@@ -14,10 +14,6 @@ git clone https://github.com/inu-software-design-team-byoun/Frontend.git && cd F
 - `cd Frontend`
 - `yarn install`
 
-실행
-
-- `yarn dev`
-
 ### 이미 클론받았는데 최신화하려는 경우
 
 ---
