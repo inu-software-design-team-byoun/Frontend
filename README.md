@@ -32,4 +32,6 @@ cd Frontend && git pull && yarn install
 
 ### 클라이언트 실행
 
+---
+
 - `yarn dev`
