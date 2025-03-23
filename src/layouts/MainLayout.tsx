@@ -16,10 +16,8 @@ export const MainWrapper = styled.div`
 `;
 
 export const SideBarArea = styled.div`
-  width: 19.5rem;
+  width: 312px; // Sidebar랑 좀 안맞음. fixed라서 그런듯
   height: 100vh;
-
-  border: 1px solid black;
 `;
 
 export const SideBar = styled.div`
@@ -42,6 +40,7 @@ export const SideBar = styled.div`
     font-size: 0.75rem;
     color: #5f5f5f;
     font-weight: bold;
+    margin-left: 0.25rem;
     margin-bottom: 0.75rem;
   }
 
@@ -129,12 +128,16 @@ export const MenuTab = styled.div<{ enabled: boolean }>`
   }
 `;
 
-export const MainBody = styled.main`
-  width: 79vw;
+export const MainArea = styled.main`
+  padding-top: 3rem;
+  /* width: 79vw; */
+  width: 75rem; //1200px
   height: 100vh;
   flex: 1;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+
+  /* border-left: black 1px solid; */
 `;
 
 type MainLayoutProps = {
@@ -148,10 +151,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         <SideBar>
           <UserNameBox>
             <UserLastName>
-              <span>박</span>
+              <span>이</span>
             </UserLastName>
             <UserRole>
-              <span className="name">박기쓱</span>
+              <span className="name">이승스껄</span>
               <span> 선생님</span>
             </UserRole>
           </UserNameBox>
@@ -194,7 +197,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </AccountMenuBox>
         </SideBar>
       </SideBarArea>
-      <MainBody>{children}</MainBody>
+      <MainArea>{children}</MainArea>
     </MainWrapper>
   );
 };
