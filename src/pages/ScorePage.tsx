@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import ScoreRadarChart from "../components/ScoreRadarChart";
 
 const StudentInfoBody = styled.div`
   margin-left: 0.5rem;
@@ -156,8 +157,8 @@ const LongInput = styled.input`
 
   &:focus {
     border-color: black;
-    border-width: 1.5px;
-    outline: none;
+    /* border-width: 1.5px; */
+    outline: 0.5px solid black;
   }
 `;
 
@@ -180,8 +181,8 @@ const NormalInput = styled.input`
 
   &:focus {
     border-color: black;
-    border-width: 1.5px;
-    outline: none;
+    /* border-width: 1.5px; */
+    outline: 0.5px solid black;
   }
 `;
 
@@ -260,6 +261,7 @@ const ScorePage: React.FC = () => {
             <CrudButton bgColor="#86acff;">수정</CrudButton>
           </div>
         </GridArea>
+        {/* <ScoreRadarChart /> */}
       </StudentInfoBody>
       <GapBlankBody>
         <CrudButton bgColor="#70C776;" width="5rem">
