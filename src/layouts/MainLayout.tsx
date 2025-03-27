@@ -108,12 +108,12 @@ export const AccountMenuBox = styled.div`
   flex-direction: column;
 `;
 
-export const MenuTab = styled.div<{ enabled: boolean }>`
+export const MenuTab = styled.div<{ $enabled: boolean }>`
   margin: 0.25rem 0;
   width: 11.5rem;
   height: 2.5rem;
   border-radius: 0.5rem;
-  background-color: ${(props) => (props.enabled ? "#dedede" : "white")};
+  background-color: ${(props) => (props.$enabled ? "#dedede" : "white")};
 
   display: flex;
   align-items: center;
@@ -160,20 +160,20 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </UserNameBox>
           <MainMenuBox>
             <span className="menurole">메인메뉴</span>
-            <MenuTab enabled={true}>
+            <MenuTab $enabled={true}>
               <div>
                 <img src={scoreIcon} />
               </div>
               <span className="menuname">성적</span>
             </MenuTab>
-            <MenuTab enabled={false}>
+            <MenuTab $enabled={false}>
               <div>
                 <img src={bookIcon} />
               </div>
 
               <span className="menuname">학생부</span>
             </MenuTab>
-            <MenuTab enabled={false}>
+            <MenuTab $enabled={false}>
               <div>
                 <img src={listIcon} />
               </div>
@@ -182,13 +182,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </MainMenuBox>
           <AccountMenuBox>
             <span className="menurole">설정</span>
-            <MenuTab enabled={false}>
+            <MenuTab $enabled={false}>
               <div>
                 <img src={userIcon} />
               </div>
               <span className="menuname">사용자계정</span>
             </MenuTab>
-            <MenuTab enabled={false}>
+            <MenuTab $enabled={false}>
               <div>
                 <img src={settingIcon} />
               </div>

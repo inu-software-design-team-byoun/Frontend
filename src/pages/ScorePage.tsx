@@ -186,7 +186,9 @@ const NormalInput = styled.input`
   }
 `;
 
-const CrudButton = styled.button<{ bgColor: string; width?: string }>`
+// const shortInput = styled.input;
+
+const CrudButton = styled.button<{ $bgColor: string; width?: string }>`
   border: none;
   border-radius: 0.5rem;
 
@@ -195,13 +197,34 @@ const CrudButton = styled.button<{ bgColor: string; width?: string }>`
   height: 2rem;
 
   /* background-color: #86acff; */
-  background-color: ${(props) => props.bgColor};
+  background-color: ${(props) => props.$bgColor};
   display: flex;
   justify-content: center;
   align-items: center;
 
   font-weight: bold;
   color: white;
+`;
+
+const ChartArea = styled.div`
+  margin: 0 1rem;
+  padding: 2.25rem 2rem 0 2rem;
+  display: flex;
+  flex-direction: column;
+
+  color: #636262;
+  font-size: 0.75rem;
+  font-weight: bold;
+
+  span {
+    width: 4rem;
+  }
+
+  div {
+    transform: translate(2rem, -0.75rem);
+    /* width: 220px; */
+    height: 200px;
+  }
 `;
 
 const GapBlankBody = styled.div`
@@ -215,8 +238,6 @@ const GapBlankBody = styled.div`
 `;
 
 const ScoreDatabaseBody = styled.div``;
-
-// const shortInput = styled.input;
 
 const ScorePage: React.FC = () => {
   return (
@@ -258,16 +279,21 @@ const ScorePage: React.FC = () => {
           <div className="item"></div>
           <div className="item"></div>
           <div className="item">
-            <CrudButton bgColor="#86acff;">수정</CrudButton>
+            <CrudButton $bgColor="#86acff;">수정</CrudButton>
           </div>
         </GridArea>
-        {/* <ScoreRadarChart /> */}
+        <ChartArea>
+          <span>평균 점수</span>
+          <div>
+            <ScoreRadarChart />
+          </div>
+        </ChartArea>
       </StudentInfoBody>
       <GapBlankBody>
-        <CrudButton bgColor="#70C776;" width="5rem">
+        <CrudButton $bgColor="#70C776;" width="5rem">
           학생 추가
         </CrudButton>
-        <CrudButton bgColor="#FF6969;">삭제</CrudButton>
+        <CrudButton $bgColor="#FF6969;">삭제</CrudButton>
       </GapBlankBody>
       <ScoreDatabaseBody />
     </>
