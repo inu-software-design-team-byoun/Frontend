@@ -1,6 +1,9 @@
+// ScorePage.tsx
 import React from "react";
 import styled from "styled-components";
 import ScoreRadarChart from "../components/ScoreRadarChart";
+import ScoreBody from "../components/ScoreBody";
+import { GradeTable } from "../components/GradeTable";
 
 const StudentInfoBody = styled.div`
   margin-left: 0.5rem;
@@ -237,8 +240,6 @@ const GapBlankBody = styled.div`
   justify-content: flex-end;
 `;
 
-const ScoreDatabaseBody = styled.div``;
-
 const ScorePage: React.FC = () => {
   return (
     <>
@@ -295,7 +296,8 @@ const ScorePage: React.FC = () => {
         </CrudButton>
         <CrudButton $bgColor="#FF6969;">삭제</CrudButton>
       </GapBlankBody>
-      <ScoreDatabaseBody />
+      {/* <ScoreBody /> */}
+      <GradeTable />
     </>
   );
 };

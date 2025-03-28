@@ -29,7 +29,7 @@ const COLOR = {
 
 const ScoreRadarChart: React.FC = () => {
   // 팀 점수 예시 데이터
-  const teamScores = [3, 7, 5, 6, 8];
+  const teamScores = [8, 5, 6, 7, 8];
 
   const chartData = {
     labels: ["국어", "수학", "영어", "사회", "과학"],
