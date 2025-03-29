@@ -52,7 +52,7 @@ const CustomRow = styled.div`
   border-bottom: 1px solid #d3d3d3;
 `;
 
-const ScoreBody = () => {
+const ScoreBody: React.FC = () => {
   return (
     <Wrapper>
       <TopRectangle />
