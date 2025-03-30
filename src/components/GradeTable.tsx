@@ -62,8 +62,9 @@ const ClassArea = styled.div`
   border-bottom: 2px solid #86acff;
 `;
 
-export const GradeTable = () => {
-  const { grades, addGrade, updateGrade, deleteGrade } = useGradeApi();
+export const GradeTable: React.FC = () => {
+  // const { grades, addGrade, updateGrade, deleteGrade } = useGradeApi();
+  const { grades, updateGrade, deleteGrade } = useGradeApi();
 
   return (
     <Wrapper>
