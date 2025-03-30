@@ -2,7 +2,7 @@
 import React from "react";
 import styled from "styled-components";
 import ScoreRadarChart from "../components/ScoreRadarChart";
-import ScoreBody from "../components/ScoreBody";
+// import ScoreBody from "../components/ScoreBody";
 import { GradeTable } from "../components/GradeTable";
 
 const StudentInfoBody = styled.div`
