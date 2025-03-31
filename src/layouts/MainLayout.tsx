@@ -132,7 +132,8 @@ export const MainArea = styled.main`
   padding-top: 3rem;
   /* width: 79vw; */
   width: 75rem; //1200px
-  height: 100vh;
+  /* height: 100vh; */
+  height: 800px;
   flex: 1;
   display: flex;
   flex-direction: column;

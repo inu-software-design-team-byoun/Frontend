@@ -194,13 +194,20 @@ export const GradeTable: React.FC = () => {
           </thead>
         </MainArea>
         <ScrollableTbody>
-          <table
-            style={{
-              width: "100%",
-              tableLayout: "fixed",
-              borderCollapse: "collapse",
-            }}
-          >
+          <table>
+            <colgroup>
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "8%" }} />
+              {/* <col style={{ width: "11%" }} /> */}
+            </colgroup>
             <tbody>
               {grades.map((grade) => (
                 <GradeRow
