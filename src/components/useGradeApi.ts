@@ -1,153 +1,47 @@
-// useGradeApi.ts
 import { useState, useEffect } from "react";
 import { Grade } from "./types";
+import { dummyGradeData } from "../data/dummyGrades";
 
-export const useGradeApi = () => {
+export const useGradeApi = (
+  selectedSemester: string,
+  selectedGrade: string,
+  selectedClass: string
+) => {
   const [grades, setGrades] = useState<Grade[]>([]);
 
   useEffect(() => {
     fetchGrades();
-  }, []);
+  }, [selectedSemester, selectedGrade, selectedClass]);
 
-  // 임시 데이터가 없는 fetchGrades함수
-  //   const fetchGrades = async () => {
-  //     const res = await fetch("/api/grades"); // 예시
-  //     const data = await res.json();
-  //     setGrades(data);
-  //   };
   const fetchGrades = async () => {
     try {
-      // 실제 API 요청
       const res = await fetch("/api/grades");
       if (!res.ok) throw new Error("API 실패");
 
       const data = await res.json();
       setGrades(data);
     } catch {
-      // 👇 임시 데이터 fallback
-      const dummyGrades: Grade[] = [
-        {
-          id: 1,
-          name: "안세균",
-          korean: 98,
-          math: 98,
-          english: 98,
-          society: 98,
-          science: 98,
-          art: 98,
-          music: 98,
-          pe: 98,
-        },
-        {
-          id: 2,
-          name: "박존슨",
-          korean: 98,
-          math: 98,
-          english: 98,
-          society: 98,
-          science: 98,
-          art: 98,
-          music: 98,
-          pe: 98,
-        },
-        {
-          id: 3,
-          name: "박기쓰껄",
-          korean: 98,
-          math: 98,
-          english: 98,
-          society: 98,
-          science: 98,
-          art: 98,
-          music: 98,
-          pe: 98,
-        },
-        {
-          id: 4,
-          name: "김진범",
-          korean: 98,
-          math: 98,
-          english: 98,
-          society: 98,
-          science: 98,
-          art: 98,
-          music: 98,
-          pe: 98,
-        },
-        {
-          id: 5,
-          name: "전해경",
-          korean: 98,
-          math: 98,
-          english: 98,
-          society: 98,
-          science: 98,
-          art: 98,
-          music: 98,
-          pe: 98,
-        },
-        {
-          id: 6,
-          name: "이승소",
-          korean: 98,
-          math: 98,
-          english: 98,
-          society: 98,
-          science: 98,
-          art: 98,
-          music: 98,
-          pe: 98,
-        },
-        {
-          id: 7,
-          name: "최디진",
-          korean: 98,
-          math: 98,
-          english: 98,
-          society: 98,
-          science: 98,
-          art: 98,
-          music: 98,
-          pe: 98,
-        },
-        {
-          id: 8,
-          name: "최승식",
-          korean: 98,
-          math: 98,
-          english: 98,
-          society: 98,
-          science: 98,
-          art: 98,
-          music: 98,
-          pe: 98,
-        },
-      ];
-      setGrades(dummyGrades);
+      // fallback 구조 탐색
+      const fallback =
+        dummyGradeData[selectedSemester]?.[`${selectedGrade}학년`]?.[
+          `${selectedClass}반`
+        ] || [];
+      setGrades(fallback);
     }
   };
 
   const addGrade = async (grade: Omit<Grade, "id">) => {
-    const res = await fetch("/api/grades", {
-      method: "POST",
-      body: JSON.stringify(grade),
-    });
-    const newGrade = await res.json();
+    const newGrade = { ...grade, id: Date.now() };
     setGrades((prev) => [...prev, newGrade]);
   };
 
   const updateGrade = async (id: number, updated: Partial<Grade>) => {
-    await fetch(`/api/grades/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(updated),
-    });
     setGrades((prev) =>
       prev.map((g) => (g.id === id ? { ...g, ...updated } : g))
     );
   };
 
   const deleteGrade = async (id: number) => {
-    await fetch(`/api/grades/${id}`, { method: "DELETE" });
     setGrades((prev) => prev.filter((g) => g.id !== id));
   };
 

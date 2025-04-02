@@ -152,10 +152,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         <SideBar>
           <UserNameBox>
             <UserLastName>
-              <span>이</span>
+              <span>앨</span>
             </UserLastName>
             <UserRole>
-              <span className="name">이승스껄</span>
+              <span className="name">앨런 튜링</span>
               <span> 선생님</span>
             </UserRole>
           </UserNameBox>

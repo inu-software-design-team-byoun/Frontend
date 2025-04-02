@@ -3,7 +3,8 @@ import React from "react";
 import styled from "styled-components";
 import ScoreRadarChart from "../components/ScoreRadarChart";
 // import ScoreBody from "../components/ScoreBody";
-import { GradeTable } from "../components/GradeTable";
+// import { GradeTable } from "../components/GradeTable";
+import { GradeTable } from "../components/GradeTableEx";
 
 const StudentInfoBody = styled.div`
   margin-left: 0.5rem;
