@@ -1,8 +1,8 @@
-// GradeTable.tsx
-import React, { useState } from "react";
+// components/GradeTableEx.tsx
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { useGradeApi } from "./useGradeApi";
-import { GradeRow } from "./GradeRow";
+import { useScoreApi } from "../hooks/useScoreApi"; // useGradeApi → useScoreApi
+import GradeRow from "../components/GradeRowEx";
 import SelectArrow from "../assets/icon/SelectArrow.png";
 
 const Wrapper = styled.div`
@@ -127,16 +127,38 @@ const Select = styled.select<{ syllable: number }>`
   background-size: 0.75rem;
 `;
 
-export const GradeTable: React.FC = () => {
-  // const { grades, addGrade, updateGrade, deleteGrade } = useGradeApi();
-  const [selectedGrade, setSelectedGrade] = useState("2");
-  const [selectedClass, setSelectedClass] = useState("3");
-  const [selectedSemester, setSelectedSemester] = useState("1학기 중간");
-  const { grades, addGrade, updateGrade, deleteGrade } = useGradeApi(
-    selectedSemester,
-    selectedGrade,
-    selectedClass
-  );
+interface GradeTableProps {
+  grade?: number;
+  classNum?: number;
+}
+
+export const GradeTable: React.FC<GradeTableProps> = ({
+  grade = 2,
+  classNum = 3,
+}) => {
+  const { data, loading } = useScoreApi(grade, classNum);
+  const [students, setStudents] = useState([]);
+
+  const handleDelete = (id: number) => {
+    setStudents((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  useEffect(() => {
+    setStudents(data);
+  }, [data]);
+
+  if (loading) return <div>Loading...</div>;
+
+  const subjects = [
+    "국어",
+    "수학",
+    "영어",
+    "사회",
+    "과학",
+    "미술",
+    "음악",
+    "체육",
+  ];
 
   return (
     <Wrapper>
@@ -145,8 +167,8 @@ export const GradeTable: React.FC = () => {
         <ClassArea>
           <Select
             syllable={3}
-            value={selectedGrade}
-            onChange={(e) => setSelectedGrade(e.target.value)}
+            //  value={selectedGrade}
+            //  onChange={(e) => setSelectedGrade(e.target.value)}
           >
             <option value="1">1학년</option>
             <option value="2">2학년</option>
@@ -154,8 +176,8 @@ export const GradeTable: React.FC = () => {
           </Select>
           <Select
             syllable={2}
-            value={selectedClass}
-            onChange={(e) => setSelectedClass(e.target.value)}
+            //  value={selectedClass}
+            //  onChange={(e) => setSelectedClass(e.target.value)}
           >
             <option value="1">1반</option>
             <option value="2">2반</option>
@@ -166,8 +188,8 @@ export const GradeTable: React.FC = () => {
           </Select>
           <Select
             syllable={4}
-            value={selectedSemester}
-            onChange={(e) => setSelectedSemester(e.target.value)}
+            //  value={selectedSemester}
+            //  onChange={(e) => setSelectedSemester(e.target.value)}
           >
             <option value="1학기 중간">1학기 중간</option>
             <option value="1학기 기말">1학기 기말</option>
@@ -222,12 +244,11 @@ export const GradeTable: React.FC = () => {
               {/* <col style={{ width: "11%" }} /> */}
             </colgroup>
             <tbody>
-              {grades.map((grade) => (
+              {data.map((student) => (
                 <GradeRow
-                  key={grade.id}
-                  grade={grade}
-                  onUpdate={updateGrade}
-                  onDelete={deleteGrade}
+                  key={student.id}
+                  student={student}
+                  subjects={subjects}
                 />
               ))}
             </tbody>

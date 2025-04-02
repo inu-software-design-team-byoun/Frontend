@@ -1,15 +1,70 @@
 import React, { useState } from "react";
+import styled from "styled-components";
 
-export const GradeRow = ({ grade, onUpdate, onDelete }) => {
+const CustomInput = styled.input`
+  border: 1px solid #7c7c7c;
+  border-radius: 0.75rem;
+  width: 4rem;
+  height: 1.75rem;
+
+  background-color: transparent;
+
+  color: black;
+  font-size: 1rem;
+  text-align: center;
+
+  &:placeholder {
+    color: gray;
+  }
+`;
+
+const EditButton = styled.button`
+  margin: 0 0.25rem;
+  border: none;
+  background-color: transparent;
+  font-size: 1rem;
+`;
+
+export const GradeRow: React.FC = ({ grade, onUpdate, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState(grade);
+  const [formData, setFormData] = useState({
+    nameInput: "",
+    koreanInput: "",
+    mathInput: "",
+    englishInput: "",
+    societyInput: "",
+    scienceInput: "",
+    artInput: "",
+    musicInput: "",
+    peInput: "",
+  });
 
   const handleChange = (field) => (e) => {
     setFormData({ ...formData, [field]: e.target.value });
   };
 
+  // const handleSave = () => {
+  //   onUpdate(grade.id, formData);
+  //   setIsEditing(false);
+  // };
+
   const handleSave = () => {
-    onUpdate(grade.id, formData);
+    const updated = {
+      name: formData.nameInput !== "" ? formData.nameInput : grade.name,
+      korean: formData.koreanInput !== "" ? formData.koreanInput : grade.korean,
+      math: formData.mathInput !== "" ? formData.mathInput : grade.math,
+      english:
+        formData.englishInput !== "" ? formData.englishInput : grade.english,
+      society:
+        formData.societyInput !== "" ? formData.societyInput : grade.society,
+      science:
+        formData.scienceInput !== "" ? formData.scienceInput : grade.science,
+      art: formData.artInput !== "" ? formData.artInput : grade.art,
+      music: formData.musicInput !== "" ? formData.musicInput : grade.music,
+      pe: formData.peInput !== "" ? formData.peInput : grade.pe,
+    };
+
+    onUpdate(grade.id, updated);
     setIsEditing(false);
   };
 
@@ -19,40 +74,67 @@ export const GradeRow = ({ grade, onUpdate, onDelete }) => {
       {isEditing ? (
         <>
           <td>
-            <input value={formData.name} onChange={handleChange("name")} />
-          </td>
-          <td>
-            <input value={formData.korean} onChange={handleChange("korean")} />
-          </td>
-          <td>
-            <input value={formData.math} onChange={handleChange("math")} />
-          </td>
-          <td>
-            <input
-              value={formData.english}
-              onChange={handleChange("english")}
+            <CustomInput
+              value={formData.nameInput}
+              placeholder={grade.name}
+              onChange={handleChange("nameInput")}
             />
           </td>
           <td>
-            <input
-              value={formData.society}
-              onChange={handleChange("society")}
+            <CustomInput
+              value={formData.koreanInput}
+              placeholder={String(grade.korean)}
+              onChange={handleChange("koreanInput")}
             />
           </td>
           <td>
-            <input
-              value={formData.science}
-              onChange={handleChange("science")}
+            <CustomInput
+              value={formData.mathInput}
+              placeholder={String(grade.math)}
+              onChange={handleChange("mathInput")}
             />
           </td>
           <td>
-            <input value={formData.art} onChange={handleChange("art")} />
+            <CustomInput
+              value={formData.englishInput}
+              placeholder={String(grade.english)}
+              onChange={handleChange("englishInput")}
+            />
           </td>
           <td>
-            <input value={formData.music} onChange={handleChange("music")} />
+            <CustomInput
+              value={formData.societyInput}
+              placeholder={String(grade.society)}
+              onChange={handleChange("societyInput")}
+            />
           </td>
           <td>
-            <input value={formData.pe} onChange={handleChange("pe")} />
+            <CustomInput
+              value={formData.scienceInput}
+              placeholder={String(grade.science)}
+              onChange={handleChange("scienceInput")}
+            />
+          </td>
+          <td>
+            <CustomInput
+              value={formData.artInput}
+              placeholder={String(grade.art)}
+              onChange={handleChange("artInput")}
+            />
+          </td>
+          <td>
+            <CustomInput
+              value={formData.musicInput}
+              placeholder={String(grade.music)}
+              onChange={handleChange("musicInput")}
+            />
+          </td>
+          <td>
+            <CustomInput
+              value={formData.peInput}
+              placeholder={String(grade.pe)}
+              onChange={handleChange("peInput")}
+            />
           </td>
           <td>
             <button onClick={handleSave}>💾</button>
@@ -70,8 +152,8 @@ export const GradeRow = ({ grade, onUpdate, onDelete }) => {
           <td>{grade.music}</td>
           <td>{grade.pe}</td>
           <td>
-            <button onClick={() => setIsEditing(true)}>✏️</button>
-            <button onClick={() => onDelete(grade.id)}>🗑️</button>
+            <EditButton onClick={() => setIsEditing(true)}>✏️</EditButton>
+            <EditButton onClick={() => onDelete(grade.id)}>🗑️</EditButton>
           </td>
         </>
       )}
