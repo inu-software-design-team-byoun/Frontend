@@ -9,7 +9,7 @@ const Wrapper = styled.div`
   margin-left: 0.5rem;
   margin-right: 3rem;
   width: 71.5rem;
-  height: 27rem; // 476px;
+  height: 27rem; // 432px;
   background-color: white;
   box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.25);
   border-radius: 1rem;
