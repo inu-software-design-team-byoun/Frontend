@@ -5,6 +5,7 @@ import listIcon from "../assets/listIcon.svg";
 import scoreIcon from "../assets/scoreIcon.svg";
 import userIcon from "../assets/userIcon.svg";
 import settingIcon from "../assets/settingIcon.svg";
+import { useNavigate } from "react-router-dom";
 
 export const MainWrapper = styled.div`
   width: 100vw;
@@ -143,9 +144,19 @@ export const MainArea = styled.main`
 
 type MainLayoutProps = {
   children: React.ReactNode;
+  ref?: string;
 };
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ children, ref }) => {
+  const navigate = useNavigate();
+  const goToMain = () => {
+    navigate("/");
+  };
+
+  const goToAttendance = () => {
+    navigate("/attendance");
+  };
+
   return (
     <MainWrapper>
       <SideBarArea>
@@ -165,14 +176,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               <div>
                 <img src={scoreIcon} />
               </div>
-              <span className="menuname">성적</span>
+              <span className="menuname" onClick={goToMain}>
+                성적
+              </span>
             </MenuTab>
             <MenuTab $enabled={false}>
               <div>
                 <img src={bookIcon} />
               </div>
 
-              <span className="menuname">학생부</span>
+              <span className="menuname" onClick={goToAttendance}>
+                학생부
+              </span>
             </MenuTab>
             <MenuTab $enabled={false}>
               <div>
