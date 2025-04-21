@@ -9,7 +9,7 @@ import { getWeekdays } from "../utils/getWeekdays";
 // 샘플 학생 데이터
 const students = [
   { id: 1, name: "안세균" },
-  { id: 2, name: "박준손" },
+  { id: 2, name: "박존슨" },
   { id: 3, name: "박기쓰껄" },
   { id: 4, name: "김진범" },
 ];
@@ -21,6 +21,8 @@ const weekdays = getWeekdays(
   // new Date("2025-06-30"),
   [] // 필요 시 공휴일 배열 추가
 );
+
+const dayKor = ["일", "월", "화", "수", "목", "금", "토"];
 
 type Attendance = "출석" | "지각" | "결석";
 
@@ -70,6 +72,28 @@ const MainArea = styled.div`
   /* border-collapse: collapse; */
   /* width: 100%; */
 
+  // 스크롤 바 커스터마이징
+  &::-webkit-scrollbar {
+    height: 8px; // 가로 스크롤 높이
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #b5b5b5; // thumb 색상
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: #f0f0f0; // 트랙 색상
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: #999999;
+  }
+
+  &::-webkit-scrollbar-thumb:active {
+    background-color: #777777;
+  }
+
   table {
     position: relative; // ✅ sticky 기준!
     border-collapse: collapse;
@@ -85,6 +109,7 @@ const MainArea = styled.div`
     font-size: 1rem;
 
     white-space: nowrap;
+    padding: 0;
   }
 
   td {
@@ -95,13 +120,14 @@ const MainArea = styled.div`
     font-size: 1rem;
 
     white-space: nowrap;
+    padding: 0;
   }
 `;
 
 const ClassArea = styled.div`
   width: 100%;
   height: 64px;
-  border-bottom: 1.5px solid #54b25c;
+  border-bottom: 2px solid #54b25c;
 
   display: flex;
   align-items: center;
@@ -113,13 +139,13 @@ const ClassSelect = styled.select<{ syllable: number }>`
     props.syllable === 3 ? "92px" : props.syllable === 2 ? "80px" : "124px"};
   height: 2.5rem;
   padding: 0 1rem; // 12px;
-  border: 1.5px solid #54b25c;
+  border: 2px solid #54b25c;
   border-radius: 0.65rem;
 
   color: black;
   font-family: NanumSquare;
   font-size: 1rem;
-  font-weight: bold;
+  font-weight: 900;
 
   background-color: white;
 
@@ -149,7 +175,7 @@ const FixedColNum = styled.th`
 
 const FixedColName = styled.th`
   position: sticky;
-  left: 8%;
+  left: 92px;
   z-index: 3;
   background: white;
 
@@ -167,23 +193,25 @@ const FixedCellNum = styled.td`
 
 const FixedCellName = styled.td`
   position: sticky;
-  left: 8%;
+  left: 92px;
   background: white;
   z-index: 2;
 
   width: 92px;
 `;
 
-const AttendanceSelect = styled.select`
+// 사전에 정의한 type Attendance 중에서 props로 받을 수 있게 설정
+const AttendanceSelect = styled.select<{ $status: Attendance }>`
   padding-left: 8px;
-  color: black;
   font-weight: bold;
   border-radius: 0.65rem;
-  border: 1.5px solid #b9b9b9;
   width: 4rem;
   height: 1.75rem;
-
   font-size: 0.85rem;
+
+  // 기본값이었던 것
+  /* color: black; */
+  /* border: 1.5px solid #b9b9b9; */
 
   &:focus {
     outline: none;
@@ -195,8 +223,27 @@ const AttendanceSelect = styled.select`
 
   background-image: url(${SelectArrow});
   background-repeat: no-repeat;
-  background-position: right 0.5rem center;
+  /* background-position: right 0.5rem center; */
+  background-position: right 0.5rem
+    ${(props) => (props.$status !== "출석" ? "top 0.65rem" : "center")};
   background-size: 0.75rem;
+
+  border: 1.5px solid
+    ${(props) =>
+      props.$status === "출석"
+        ? "#b9b9b9"
+        : props.$status === "지각"
+          ? "#FC8D4C"
+          : "#FF6969"};
+
+  background-color: ${(props) =>
+    props.$status === "출석"
+      ? "white"
+      : props.$status === "지각"
+        ? "#FC8D4C"
+        : "#FF6969"};
+
+  color: ${(props) => (props.$status === "출석" ? "black" : "white")};
 `;
 
 interface AttendanceTableProps {
@@ -239,7 +286,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
         <ClassArea>
           <ClassSelect
             syllable={3}
-            value={2}
+
             //  value={selectedGrade}
             //  onChange={(e) => setSelectedGrade(e.target.value)}
           >
@@ -247,9 +294,10 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
             <option value="2">2학년</option>
             <option value="3">3학년</option>
           </ClassSelect>
+
           <ClassSelect
             syllable={2}
-            value={4}
+
             //  value={selectedClass}
             //  onChange={(e) => setSelectedClass(e.target.value)}
           >
@@ -267,16 +315,28 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
               <col />
               <col />
               {weekdays.map((_, idx) => (
-                <col key={idx} />
+                <col key={idx} style={{ width: "100px" }} />
               ))}
             </colgroup>
             <thead>
               <tr>
                 <FixedColNum>번호</FixedColNum>
                 <FixedColName>이름</FixedColName>
-                {weekdays.map((date) => (
+
+                {/* {weekdays.map((date) => (
                   <th key={date}>{date.slice(5)}</th>
-                ))}
+                ))} */}
+                {weekdays.map((dateStr) => {
+                  const date = new Date(dateStr);
+                  const month = (date.getMonth() + 1)
+                    .toString()
+                    .padStart(2, "0");
+                  const day = date.getDate().toString().padStart(2, "0");
+                  const weekday = dayKor[date.getDay()];
+                  return (
+                    <th key={dateStr}>{`${month}/${day} (${weekday})`}</th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
@@ -287,6 +347,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                   {weekdays.map((date) => (
                     <td key={`${student.id}-${date}`}>
                       <AttendanceSelect
+                        $status={attendanceData[student.id]?.[date] || "출석"}
                         value={attendanceData[student.id]?.[date] || "출석"}
                         onChange={(e) =>
                           handleChange(
