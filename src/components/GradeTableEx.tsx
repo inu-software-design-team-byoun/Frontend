@@ -2,7 +2,9 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useScoreApi } from "../hooks/useScoreApi"; // useGradeApi → useScoreApi
+
 import GradeRow from "../components/GradeRowEx";
+import { TransformedStudent } from "../hooks/useScoreApi"; // 맨 위 import 추가
 import SelectArrow from "../assets/icon/SelectArrow.png";
 
 const Wrapper = styled.div`
@@ -137,7 +139,8 @@ export const GradeTable: React.FC<GradeTableProps> = ({
   classNum = 3,
 }) => {
   const { data, loading } = useScoreApi(grade, classNum);
-  const [students, setStudents] = useState([]);
+  // const [students, setStudents] = useState([]);
+  const [students, setStudents] = useState<TransformedStudent[]>([]);
 
   const handleDelete = (id: number) => {
     setStudents((prev) => prev.filter((s) => s.id !== id));
