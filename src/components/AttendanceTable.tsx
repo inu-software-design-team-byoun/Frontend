@@ -4,6 +4,7 @@ import styled from "styled-components";
 // import { useScoreApi } from "../hooks/useScoreApi"; // useGradeApi → useScoreApi
 // import GradeRow from "../components/GradeRowEx";
 import SelectArrow from "../assets/icon/SelectArrow.png";
+import whiteArrow from "../assets/icon/whiteArrow.png";
 import { getWeekdays } from "../utils/getWeekdays";
 
 // 샘플 학생 데이터
@@ -221,11 +222,15 @@ const AttendanceSelect = styled.select<{ $status: Attendance }>`
   -webkit-appearance: none;
   background-color: white;
 
-  background-image: url(${SelectArrow});
+  background-image: ${(props) =>
+    `url(${props.$status === "출석" ? SelectArrow : whiteArrow})`};
+
   background-repeat: no-repeat;
-  /* background-position: right 0.5rem center; */
-  background-position: right 0.5rem
-    ${(props) => (props.$status !== "출석" ? "top 0.65rem" : "center")};
+  background-position: right 0.5rem center;
+  // arrow 적용이 이상하게 될 경우(높이가 안맞을 경우)
+  /* background-position: right 0.5rem
+    ${(props) => (props.$status !== "출석" ? "top 0.65rem" : "center")}; */
+
   background-size: 0.75rem;
 
   border: 1.5px solid
