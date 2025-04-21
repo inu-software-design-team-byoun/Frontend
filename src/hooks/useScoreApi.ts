@@ -9,14 +9,22 @@ interface ScoreItem {
   grade: string;
 }
 
+// 나중에 쓸 수 있음.
 interface StudentScore {
   student_id: number;
   name: string;
   scores: ScoreItem[];
 }
 
+export type TransformedStudent = {
+  id: number;
+  name: string;
+  [subject: string]: string | number;
+};
+
 export const useScoreApi = (grade: number, classNum: number) => {
-  const [data, setData] = useState<StudentScore[]>([]);
+  // const [data, setData] = useState<StudentScore[]>([]);
+  const [data, setData] = useState<TransformedStudent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,7 +39,12 @@ export const useScoreApi = (grade: number, classNum: number) => {
 
         // GradeTable과 GradeRow에서 사용 중인 형식으로 변환
         const transformed = json.students.map((student: any) => {
-          const result: { [subject: string]: string } = {
+          // const result: { [subject: string]: string } = {
+          //   id: student.student_id,
+          //   name: student.name,
+          // };
+
+          const result: TransformedStudent = {
             id: student.student_id,
             name: student.name,
           };
