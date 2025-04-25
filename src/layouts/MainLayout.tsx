@@ -5,7 +5,8 @@ import listIcon from "../assets/listIcon.svg";
 import scoreIcon from "../assets/scoreIcon.svg";
 import userIcon from "../assets/userIcon.svg";
 import settingIcon from "../assets/settingIcon.svg";
-import { useNavigate } from "react-router-dom";
+import pencilIcon from "../assets/icon/pencilIcon.svg";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export const MainWrapper = styled.div`
   width: 100vw;
@@ -127,6 +128,13 @@ export const MenuTab = styled.div<{ $enabled: boolean }>`
     display: flex;
     justify-content: center;
   }
+
+  cursor: pointer;
+
+  &:hover {
+    transition: 0.2s;
+    background-color: #dedede;
+  }
 `;
 
 export const MainArea = styled.main`
@@ -148,13 +156,21 @@ type MainLayoutProps = {
 };
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children, ref }) => {
+  const location = useLocation();
+  const currentPath = location.pathname;
+
   const navigate = useNavigate();
+
   const goToMain = () => {
     navigate("/");
   };
 
   const goToAttendance = () => {
     navigate("/attendance");
+  };
+
+  const goToScoreInput = () => {
+    navigate("/scoreinput");
   };
 
   return (
@@ -172,28 +188,35 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, ref }) => {
           </UserNameBox>
           <MainMenuBox>
             <span className="menurole">메인메뉴</span>
-            <MenuTab $enabled={true}>
+            <MenuTab $enabled={currentPath === "/"} onClick={goToMain}>
               <div>
                 <img src={scoreIcon} />
               </div>
-              <span className="menuname" onClick={goToMain}>
-                성적
-              </span>
+              <span className="menuname">성적</span>
             </MenuTab>
-            <MenuTab $enabled={false}>
+            <MenuTab
+              $enabled={currentPath === "/attendance"}
+              onClick={goToAttendance}
+            >
               <div>
                 <img src={bookIcon} />
               </div>
-
-              <span className="menuname" onClick={goToAttendance}>
-                학생부
-              </span>
+              <span className="menuname">출석부</span>
             </MenuTab>
-            <MenuTab $enabled={false}>
+            <MenuTab $enabled={currentPath === "/counsel"}>
               <div>
                 <img src={listIcon} />
               </div>
               <span className="menuname">상담내역</span>
+            </MenuTab>
+            <MenuTab
+              $enabled={currentPath === "/scoreinput"}
+              onClick={goToScoreInput}
+            >
+              <div>
+                <img src={pencilIcon} />
+              </div>
+              <span className="menuname">성적 입력</span>
             </MenuTab>
           </MainMenuBox>
           <AccountMenuBox>

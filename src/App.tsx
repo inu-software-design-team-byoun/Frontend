@@ -6,6 +6,7 @@ import ScorePage from "./pages/ScorePage";
 import { LoginPage } from "./pages/LoginPage";
 import AuthLayout from "./layouts/AuthLayout";
 import AttendancePage from "./pages/AttendancePage";
+import ScoreInputPage from "./pages/ScoreInputPage";
 
 const App: React.FC = () => {
   return (
@@ -24,6 +25,14 @@ const App: React.FC = () => {
           element={
             <MainLayout>
               <AttendancePage />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/scoreinput"
+          element={
+            <MainLayout>
+              <ScoreInputPage />
             </MainLayout>
           }
         />
