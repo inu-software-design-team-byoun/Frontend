@@ -4,6 +4,7 @@ import styled from "styled-components";
 import ScoreRadarChart from "../components/ScoreRadarChart";
 // import ScoreBody from "../components/ScoreBody";
 import { GradeTable } from "../components/GradeTableEx";
+import { useStudentInfoApi } from "../hooks/useStudentInfoApi";
 
 const StudentInfoBody = styled.div`
   margin-left: 0.5rem;
@@ -240,7 +241,17 @@ const GapBlankBody = styled.div`
   justify-content: flex-end;
 `;
 
-const ScorePage: React.FC = () => {
+interface ScorePageProps {
+  studentId?: number;
+}
+
+const ScorePage: React.FC<ScorePageProps> = ({ studentId = 20401 }) => {
+  const { data, loading } = useStudentInfoApi(studentId);
+
+  if (loading || !data) return <div>Loading...</div>;
+
+  const grade = String(data.studentid)[0];
+  const classNum = Number(String(data.studentid).substring(1, 3));
   return (
     <>
       <StudentInfoBody>
@@ -251,11 +262,15 @@ const ScorePage: React.FC = () => {
         <GridArea>
           <div className="item">
             <span>이름</span>
-            <LongInput placeholder="학생 이름 입력"></LongInput>
+            {/* <LongInput placeholder="학생 이름 입력"></LongInput> */}
+            <LongInput value={data.name} readOnly />
           </div>
           <div className="item">
             <span>학년, 반</span>
-            <span className="fixed">2학년 4반</span>
+            {/* <span className="fixed">2학년 4반</span> */}
+            <span className="fixed">
+              {grade}학년 {classNum}반
+            </span>
             <div>
               <button>상담 내역</button>
               <button>피드백</button>
@@ -263,19 +278,23 @@ const ScorePage: React.FC = () => {
           </div>
           <div className="item">
             <span>전화번호</span>
-            <LongInput placeholder="010-XXXX-XXXX"></LongInput>
+            {/* <LongInput placeholder="010-XXXX-XXXX"></LongInput> */}
+            <LongInput value={data.phoneNum} readOnly />
           </div>
           <div className="item">
             <span>생년월일</span>
-            <LongInput placeholder="YYYY-MM-DD"></LongInput>
+            {/* <LongInput placeholder="YYYY-MM-DD"></LongInput> */}
+            <LongInput value={data.birthday} readOnly />
           </div>
           <div className="item">
             <span>총 성적</span>
-            <NormalInput placeholder="98"></NormalInput>
+            {/* <NormalInput placeholder="98"></NormalInput> */}
+            <NormalInput value={data.avgScore} readOnly />
           </div>
           <div className="item">
             <span>평균 등급</span>
-            <NormalInput placeholder="B+"></NormalInput>
+            {/* <NormalInput placeholder="B+"></NormalInput> */}
+            <NormalInput value={data.avgScore} readOnly />
           </div>
           <div className="item"></div>
           <div className="item"></div>
