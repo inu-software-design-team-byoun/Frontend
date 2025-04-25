@@ -1,20 +1,6 @@
-// useScoreApi.ts
 import { useEffect, useState } from "react";
-import { dummyScores } from "../data/dummyScores"; // 실제 API 연결 전용 임시 데이터
+import { dummyScores } from "../data/dummyScores";
 import { ENDPOINTS } from "../constants/api";
-
-interface ScoreItem {
-  subject: string;
-  score: number;
-  grade: string;
-}
-
-// 나중에 쓸 수 있음.
-interface StudentScore {
-  student_id: number;
-  name: string;
-  scores: ScoreItem[];
-}
 
 export type TransformedStudent = {
   id: number;
@@ -23,34 +9,42 @@ export type TransformedStudent = {
 };
 
 export const useScoreApi = (grade: number, classNum: number) => {
-  // const [data, setData] = useState<StudentScore[]>([]);
   const [data, setData] = useState<TransformedStudent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchScores = async () => {
       try {
-        // 실제 API 사용 시 주석 해제
-        // const res = await fetch(ENDPOINTS.scores(grade, classNum));
+        // 실제 API 사용할 경우
+        // const res = await fetch(ENDPOINTS.studentsList(grade, classNum));
         // const json = await res.json();
 
-        // 실제 API 사용시 주석처리
-        const json = dummyScores; // 임시 데이터로 대체
+        // ⬇️ dummyScores에서 학년/반 필터
+        const filtered = dummyScores.filter((s) => {
+          const sid = String(s.studentid).padStart(5, "0"); // ex: 20304
+          const sGrade = Number(sid.charAt(0));
+          const sClass = Number(sid.substring(1, 3));
+          return sGrade === grade && sClass === classNum;
+        });
 
-        // GradeTable과 GradeRow에서 사용 중인 형식으로 변환
-        const transformed = json.students.map((student: any) => {
-          // const result: { [subject: string]: string } = {
-          //   id: student.student_id,
-          //   name: student.name,
-          // };
-
+        const transformed = filtered.map((student: any) => {
           const result: TransformedStudent = {
-            id: student.student_id,
+            id: student.studentid,
             name: student.name,
           };
 
-          student.scores.forEach((item: ScoreItem) => {
-            result[item.subject] = item.grade; // 점수(score)가 아닌 등급(grade) 기준
+          const subjects = [
+            "korean",
+            "math",
+            "english",
+            "society",
+            "science",
+            "art",
+            "music",
+            "physical",
+          ];
+          subjects.forEach((subj) => {
+            result[subj] = student[subj];
           });
 
           return result;
@@ -59,7 +53,7 @@ export const useScoreApi = (grade: number, classNum: number) => {
         setData(transformed);
       } catch (err) {
         console.error("Score API fetch error:", err);
-        setData([]); // 실패 시 빈 배열
+        setData([]);
       } finally {
         setLoading(false);
       }

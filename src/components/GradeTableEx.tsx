@@ -134,11 +134,11 @@ interface GradeTableProps {
   classNum?: number;
 }
 
-export const GradeTable: React.FC<GradeTableProps> = ({
-  grade = 2,
-  classNum = 3,
-}) => {
-  const { data, loading } = useScoreApi(grade, classNum);
+export const GradeTable: React.FC<GradeTableProps> = () => {
+  const [selectedGrade, setSelectedGrade] = useState(2);
+  const [selectedClass, setSelectedClass] = useState(3);
+
+  const { data, loading } = useScoreApi(selectedGrade, selectedClass);
   // const [students, setStudents] = useState([]);
   const [students, setStudents] = useState<TransformedStudent[]>([]);
 
@@ -153,14 +153,14 @@ export const GradeTable: React.FC<GradeTableProps> = ({
   if (loading) return <div>Loading...</div>;
 
   const subjects = [
-    "국어",
-    "수학",
-    "영어",
-    "사회",
-    "과학",
-    "미술",
-    "음악",
-    "체육",
+    "korean",
+    "math",
+    "english",
+    "society",
+    "science",
+    "art",
+    "music",
+    "physical",
   ];
 
   return (
@@ -170,8 +170,8 @@ export const GradeTable: React.FC<GradeTableProps> = ({
         <ClassArea>
           <Select
             syllable={3}
-            //  value={selectedGrade}
-            //  onChange={(e) => setSelectedGrade(e.target.value)}
+            value={selectedGrade}
+            onChange={(e) => setSelectedGrade(Number(e.target.value))}
           >
             <option value="1">1학년</option>
             <option value="2">2학년</option>
@@ -179,8 +179,8 @@ export const GradeTable: React.FC<GradeTableProps> = ({
           </Select>
           <Select
             syllable={2}
-            //  value={selectedClass}
-            //  onChange={(e) => setSelectedClass(e.target.value)}
+            value={selectedClass}
+            onChange={(e) => setSelectedClass(Number(e.target.value))}
           >
             <option value="1">1반</option>
             <option value="2">2반</option>

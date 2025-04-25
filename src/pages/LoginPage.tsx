@@ -3,6 +3,8 @@ import { useState } from "react";
 import styled from "styled-components";
 import BackgroundImage from "../assets/img/LoginBack.png";
 
+import { useGoogleLogin } from "@react-oauth/google";
+
 const Wrapper = styled.div`
   width: 100vw;
   height: 100vh;
@@ -146,6 +148,31 @@ const SecondaryArea = styled.div`
   }
 `;
 
+const GoogleLoginButton = styled.button`
+  margin-top: 1rem;
+  border: none;
+  border-radius: 1.25rem;
+
+  width: 20rem;
+  height: 3.5rem;
+
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #4285f4;
+  filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.25));
+  cursor: pointer;
+
+  img {
+    width: 1.5rem;
+    margin-right: 0.75rem;
+  }
+`;
+
 export const LoginPage: React.FC = () => {
   // true이면 회원가입 페이지, false이면 로그인 페이지
   const [isSignUp, setIsSignUp] = useState(false);
@@ -153,6 +180,28 @@ export const LoginPage: React.FC = () => {
   const toggleSignUp = () => {
     setIsSignUp(!isSignUp);
   };
+
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      console.log("✅ Google Login Success", tokenResponse);
+
+      // access_token 백엔드로 전달
+      const res = await fetch("http://localhost:8080/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accessToken: tokenResponse.access_token }),
+      });
+
+      const result = await res.json();
+      console.log("서버 응답:", result);
+
+      // 예: 받은 JWT 저장
+      localStorage.setItem("token", result.token);
+    },
+    onError: (err) => {
+      console.error("❌ Google Login Error", err);
+    },
+  });
 
   return (
     <Wrapper>
@@ -182,11 +231,27 @@ export const LoginPage: React.FC = () => {
             <SignButton $bgColor="#70C776">
               <p>회원가입</p>
             </SignButton>
+            <GoogleLoginButton>
+              <img
+                src="https://developers.google.com/identity/images/g-logo.png"
+                alt="Google logo"
+              />
+              Google로 계속하기
+            </GoogleLoginButton>
           </>
         ) : (
-          <SignButton $bgColor="#3BA8F0">
-            <p>로그인</p>
-          </SignButton>
+          <>
+            <SignButton $bgColor="#3BA8F0">
+              <p>로그인</p>
+            </SignButton>
+            <GoogleLoginButton onClick={loginWithGoogle}>
+              <img
+                src="https://developers.google.com/identity/images/g-logo.png"
+                alt="Google logo"
+              />
+              Google로 계속하기
+            </GoogleLoginButton>
+          </>
         )}
 
         {isSignUp ? (
