@@ -181,27 +181,33 @@ export const LoginPage: React.FC = () => {
     setIsSignUp(!isSignUp);
   };
 
-  const loginWithGoogle = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      console.log("✅ Google Login Success", tokenResponse);
+  // const loginWithGoogle = useGoogleLogin({
+  //   onSuccess: async (tokenResponse) => {
+  //     console.log("✅ Google Login Success", tokenResponse);
 
-      // access_token 백엔드로 전달
-      const res = await fetch("http://localhost:8080/api/auth/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accessToken: tokenResponse.access_token }),
-      });
+  //     // access_token 백엔드로 전달
+  //     const res = await fetch("http://localhost:3000/api/auth/google", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ accessToken: tokenResponse.access_token }),
+  //     });
 
-      const result = await res.json();
-      console.log("서버 응답:", result);
+  //     const result = await res.json();
+  //     console.log("서버 응답:", result);
 
-      // 예: 받은 JWT 저장
-      localStorage.setItem("token", result.token);
-    },
-    onError: (err) => {
-      console.error("❌ Google Login Error", err);
-    },
-  });
+  //     // 예: 받은 JWT 저장
+  //     localStorage.setItem("token", result.token);
+  //   },
+  //   onError: (err) => {
+  //     console.error("❌ Google Login Error", err);
+  //   },
+  // });
+
+  const loginWithGoogle = () => {
+    window.location.href =
+      "http://localhost:3000/auth/google";
+    console.log("Google Login Clicked");
+  }
 
   return (
     <Wrapper>
@@ -244,7 +250,7 @@ export const LoginPage: React.FC = () => {
             <SignButton $bgColor="#3BA8F0">
               <p>로그인</p>
             </SignButton>
-            <GoogleLoginButton onClick={loginWithGoogle}>
+            <GoogleLoginButton onClick={() => loginWithGoogle()}>
               <img
                 src="https://developers.google.com/identity/images/g-logo.png"
                 alt="Google logo"
