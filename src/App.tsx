@@ -7,6 +7,7 @@ import { LoginPage } from "./pages/LoginPage";
 import AuthLayout from "./layouts/AuthLayout";
 import AttendancePage from "./pages/AttendancePage";
 import ScoreInputPage from "./pages/ScoreInputPage";
+import CounselPage from "./pages/CounselPage";
 
 const App: React.FC = () => {
   return (
@@ -25,6 +26,14 @@ const App: React.FC = () => {
           element={
             <MainLayout>
               <AttendancePage />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/counsel"
+          element={
+            <MainLayout>
+              <CounselPage />
             </MainLayout>
           }
         />
