@@ -50,7 +50,7 @@ const LogoBody = styled.div`
   /* border: 1px solid black; */
   position: relative;
 
-  margin: 4.75rem 0 1.75rem 0;
+  margin: 4.5rem 0 1.25rem 0;
 
   width: 25rem;
   height: 13.125rem;
@@ -80,10 +80,32 @@ const LogoBody = styled.div`
   }
 `;
 
+const RoleSelect = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin: 0.25rem 0 0.25rem 0;
+
+  label {
+    display: flex;
+    align-items: center;
+
+    gap: 0.75rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white;
+    margin: 0 0.5rem;
+  }
+
+  input[type="radio"] {
+    transform: scale(1.25);
+    margin: 0;
+  }
+`;
+
 const DropdownArea = styled.div`
   /* border: 1px solid black; */
   width: 22.25rem;
-  height: 4rem;
+  height: 3.5;
   display: flex;
 
   justify-content: space-between;
@@ -93,8 +115,8 @@ const DropdownArea = styled.div`
 `;
 
 const StyledSelect = styled.select<{ $isNone: boolean }>`
-  width: 10rem;
-  height: 4rem;
+  width: 9rem;
+  height: 3.75rem;
   border: none;
   border-radius: 1.5rem;
   font-size: 1.25rem;
@@ -153,7 +175,7 @@ const InputArea = styled.div`
 `;
 
 const SignButton = styled.button<{ $bgColor: string }>`
-  margin-top: 2rem;
+  margin-top: 1.25rem;
   border: none;
   border-radius: 1.25rem;
 
@@ -174,6 +196,7 @@ const SignButton = styled.button<{ $bgColor: string }>`
 `;
 
 export const AddinfoPage: React.FC = () => {
+  const [role, setRole] = useState("student");
   const [grade, setGrade] = useState("none");
   const [classNum, setClassNum] = useState("none");
   const [name, setName] = useState("");
@@ -197,13 +220,19 @@ export const AddinfoPage: React.FC = () => {
     return `${numbersOnly.slice(0, 4)}-${numbersOnly.slice(4, 6)}-${numbersOnly.slice(6, 8)}`;
   };
 
+  // const isFormValid =
+  //   grade !== "none" &&
+  //   classNum !== "none" &&
+  //   name.trim() !== "" &&
+  //   studentId.trim() !== "" &&
+  //   phoneNum.trim() !== "" &&
+  //   birthday.trim() !== "";
   const isFormValid =
-    grade !== "none" &&
-    classNum !== "none" &&
     name.trim() !== "" &&
-    studentId.trim() !== "" &&
     phoneNum.trim() !== "" &&
-    birthday.trim() !== "";
+    birthday.trim() !== "" &&
+    (role !== "student" ||
+      (grade !== "none" && classNum !== "none" && studentId.trim() !== ""));
 
   const handleSubmit = async () => {
     const payload = {
@@ -239,58 +268,87 @@ export const AddinfoPage: React.FC = () => {
           <img className="lower" src={CloudImage} />
           <img className="higher" src={hieduLogo} />
         </LogoBody>
-        <DropdownArea>
-          <StyledSelect
-            value={grade}
-            onChange={(e) => {
-              setGrade(e.target.value);
-            }}
-            $isNone={grade === "none"}
-          >
-            <option value="none" disabled>
-              학년
-            </option>
-            <option value="1">1학년</option>
-            <option value="2">2학년</option>
-            <option value="3">3학년</option>
-          </StyledSelect>
-          <StyledSelect
-            value={classNum}
-            onChange={(e) => {
-              setClassNum(e.target.value);
-            }}
-            $isNone={classNum === "none"}
-          >
-            <option value="none" disabled>
-              반
-            </option>
-            <option value="1">1반</option>
-            <option value="2">2반</option>
-            <option value="3">3반</option>
-            <option value="4">4반</option>
-            <option value="5">5반</option>
-            <option value="6">6반</option>
-          </StyledSelect>
-        </DropdownArea>
+        <RoleSelect>
+          <label>
+            <input
+              type="radio"
+              value="student"
+              checked={role === "student"}
+              onChange={(e) => setRole(e.target.value)}
+            />
+            학생
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="teacher"
+              checked={role === "teacher"}
+              onChange={(e) => setRole(e.target.value)}
+            />
+            선생
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="parent"
+              checked={role === "parent"}
+              onChange={(e) => setRole(e.target.value)}
+            />
+            학부모
+          </label>
+        </RoleSelect>
+        {role === "student" && (
+          <>
+            <DropdownArea>
+              <StyledSelect
+                value={grade}
+                onChange={(e) => setGrade(e.target.value)}
+                $isNone={grade === "none"}
+              >
+                <option value="none" disabled>
+                  학년
+                </option>
+                <option value="1">1학년</option>
+                <option value="2">2학년</option>
+                <option value="3">3학년</option>
+              </StyledSelect>
+              <StyledSelect
+                value={classNum}
+                onChange={(e) => setClassNum(e.target.value)}
+                $isNone={classNum === "none"}
+              >
+                <option value="none" disabled>
+                  반
+                </option>
+                <option value="1">1반</option>
+                <option value="2">2반</option>
+                <option value="3">3반</option>
+                <option value="4">4반</option>
+                <option value="5">5반</option>
+                <option value="6">6반</option>
+              </StyledSelect>
+            </DropdownArea>
+            <InputArea>
+              <input
+                placeholder="학번"
+                value={studentId}
+                onChange={(e) => setStudentId(e.target.value)}
+              />
+              <img src={studentIcon} />
+            </InputArea>
+          </>
+        )}
         <InputArea>
           <input
             placeholder="이름"
             value={name}
             onChange={(e) => setName(e.target.value)}
-          ></input>
+          />
           <img src={nameIcon} />
         </InputArea>
         <InputArea>
           <input
-            placeholder="학번"
-            value={studentId}
-            onChange={(e) => setStudentId(e.target.value)}
-          ></input>
-          <img src={studentIcon} />
-        </InputArea>
-        <InputArea>
-          <input
-            placeholder="전화번호"
+            placeholder="전화번호 11자리 '-' 없이 입력"
             value={phoneNum}
             onChange={(e) => setPhoneNum(formatPhone(e.target.value))}
           ></input>
@@ -298,7 +356,7 @@ export const AddinfoPage: React.FC = () => {
         </InputArea>
         <InputArea>
           <input
-            placeholder="생년월일 (ex. 2000-01-01)"
+            placeholder="생년월일 8자리 '-' 없이 입력"
             value={birthday}
             onChange={(e) => setBirthday(formatBirthday(e.target.value))}
             // type="date"
