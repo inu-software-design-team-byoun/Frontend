@@ -160,7 +160,7 @@ const SignButton = styled.button<{ $bgColor: string }>`
   width: 10rem;
   height: 3.5rem;
 
-  background-color: ${(props) => props.$bgColor};
+  background-color: ${(props) => (props.disabled ? "#a9a9a9" : props.$bgColor)};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -170,7 +170,7 @@ const SignButton = styled.button<{ $bgColor: string }>`
   color: white;
   filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.25));
 
-  cursor: pointer;
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
 `;
 
 export const AddinfoPage: React.FC = () => {
@@ -180,6 +180,30 @@ export const AddinfoPage: React.FC = () => {
   const [studentId, setStudentId] = useState("");
   const [phoneNum, setPhoneNum] = useState("");
   const [birthday, setBirthday] = useState("");
+
+  const formatPhone = (input: string) => {
+    const numbersOnly = input.replace(/\D/g, ""); // 숫자만 추출
+    if (numbersOnly.length <= 3) return numbersOnly;
+    if (numbersOnly.length <= 7)
+      return `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3)}`;
+    return `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3, 7)}-${numbersOnly.slice(7, 11)}`;
+  };
+
+  const formatBirthday = (input: string) => {
+    const numbersOnly = input.replace(/\D/g, ""); // 숫자만 추출
+    if (numbersOnly.length <= 4) return numbersOnly;
+    if (numbersOnly.length <= 6)
+      return `${numbersOnly.slice(0, 4)}-${numbersOnly.slice(4)}`;
+    return `${numbersOnly.slice(0, 4)}-${numbersOnly.slice(4, 6)}-${numbersOnly.slice(6, 8)}`;
+  };
+
+  const isFormValid =
+    grade !== "none" &&
+    classNum !== "none" &&
+    name.trim() !== "" &&
+    studentId.trim() !== "" &&
+    phoneNum.trim() !== "" &&
+    birthday.trim() !== "";
 
   const handleSubmit = async () => {
     const payload = {
@@ -268,7 +292,7 @@ export const AddinfoPage: React.FC = () => {
           <input
             placeholder="전화번호"
             value={phoneNum}
-            onChange={(e) => setPhoneNum(e.target.value)}
+            onChange={(e) => setPhoneNum(formatPhone(e.target.value))}
           ></input>
           <img src={phoneIcon} />
         </InputArea>
@@ -276,13 +300,17 @@ export const AddinfoPage: React.FC = () => {
           <input
             placeholder="생년월일 (ex. 2000-01-01)"
             value={birthday}
-            onChange={(e) => setBirthday(e.target.value)}
+            onChange={(e) => setBirthday(formatBirthday(e.target.value))}
             // type="date"
           ></input>
           <img src={birthdayIcon} />
         </InputArea>
 
-        <SignButton $bgColor="#3BA8F0" onClick={handleSubmit}>
+        <SignButton
+          $bgColor="#3BA8F0"
+          onClick={handleSubmit}
+          disabled={!isFormValid}
+        >
           <p>입력 완료</p>
         </SignButton>
       </AuthBody>
