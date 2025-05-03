@@ -5,6 +5,7 @@ import hieduLogo from "../assets/img/hieduLogo.svg";
 import CloudImage from "../assets/img/CloudForLogo.svg";
 import ContinueWithGoogleButton from "../assets/img/ContinueWithGoogleButton.svg";
 
+import { BtnForDev } from "../components/BtnForDev";
 import { useGoogleLogin } from "@react-oauth/google";
 
 const Wrapper = styled.div`
@@ -73,7 +74,7 @@ const LogoBody = styled.div`
 `;
 
 const GoogleLoginButton = styled.button`
-  margin-top: 1rem;
+  margin-top: 6rem;
   border: none;
   border-radius: 1.25rem;
 
@@ -124,6 +125,7 @@ export const LoginPage: React.FC = () => {
 
   return (
     <Wrapper>
+      <BtnForDev link="/addinfo" />
       <AuthBody>
         <LogoBody>
           <img className="lower" src={CloudImage} />
