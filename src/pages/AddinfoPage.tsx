@@ -346,6 +346,16 @@ export const AddinfoPage: React.FC = () => {
           />
           <img src={nameIcon} />
         </InputArea>
+        {role === "parent" && (
+          <InputArea>
+            <input
+              placeholder="자녀 학번"
+              value={studentId}
+              onChange={(e) => setStudentId(e.target.value)}
+            />
+            <img src={studentIcon} />
+          </InputArea>
+        )}
         <InputArea>
           <input
             placeholder="전화번호 11자리 '-' 없이 입력"
