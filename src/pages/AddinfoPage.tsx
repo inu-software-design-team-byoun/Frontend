@@ -15,6 +15,9 @@ import SelectArrow from "../assets/icon/SelectArrow.png";
 // components
 import { BtnForDev } from "../components/BtnForDev";
 
+// api
+import { ENDPOINTS } from "../constants/api";
+
 const Wrapper = styled.div`
   width: 100vw;
   height: 100vh;
@@ -227,6 +230,7 @@ export const AddinfoPage: React.FC = () => {
   //   studentId.trim() !== "" &&
   //   phoneNum.trim() !== "" &&
   //   birthday.trim() !== "";
+
   const isFormValid =
     name.trim() !== "" &&
     phoneNum.trim() !== "" &&
@@ -236,16 +240,22 @@ export const AddinfoPage: React.FC = () => {
 
   const handleSubmit = async () => {
     const payload = {
-      grade,
-      classNum,
+      role,
       name,
-      studentId,
       phoneNum,
       birthday,
+      ...(role === "student" && {
+        grade,
+        classNum,
+        studentId,
+      }),
+      ...(role === "parent" && {
+        studentId, // 부모는 자녀 학번
+      }),
     };
 
     try {
-      const res = await fetch("/api/student", {
+      const res = await fetch(ENDPOINTS.students, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -254,9 +264,9 @@ export const AddinfoPage: React.FC = () => {
       });
 
       if (!res.ok) throw new Error("등록 실패");
-      alert("성공적으로 회원가입되셨습니다.");
+      alert("성공적으로 등록되었습니다.");
     } catch (error) {
-      alert("가입 과정에서 오류가 발생하였습니다: " + error);
+      alert("등록 중 오류 발생: " + error);
     }
   };
 
