@@ -1,66 +1,62 @@
+// useScoreApi.ts
 import { useEffect, useState } from "react";
-import { dummyScores } from "../data/dummyScores";
 import { ENDPOINTS } from "../constants/api";
 
 export type TransformedStudent = {
   id: number;
   name: string;
-  [subject: string]: string | number;
+  korean: number | null;
+  math: number | null;
+  english: number | null;
+  society: number | null;
+  science: number | null;
+  art: number | null;
+  music: number | null;
+  physical: number | null;
 };
 
-export const useScoreApi = (grade: number, classNum: number) => {
+export const useScoreApi = (grade: number, classroom: number) => {
   const [data, setData] = useState<TransformedStudent[]>([]);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchScores = async () => {
       try {
-        // 실제 API 사용할 경우
-        // const res = await fetch(ENDPOINTS.studentsList(grade, classNum));
-        // const json = await res.json();
+        const res = await fetch(ENDPOINTS.scores(grade, classroom));
+        const json = await res.json();
 
-        // ⬇️ dummyScores에서 학년/반 필터
-        const filtered = dummyScores.filter((s) => {
-          const sid = String(s.studentid).padStart(5, "0"); // ex: 20304
-          const sGrade = Number(sid.charAt(0));
-          const sClass = Number(sid.substring(1, 3));
-          return sGrade === grade && sClass === classNum;
-        });
+        const transformed: TransformedStudent[] = json.students.map(
+          (student: any) => {
+            const subjects = student.subjects || {};
 
-        const transformed = filtered.map((student: any) => {
-          const result: TransformedStudent = {
-            id: student.studentid,
-            name: student.name,
-          };
-
-          const subjects = [
-            "korean",
-            "math",
-            "english",
-            "society",
-            "science",
-            "art",
-            "music",
-            "physical",
-          ];
-          subjects.forEach((subj) => {
-            result[subj] = student[subj];
-          });
-
-          return result;
-        });
+            return {
+              id: student.studentId,
+              name: student.name,
+              korean: subjects.subject1 ?? null,
+              math: subjects.subject2 ?? null,
+              english: subjects.subject3 ?? null,
+              society: subjects.subject4 ?? null,
+              science: subjects.subject5 ?? null,
+              art: subjects.subject6 ?? null,
+              music: subjects.subject7 ?? null,
+              physical: subjects.subject8 ?? null,
+              totalScore: student.totalScore ?? null,
+              averageScore: student.averageScore ?? null,
+            };
+          }
+        );
 
         setData(transformed);
       } catch (err) {
         console.error("Score API fetch error:", err);
         setData([]);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
 
     fetchScores();
-  }, [grade, classNum]);
+  }, [grade, classroom]);
 
-  return { data, loading };
+  return { data };
 };
