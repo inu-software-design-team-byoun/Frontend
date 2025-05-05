@@ -6,6 +6,7 @@ import { useScoreApi } from "../hooks/useScoreApi"; // useGradeApi → useScoreA
 import GradeRow from "../components/GradeRowEx";
 import { TransformedStudent } from "../hooks/useScoreApi"; // 맨 위 import 추가
 import SelectArrow from "../assets/icon/SelectArrow.png";
+import { ENDPOINTS } from "../constants/api";
 
 const Wrapper = styled.div`
   margin-left: 0.5rem;
@@ -96,6 +97,14 @@ const ClassArea = styled.div`
 
   display: flex;
   align-items: center;
+
+  button {
+    margin-left: 2rem;
+    width: 4rem;
+    height: 2rem;
+
+    color: black;
+  }
 `;
 
 const Select = styled.select<{ syllable: number }>`
@@ -135,22 +144,19 @@ interface GradeTableProps {
 }
 
 export const GradeTable: React.FC<GradeTableProps> = () => {
-  const [selectedGrade, setSelectedGrade] = useState(2);
-  const [selectedClass, setSelectedClass] = useState(3);
+  const [selectedGrade, setSelectedGrade] = useState(1);
+  const [selectedClass, setSelectedClass] = useState(5);
 
-  const { data, loading } = useScoreApi(selectedGrade, selectedClass);
-  // const [students, setStudents] = useState([]);
+  const { data } = useScoreApi(selectedGrade, selectedClass);
+  // const { data, loading } = useScoreApi(selectedGrade, selectedClass);
+
   const [students, setStudents] = useState<TransformedStudent[]>([]);
-
-  const handleDelete = (id: number) => {
-    setStudents((prev) => prev.filter((s) => s.id !== id));
-  };
 
   useEffect(() => {
     setStudents(data);
   }, [data]);
 
-  if (loading) return <div>Loading...</div>;
+  // if (loading) return <div>Loading...</div>;
 
   const subjects = [
     "korean",
