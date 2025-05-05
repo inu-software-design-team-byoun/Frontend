@@ -2,9 +2,9 @@
 import React from "react";
 import styled from "styled-components";
 import ScoreRadarChart from "../components/ScoreRadarChart";
-// import ScoreBody from "../components/ScoreBody";
 import { GradeTable } from "../components/GradeTableEx";
-import { useStudentInfoApi } from "../hooks/useStudentInfoApi";
+// import { ENDPOINTS } from "../constants/api";
+import { useSelectedStudentStore } from "../store/useSelectedStudentStore";
 
 const StudentInfoBody = styled.div`
   margin-left: 0.5rem;
@@ -190,8 +190,6 @@ const NormalInput = styled.input`
   }
 `;
 
-// const shortInput = styled.input;
-
 const CrudButton = styled.button<{ $bgColor: string; width?: string }>`
   border: none;
   border-radius: 0.5rem;
@@ -245,13 +243,19 @@ interface ScorePageProps {
   studentId?: number;
 }
 
-const ScorePage: React.FC<ScorePageProps> = ({ studentId = 20401 }) => {
-  const { data, loading } = useStudentInfoApi(studentId);
+const ScorePage: React.FC<ScorePageProps> = () => {
+  const { selectedStudent } = useSelectedStudentStore();
 
-  if (loading || !data) return <div>Loading...</div>;
+  // const getAllStudents = async () => {
+  //   try {
+  //     const res = await fetch(ENDPOINTS.students);
+  //     const json = await res.json();
+  //     console.log("학생리스트: ", json);
+  //   } catch (error) {
+  //     console.log("학생리스트 가져오기 실패 : ", error);
+  //   }
+  // };
 
-  const grade = String(data.studentid)[0];
-  const classNum = Number(String(data.studentid).substring(1, 3));
   return (
     <>
       <StudentInfoBody>
@@ -262,14 +266,14 @@ const ScorePage: React.FC<ScorePageProps> = ({ studentId = 20401 }) => {
         <GridArea>
           <div className="item">
             <span>이름</span>
-            {/* <LongInput placeholder="학생 이름 입력"></LongInput> */}
-            <LongInput value={data.name} readOnly />
+            <LongInput value={selectedStudent?.name || ""} readOnly />
           </div>
           <div className="item">
             <span>학년, 반</span>
-            {/* <span className="fixed">2학년 4반</span> */}
             <span className="fixed">
-              {grade}학년 {classNum}반
+              {selectedStudent
+                ? `${selectedStudent.grade}학년 ${selectedStudent.classroom}반`
+                : ""}
             </span>
             <div>
               <button>상담 내역</button>
@@ -278,23 +282,19 @@ const ScorePage: React.FC<ScorePageProps> = ({ studentId = 20401 }) => {
           </div>
           <div className="item">
             <span>전화번호</span>
-            {/* <LongInput placeholder="010-XXXX-XXXX"></LongInput> */}
-            <LongInput value={data.phoneNum} readOnly />
+            <LongInput value={selectedStudent?.phoneNum || ""} readOnly />
           </div>
           <div className="item">
             <span>생년월일</span>
-            {/* <LongInput placeholder="YYYY-MM-DD"></LongInput> */}
-            <LongInput value={data.birthday} readOnly />
+            <LongInput value={selectedStudent?.birthday || ""} readOnly />
           </div>
           <div className="item">
             <span>총 성적</span>
-            {/* <NormalInput placeholder="98"></NormalInput> */}
-            <NormalInput value={data.avgScore} readOnly />
+            <NormalInput value={selectedStudent?.totalScore || ""} readOnly />
           </div>
           <div className="item">
             <span>평균 등급</span>
-            {/* <NormalInput placeholder="B+"></NormalInput> */}
-            <NormalInput value={data.avgScore} readOnly />
+            <NormalInput value={selectedStudent?.averageScore || ""} readOnly />
           </div>
           <div className="item"></div>
           <div className="item"></div>
@@ -315,7 +315,6 @@ const ScorePage: React.FC<ScorePageProps> = ({ studentId = 20401 }) => {
         </CrudButton>
         <CrudButton $bgColor="#FF6969;">삭제</CrudButton>
       </GapBlankBody>
-      {/* <ScoreBody /> */}
       <GradeTable />
     </>
   );
