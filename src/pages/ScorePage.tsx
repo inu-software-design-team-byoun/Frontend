@@ -5,6 +5,7 @@ import ScoreRadarChart from "../components/ScoreRadarChart";
 import { GradeTable } from "../components/GradeTableEx";
 
 import { useSelectedStudentStore } from "../store/useSelectedStudentStore";
+import { useStudentsListApi } from "../hooks/useStudentListApi";
 import { ENDPOINTS } from "../constants/api";
 
 const StudentInfoBody = styled.div`
@@ -268,9 +269,15 @@ const ScorePage: React.FC<ScorePageProps> = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
-  // 추가: grade/class 상태를 ScorePage에서 보관
+  // grade/class 상태를 ScorePage에서 보관
   const [selectedGrade, setSelectedGrade] = useState(1);
   const [selectedClass, setSelectedClass] = useState(5);
+
+  // ── 추가: 해당 학년·반의 학생 목록 가져오기 ──
+  const { data: studentList } = useStudentsListApi(
+    selectedGrade,
+    selectedClass
+  );
 
   const [editForm, setEditForm] = useState({
     name: "",
@@ -284,7 +291,7 @@ const ScorePage: React.FC<ScorePageProps> = () => {
     birthday: "",
   });
 
-  // ■ 폼 유효성 검사 플래그
+  // 폼 유효성 검사 플래그
   const canSubmitAdd =
     addForm.name.trim() !== "" &&
     addForm.phoneNum.trim() !== "" &&
@@ -305,7 +312,12 @@ const ScorePage: React.FC<ScorePageProps> = () => {
     }
   }, [selectedStudent]);
 
-  // ── 추가 ──: 수정 취소 핸들러
+  // 수정 모드 진입 핸들러
+  const handleIsEditing = () => {
+    setIsEditing(true);
+  };
+
+  // 수정 취소 핸들러
   const handleCancelEdit = () => {
     if (selectedStudent) {
       setEditForm({
@@ -317,23 +329,14 @@ const ScorePage: React.FC<ScorePageProps> = () => {
     setIsEditing(false);
   };
 
-  // const handleIsEditing = () => {
-  //   setIsEditing(!isEditing);
-  // };
-
-  // ── 기존 handleIsEditing: 수정 모드 진입만 담당 ──
-  const handleIsEditing = () => {
-    setIsEditing(true);
-    // 이미 editForm은 useEffect로 selectedStudent와 동기화되어 있으므로
-    // 진입 시점엔 따로 세팅할 필요 없습니다.
-  };
-
+  // 학생 추가 모드 진입 핸들러
   const handleAddClick = () => {
     setIsAdding(true);
     setAddForm({ name: "", phoneNum: "", birthday: "" });
     // 편집 모드 꺼두기
     setIsEditing(false);
   };
+
   const handleCancelAdd = () => {
     setIsAdding(false);
     setAddForm({ name: "", phoneNum: "", birthday: "" });
@@ -358,6 +361,7 @@ const ScorePage: React.FC<ScorePageProps> = () => {
   //   }
   // };
 
+  // 수정 완료 핸들러
   const handleSubmitEdit = async () => {
     // 유효성 검사
     if (!canSubmitEdit) {
@@ -383,7 +387,7 @@ const ScorePage: React.FC<ScorePageProps> = () => {
     }
   };
 
-  // ─── 추가: 학생 추가 완료 핸들러 ──────────────────────────────
+  // 학생 추가 완료 핸들러
   const handleSubmitAdd = async () => {
     // 유효성 검사
     if (!canSubmitAdd) {
@@ -391,8 +395,12 @@ const ScorePage: React.FC<ScorePageProps> = () => {
       return;
     }
     try {
+      // 자동 학번 부여 로직
+      const order = studentList.length + 1; // 기존 학생 수 + 1
+      const studentNum = selectedGrade * 10000 + selectedClass * 100 + order;
+
       const body = {
-        studentNum: 5, // 우선 하드코딩
+        studentNum, // 자동 생성된 학번
         grade: selectedGrade, // lifted state 사용
         classroom: selectedClass, // lifted state 사용
         ...addForm,
@@ -406,7 +414,8 @@ const ScorePage: React.FC<ScorePageProps> = () => {
       console.log("생성된 학생:", newStudent);
       alert("학생 추가 완료");
       setIsAdding(false);
-      // TODO: 학생 리스트 리프레시 (GradeTableEx 의 useStudentsListApi 재호출)
+      // 목록 갱신을 위해 같은 반 상태 강제 트리거
+      setSelectedClass((c) => c);
     } catch (err) {
       console.error("학생 추가 실패", err);
     }
