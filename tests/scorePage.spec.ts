@@ -4,7 +4,7 @@ import { test, expect } from "@playwright/test";
 test.describe("ScorePage CRUD flows", () => {
   test.beforeEach(async ({ page }) => {
     // 실제로 ScorePage가 열리는 URL로 바꿔주세요
-    await page.goto("http://localhost:3000/score");
+    await page.goto("http://localhost:3012/");
   });
 
   test("should add a new student and show it in the table", async ({
