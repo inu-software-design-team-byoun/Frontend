@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import BackgroundImage from "../assets/img/LoginBack.png";
 import hieduLogo from "../assets/img/hieduLogo.svg";
@@ -7,6 +7,7 @@ import ContinueWithGoogleButton from "../assets/img/ContinueWithGoogleButton.svg
 import { ENDPOINTS } from "../constants/api";
 
 import { BtnForDev } from "../components/BtnForDev";
+// import { useNavigate } from "react-router-dom";
 // import { useGoogleLogin } from "@react-oauth/google";
 
 const Wrapper = styled.div`
@@ -97,6 +98,17 @@ const GoogleLoginButton = styled.button`
 `;
 
 export const LoginPage: React.FC = () => {
+  // const navigate = useNavigate();
+
+  // URL에 ?token=xxx 가 있으면 저장하고 addinfo로 이동
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    if (token) {
+      localStorage.setItem("token", token);
+    }
+  }, []);
+
   // const loginWithGoogle = useGoogleLogin({
   //   onSuccess: async (tokenResponse) => {
   //     console.log("✅ Google Login Success", tokenResponse);

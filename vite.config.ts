@@ -13,7 +13,7 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3012, // 원하는 포트 번호로 변경
+    port: 5173, // 원하는 포트 번호로 변경
     allowedHosts: ["hiedu.site"],
   },
 });
