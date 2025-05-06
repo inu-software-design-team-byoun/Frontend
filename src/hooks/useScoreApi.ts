@@ -5,6 +5,12 @@ import { ENDPOINTS } from "../constants/api";
 export type TransformedStudent = {
   id: number;
   name: string;
+  grade: number; // 추가
+  classroom: number; // 추가
+  phoneNum: string; // 추가
+  birthday: string; // 추가
+  totalScore: number | null;
+  averageScore: number | null;
   korean: number | null;
   math: number | null;
   english: number | null;
@@ -32,6 +38,10 @@ export const useScoreApi = (grade: number, classroom: number) => {
             return {
               id: student.studentId,
               name: student.name,
+              grade: student.grade, // 추가
+              classroom: student.classroom, // 추가
+              phoneNum: student.phoneNum, // 추가
+              birthday: student.birthday, // 추가
               korean: subjects.subject1 ?? null,
               math: subjects.subject2 ?? null,
               english: subjects.subject3 ?? null,
