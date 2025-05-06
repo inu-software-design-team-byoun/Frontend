@@ -31,43 +31,48 @@ export const useScoreApi = (grade: number, classroom: number) => {
       try {
         const res = await fetch(ENDPOINTS.scores(grade, classroom));
         const json = await res.json();
-
         console.log("score api 응답: ", json);
+        const studentsData: any[] = json.students;
 
-        const filtered = json.scores.find(
-          (s: any) => s.grade === grade && s.semester === 1 // semester는 필요에 따라 수정
+        // grade, class, semester(1) 매칭
+        const filtered = studentsData.filter(
+          (s) => s.grade === grade && s.class === classroom && s.semester === 1
         );
 
-        if (!filtered) {
-          console.error("해당 학년/학기의 성적이 없습니다.");
-          return;
-        }
+        // const filtered = json.students.find(
+        //   (s: any) => s.grade === grade && s.semester === 1 // semester는 필요에 따라 수정
+        // );
 
-        const subjects = filtered.subjects || {};
+        // if (!filtered) {
+        //   console.error("해당 학년/학기의 성적이 없습니다.");
+        //   return;
+        // }
 
-        const transformed: TransformedStudent[] = [
-          {
-            id: json.studentId,
-            studentNum: json.studentNum,
-            name: json.studentName,
-            grade: json.grade,
-            classroom: classroom,
-            // phoneNum: student.phoneNum,
-            // birthday: student.birthday,
-            phoneNum: "", // 다른 API에서 채움
-            birthday: "",
-            korean: subjects.subject1 ?? null,
-            math: subjects.subject2 ?? null,
-            english: subjects.subject3 ?? null,
-            society: subjects.subject4 ?? null,
-            science: subjects.subject5 ?? null,
-            art: subjects.subject6 ?? null,
-            music: subjects.subject7 ?? null,
-            physical: subjects.subject8 ?? null,
-            totalScore: filtered.totalScore ?? null,
-            averageScore: filtered.averageScore ?? null,
-          },
-        ];
+        // const subjects = filtered.subjects || {};
+
+        const transformed: TransformedStudent[] = filtered.map((s) => ({
+          id: s.studentId,
+          // studentNum: json.studentNum,
+          studentNum: 0,
+          // name: s.studentName,
+          name: "",
+          grade: s.grade,
+          classroom: s.class,
+          // phoneNum: student.phoneNum,
+          // birthday: student.birthday,
+          phoneNum: "", // 다른 API에서 채움
+          birthday: "",
+          korean: s.subjects.subject1 ?? null,
+          math: s.subjects.subject2 ?? null,
+          english: s.subjects.subject3 ?? null,
+          society: s.subjects.subject4 ?? null,
+          science: s.subjects.subject5 ?? null,
+          art: s.subjects.subject6 ?? null,
+          music: s.subjects.subject7 ?? null,
+          physical: s.subjects.subject8 ?? null,
+          totalScore: s.totalScore ?? null,
+          averageScore: s.averageScore ?? null,
+        }));
 
         setData(transformed);
       } catch (err) {
