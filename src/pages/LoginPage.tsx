@@ -103,12 +103,34 @@ export const LoginPage: React.FC = () => {
 
   // URL에 ?token=xxx 가 있으면 저장하고 addinfo로 이동
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("accessToken");
-    if (token) {
+    const checkTokenAndNavigate = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("accessToken"); // 백엔드에서 붙여준 쿼리 키와 일치시킬 것
+      if (!token) return;
+
       localStorage.setItem("accessToken", token);
-      navigate("/addinfo");
-    }
+
+      try {
+        const res = await fetch("/api/auth/check-user", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.ok) {
+          navigate("/addinfo");
+        } else {
+          // 신규 사용자면400/404 같은 상태코드로 내려온다고 가정
+          navigate("/addinfo");
+        }
+      } catch (err) {
+        console.error("check-user 오류:", err);
+      }
+    };
+
+    checkTokenAndNavigate();
   }, [navigate]);
 
   // const loginWithGoogle = useGoogleLogin({
