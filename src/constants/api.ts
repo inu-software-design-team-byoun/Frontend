@@ -3,7 +3,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const ENDPOINTS = {
   scores: (grade: number, classroom: number) =>
-    `${API_BASE_URL}/scores/grade=${grade}&classroom=${classroom}`,
+    `${API_BASE_URL}/scores?grade=${grade}&classroom=${classroom}`,
   students: `${API_BASE_URL}/students`, // 전체 학생 조회
   studentsList: (
     grade: number,
