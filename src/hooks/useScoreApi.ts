@@ -4,6 +4,7 @@ import { ENDPOINTS } from "../constants/api";
 
 export type TransformedStudent = {
   id: number;
+  studentNum: number;
   name: string;
   grade: number; // 추가
   classroom: number; // 추가
@@ -30,38 +31,53 @@ export const useScoreApi = (grade: number, classroom: number) => {
       try {
         const res = await fetch(ENDPOINTS.scores(grade, classroom));
         const json = await res.json();
+        console.log("score api 응답: ", json);
+        const studentsData: any[] = json.students;
 
-        const transformed: TransformedStudent[] = json.students.map(
-          (student: any) => {
-            const subjects = student.subjects || {};
-
-            return {
-              id: student.studentId,
-              name: student.name,
-              grade: student.grade, // 추가
-              classroom: student.classroom, // 추가
-              phoneNum: student.phoneNum, // 추가
-              birthday: student.birthday, // 추가
-              korean: subjects.subject1 ?? null,
-              math: subjects.subject2 ?? null,
-              english: subjects.subject3 ?? null,
-              society: subjects.subject4 ?? null,
-              science: subjects.subject5 ?? null,
-              art: subjects.subject6 ?? null,
-              music: subjects.subject7 ?? null,
-              physical: subjects.subject8 ?? null,
-              totalScore: student.totalScore ?? null,
-              averageScore: student.averageScore ?? null,
-            };
-          }
+        // grade, class, semester(1) 매칭
+        const filtered = studentsData.filter(
+          (s) => s.grade === grade && s.class === classroom && s.semester === 1
         );
+
+        // const filtered = json.students.find(
+        //   (s: any) => s.grade === grade && s.semester === 1 // semester는 필요에 따라 수정
+        // );
+
+        // if (!filtered) {
+        //   console.error("해당 학년/학기의 성적이 없습니다.");
+        //   return;
+        // }
+
+        // const subjects = filtered.subjects || {};
+
+        const transformed: TransformedStudent[] = filtered.map((s) => ({
+          id: s.studentId,
+          // studentNum: json.studentNum,
+          studentNum: 0,
+          // name: s.studentName,
+          name: "",
+          grade: s.grade,
+          classroom: s.class,
+          // phoneNum: student.phoneNum,
+          // birthday: student.birthday,
+          phoneNum: "", // 다른 API에서 채움
+          birthday: "",
+          korean: s.subjects.subject1 ?? null,
+          math: s.subjects.subject2 ?? null,
+          english: s.subjects.subject3 ?? null,
+          society: s.subjects.subject4 ?? null,
+          science: s.subjects.subject5 ?? null,
+          art: s.subjects.subject6 ?? null,
+          music: s.subjects.subject7 ?? null,
+          physical: s.subjects.subject8 ?? null,
+          totalScore: s.totalScore ?? null,
+          averageScore: s.averageScore ?? null,
+        }));
 
         setData(transformed);
       } catch (err) {
         console.error("Score API fetch error:", err);
         setData([]);
-      } finally {
-        // setLoading(false);
       }
     };
 

@@ -1,12 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import BackgroundImage from "../assets/img/LoginBack.png";
 import hieduLogo from "../assets/img/hieduLogo.svg";
 import CloudImage from "../assets/img/CloudForLogo.svg";
 import ContinueWithGoogleButton from "../assets/img/ContinueWithGoogleButton.svg";
+import { ENDPOINTS } from "../constants/api";
 
 import { BtnForDev } from "../components/BtnForDev";
-import { useGoogleLogin } from "@react-oauth/google";
+import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+// import { useGoogleLogin } from "@react-oauth/google";
 
 const Wrapper = styled.div`
   width: 100vw;
@@ -96,6 +99,40 @@ const GoogleLoginButton = styled.button`
 `;
 
 export const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
+
+  // URL에 ?token=xxx 가 있으면 저장하고 addinfo로 이동
+  useEffect(() => {
+    const checkTokenAndNavigate = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("accessToken"); // 백엔드에서 붙여준 쿼리 키와 일치시킬 것
+      if (!token) return;
+
+      localStorage.setItem("accessToken", token);
+
+      try {
+        const res = await fetch("/api/auth/check-user", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.ok) {
+          navigate("/addinfo");
+        } else {
+          // 신규 사용자면400/404 같은 상태코드로 내려온다고 가정
+          navigate("/addinfo");
+        }
+      } catch (err) {
+        console.error("check-user 오류:", err);
+      }
+    };
+
+    checkTokenAndNavigate();
+  }, [navigate]);
+
   // const loginWithGoogle = useGoogleLogin({
   //   onSuccess: async (tokenResponse) => {
   //     console.log("✅ Google Login Success", tokenResponse);
@@ -119,7 +156,8 @@ export const LoginPage: React.FC = () => {
   // });
 
   const loginWithGoogle = () => {
-    window.location.href = "http://localhost:3000/auth/google";
+    // window.location.href = "https://hiedu.site/api/auth/google";
+    window.location.href = ENDPOINTS.auth;
     console.log("Google Login Clicked");
   };
 

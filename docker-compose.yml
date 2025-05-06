@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  react-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3012:5173"  # 로컬 3012 포트 → 컨테이너 5173 포트
+    volumes:
+      - .:/app  # 로컬 파일 시스템과 Docker 컨테이너 파일 시스템 동기화
+      - /app/node_modules  # node_modules는 로컬과 분리
+    environment:
+      - NODE_ENV=development
+    restart: always

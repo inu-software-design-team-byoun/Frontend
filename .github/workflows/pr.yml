@@ -1,9 +1,9 @@
-name: Prod CI
+name: Pr CI
 
 on:
-  push:
+  pull_request:
     branches:
-      - main
+      - "**" # 모든 브랜치에 PR 올릴 때 실행
 
 jobs:
   build:
@@ -62,4 +62,4 @@ jobs:
           docker buildx build \
             --platform linux/amd64 \
             --push \
-            -t ${{ secrets.DOCKER_HUB_USERNAME }}/hiedu-react:$DOCKER_IMAGE_TAG .
+            -t ${{ secrets.DOCKER_HUB_USERNAME }}/my-react-app:$DOCKER_IMAGE_TAG .

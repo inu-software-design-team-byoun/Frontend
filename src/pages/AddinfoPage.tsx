@@ -1,6 +1,7 @@
-// AddinfoPage.tsx
+// src/pages/AddinfoPage.tsx
 import React, { useState } from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 
 // images, icons
 import BackgroundImage from "../assets/img/LoginBack.png";
@@ -21,52 +22,28 @@ import { ENDPOINTS } from "../constants/api";
 const Wrapper = styled.div`
   width: 100vw;
   height: 100vh;
-  /* padding-top: 6.25rem; */
-  /* background-color: white; */
-
   background-image: url(${BackgroundImage});
   background-size: cover;
-
-  /* 이미지를 컨테이너에 맞게 조절 */
-  /* background-size: contain; */
-  /* 이미지가 중앙에 오도록 조정 */
-  /* background-position: center; */
-  /* 반복 방지 */
-  /* background-repeat: no-repeat; */
-
   display: flex;
   justify-content: center;
 `;
 
 const AuthBody = styled.div`
-  /* border: 1px solid black; */
-
-  width: 25rem; // 400px
+  width: 25rem;
   height: 100vh;
-
   display: flex;
   flex-direction: column;
   align-items: center;
 `;
 
 const LogoBody = styled.div`
-  /* border: 1px solid black; */
   position: relative;
-
   margin: 4.5rem 0 1.25rem 0;
-
   width: 25rem;
   height: 13.125rem;
-
   align-items: center;
   font-size: 44px;
   color: white;
-
-  div {
-    /* border: 1px solid black; */
-    width: 100%;
-    height: 8.25rem;
-  }
 
   .lower {
     position: absolute;
@@ -86,19 +63,16 @@ const LogoBody = styled.div`
 const RoleSelect = styled.div`
   display: flex;
   gap: 1rem;
-  margin: 0.25rem 0 0.25rem 0;
-
+  margin: 0.25rem 0;
   label {
     display: flex;
     align-items: center;
-
     gap: 0.75rem;
     font-size: 1.5rem;
     font-weight: 600;
     color: white;
     margin: 0 0.5rem;
   }
-
   input[type="radio"] {
     transform: scale(1.25);
     margin: 0;
@@ -106,11 +80,8 @@ const RoleSelect = styled.div`
 `;
 
 const DropdownArea = styled.div`
-  /* border: 1px solid black; */
   width: 22.25rem;
-  height: 3.5;
   display: flex;
-
   justify-content: space-between;
   align-items: center;
   margin: 0.75rem 0;
@@ -126,23 +97,16 @@ const StyledSelect = styled.select<{ $isNone: boolean }>`
   font-weight: 500;
   padding-left: 1.75rem;
   filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.25));
-
-  &:focus {
-    outline: none;
-    /* border-color: black; */
-  }
-
-  appearance: none; // 브라우저 기본 스타일 제거
-  -webkit-appearance: none;
+  appearance: none;
   background-color: white;
-
   background-image: url(${SelectArrow});
   background-repeat: no-repeat;
   background-position: right 1.25rem center;
   background-size: 1rem;
-
-  // placeholder 스타일처럼 기본값일 때 회색으로 만들기
   color: ${(props) => (props.$isNone ? "#757575" : "black")};
+  &:focus {
+    outline: none;
+  }
 `;
 
 const InputArea = styled.div`
@@ -154,23 +118,19 @@ const InputArea = styled.div`
   margin: 0.75rem 0;
   border-radius: 1.5rem;
   filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.25));
-
   font-size: 1.25rem;
-
   input {
+    flex: 1;
     color: black;
     border: none;
-    width: 20rem;
     margin-left: 1.75rem;
     background-color: transparent;
     font-size: 1.25rem;
     font-weight: 500;
   }
-
   input:focus {
     outline: none;
   }
-
   img {
     width: 1.5rem;
     margin-right: 1.5rem;
@@ -181,25 +141,23 @@ const SignButton = styled.button<{ $bgColor: string }>`
   margin-top: 1.25rem;
   border: none;
   border-radius: 1.25rem;
-
   width: 10rem;
   height: 3.5rem;
-
   background-color: ${(props) => (props.disabled ? "#a9a9a9" : props.$bgColor)};
   display: flex;
   justify-content: center;
   align-items: center;
-
   font-size: 1.25rem;
   font-weight: bold;
   color: white;
   filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.25));
-
   cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
 `;
 
 export const AddinfoPage: React.FC = () => {
-  const [role, setRole] = useState("student");
+  const navigate = useNavigate();
+
+  const [role, setRole] = useState<"student" | "teacher" | "parent">("student");
   const [grade, setGrade] = useState("none");
   const [classNum, setClassNum] = useState("none");
   const [name, setName] = useState("");
@@ -208,28 +166,18 @@ export const AddinfoPage: React.FC = () => {
   const [birthday, setBirthday] = useState("");
 
   const formatPhone = (input: string) => {
-    const numbersOnly = input.replace(/\D/g, ""); // 숫자만 추출
-    if (numbersOnly.length <= 3) return numbersOnly;
-    if (numbersOnly.length <= 7)
-      return `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3)}`;
-    return `${numbersOnly.slice(0, 3)}-${numbersOnly.slice(3, 7)}-${numbersOnly.slice(7, 11)}`;
+    const nums = input.replace(/\D/g, "");
+    if (nums.length <= 3) return nums;
+    if (nums.length <= 7) return `${nums.slice(0, 3)}-${nums.slice(3)}`;
+    return `${nums.slice(0, 3)}-${nums.slice(3, 7)}-${nums.slice(7, 11)}`;
   };
 
   const formatBirthday = (input: string) => {
-    const numbersOnly = input.replace(/\D/g, ""); // 숫자만 추출
-    if (numbersOnly.length <= 4) return numbersOnly;
-    if (numbersOnly.length <= 6)
-      return `${numbersOnly.slice(0, 4)}-${numbersOnly.slice(4)}`;
-    return `${numbersOnly.slice(0, 4)}-${numbersOnly.slice(4, 6)}-${numbersOnly.slice(6, 8)}`;
+    const nums = input.replace(/\D/g, "");
+    if (nums.length <= 4) return nums;
+    if (nums.length <= 6) return `${nums.slice(0, 4)}-${nums.slice(4)}`;
+    return `${nums.slice(0, 4)}-${nums.slice(4, 6)}-${nums.slice(6, 8)}`;
   };
-
-  // const isFormValid =
-  //   grade !== "none" &&
-  //   classNum !== "none" &&
-  //   name.trim() !== "" &&
-  //   studentId.trim() !== "" &&
-  //   phoneNum.trim() !== "" &&
-  //   birthday.trim() !== "";
 
   const isFormValid =
     name.trim() !== "" &&
@@ -239,32 +187,47 @@ export const AddinfoPage: React.FC = () => {
       (grade !== "none" && classNum !== "none" && studentId.trim() !== ""));
 
   const handleSubmit = async () => {
-    const payload = {
-      role,
-      name,
-      phoneNum,
-      birthday,
-      ...(role === "student" && {
-        grade,
-        classNum,
-        studentId,
-      }),
-      ...(role === "parent" && {
-        studentId, // 부모는 자녀 학번
-      }),
-    };
+    const token = localStorage.getItem("accessToken");
+    console.log("stored:",token);
+
+    if (!token) {alert("로그인 정보가 없음"); return;}
+    // const url = role === "teacher" ? ENDPOINTS.teachers : ENDPOINTS.students;
+    const url = ENDPOINTS.teachers;
+    const bodyData =
+      role === "teacher"
+        ? {
+            name,
+            birthday,
+            phoneNum,
+          }
+        : {
+            role,
+            name,
+            phoneNum,
+            birthday,
+            ...(role === "student" && {
+              grade,
+              classNum,
+              studentId,
+            }),
+            ...(role === "parent" && { studentId }),
+          };
+
+    // const token = localStorage.getItem("token");
 
     try {
-      const res = await fetch(ENDPOINTS.students, {
+      const res = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(bodyData),
       });
 
       if (!res.ok) throw new Error("등록 실패");
       alert("성공적으로 등록되었습니다.");
+      navigate("/");
     } catch (error) {
       alert("등록 중 오류 발생: " + error);
     }
@@ -275,16 +238,17 @@ export const AddinfoPage: React.FC = () => {
       <BtnForDev link="/login" />
       <AuthBody>
         <LogoBody>
-          <img className="lower" src={CloudImage} />
-          <img className="higher" src={hieduLogo} />
+          <img className="lower" src={CloudImage} alt="cloud" />
+          <img className="higher" src={hieduLogo} alt="logo" />
         </LogoBody>
+
         <RoleSelect>
           <label>
             <input
               type="radio"
               value="student"
               checked={role === "student"}
-              onChange={(e) => setRole(e.target.value)}
+              onChange={() => setRole("student")}
             />
             학생
           </label>
@@ -293,7 +257,7 @@ export const AddinfoPage: React.FC = () => {
               type="radio"
               value="teacher"
               checked={role === "teacher"}
-              onChange={(e) => setRole(e.target.value)}
+              onChange={() => setRole("teacher")}
             />
             선생
           </label>
@@ -302,11 +266,12 @@ export const AddinfoPage: React.FC = () => {
               type="radio"
               value="parent"
               checked={role === "parent"}
-              onChange={(e) => setRole(e.target.value)}
+              onChange={() => setRole("parent")}
             />
             학부모
           </label>
         </RoleSelect>
+
         {role === "student" && (
           <>
             <DropdownArea>
@@ -344,18 +309,20 @@ export const AddinfoPage: React.FC = () => {
                 value={studentId}
                 onChange={(e) => setStudentId(e.target.value)}
               />
-              <img src={studentIcon} />
+              <img src={studentIcon} alt="student icon" />
             </InputArea>
           </>
         )}
+
         <InputArea>
           <input
             placeholder="이름"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          <img src={nameIcon} />
+          <img src={nameIcon} alt="name icon" />
         </InputArea>
+
         {role === "parent" && (
           <InputArea>
             <input
@@ -363,25 +330,26 @@ export const AddinfoPage: React.FC = () => {
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
             />
-            <img src={studentIcon} />
+            <img src={studentIcon} alt="student icon" />
           </InputArea>
         )}
+
         <InputArea>
           <input
             placeholder="전화번호 11자리 '-' 없이 입력"
             value={phoneNum}
             onChange={(e) => setPhoneNum(formatPhone(e.target.value))}
-          ></input>
-          <img src={phoneIcon} />
+          />
+          <img src={phoneIcon} alt="phone icon" />
         </InputArea>
+
         <InputArea>
           <input
             placeholder="생년월일 8자리 '-' 없이 입력"
             value={birthday}
             onChange={(e) => setBirthday(formatBirthday(e.target.value))}
-            // type="date"
-          ></input>
-          <img src={birthdayIcon} />
+          />
+          <img src={birthdayIcon} alt="birthday icon" />
         </InputArea>
 
         <SignButton
@@ -389,7 +357,7 @@ export const AddinfoPage: React.FC = () => {
           onClick={handleSubmit}
           disabled={!isFormValid}
         >
-          <p>입력 완료</p>
+          입력 완료
         </SignButton>
       </AuthBody>
     </Wrapper>

@@ -5,6 +5,7 @@ import { fetchStudentInfo } from "../utils/fetchStudentInfo";
 interface GradeRowProps {
   student: {
     id: number;
+    studentNum: number;
     name: string;
     grade: number;
     classroom: number;
@@ -22,20 +23,21 @@ interface GradeRowProps {
 const GradeRow: React.FC<GradeRowProps> = ({ student, subjects }) => {
   // ⬇️ 이 줄을 통해 zustand에 정보 저장
   const handleSelect = async () => {
-    if (student.totalScore == null || student.averageScore == null) return;
-
     await fetchStudentInfo(
       student.id,
-      // student.grade,
-      // student.classroom,
-      student.totalScore,
-      student.averageScore
+      student.totalScore ?? 0,
+      student.averageScore ?? 0
     );
   };
 
+  // // ── studentNum 뒤 두 자리만 % 연산으로 가져오면, 03 → 3, 11 → 11 ──
+  // const displayNum = student.studentNum % 100;
+
   return (
     <tr>
-      <td>{String(student.id).slice(-2)}</td>
+      {/* 학번 뒤 두 자리만 표시 */}
+      <td>{String(student.studentNum % 100)}</td>
+
       <td
         onClick={handleSelect}
         style={{ cursor: "pointer", fontWeight: "bold" }}
