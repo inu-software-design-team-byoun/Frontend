@@ -4,6 +4,7 @@ import BackgroundImage from "../assets/img/LoginBack.png";
 import hieduLogo from "../assets/img/hieduLogo.svg";
 import CloudImage from "../assets/img/CloudForLogo.svg";
 import ContinueWithGoogleButton from "../assets/img/ContinueWithGoogleButton.svg";
+import { ENDPOINTS } from "../constants/api";
 
 import { BtnForDev } from "../components/BtnForDev";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -119,7 +120,8 @@ export const LoginPage: React.FC = () => {
   // });
 
   const loginWithGoogle = () => {
-    window.location.href = "http://localhost:3000/auth/google";
+    // window.location.href = "https://hiedu.site/api/auth/google";
+    window.location.href = ENDPOINTS.auth;
     console.log("Google Login Clicked");
   };
 
