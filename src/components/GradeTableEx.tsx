@@ -107,10 +107,10 @@ const ClassArea = styled.div`
   }
 `;
 
-const Select = styled.select<{ syllable: number }>`
-  margin-left: ${(props) => (props.syllable === 3 ? "1.25rem" : "1rem")};
+const Select = styled.select<{ $syllable: number }>`
+  margin-left: ${(props) => (props.$syllable === 3 ? "1.25rem" : "1rem")};
   width: ${(props) =>
-    props.syllable === 3 ? "92px" : props.syllable === 2 ? "80px" : "124px"};
+    props.$syllable === 3 ? "92px" : props.$syllable === 2 ? "80px" : "124px"};
   height: 2.5rem;
   padding: 0 1rem; // 12px;
   border: 2px solid #86acff;
@@ -175,7 +175,7 @@ export const GradeTable: React.FC<GradeTableProps> = () => {
         <TopRectangle />
         <ClassArea>
           <Select
-            syllable={3}
+            $syllable={3}
             value={selectedGrade}
             onChange={(e) => setSelectedGrade(Number(e.target.value))}
           >
@@ -184,7 +184,7 @@ export const GradeTable: React.FC<GradeTableProps> = () => {
             <option value="3">3학년</option>
           </Select>
           <Select
-            syllable={2}
+            $syllable={2}
             value={selectedClass}
             onChange={(e) => setSelectedClass(Number(e.target.value))}
           >
@@ -196,7 +196,7 @@ export const GradeTable: React.FC<GradeTableProps> = () => {
             <option value="6">6반</option>
           </Select>
           <Select
-            syllable={4}
+            $syllable={4}
             //  value={selectedSemester}
             //  onChange={(e) => setSelectedSemester(e.target.value)}
           >

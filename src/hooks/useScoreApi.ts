@@ -31,30 +31,41 @@ export const useScoreApi = (grade: number, classroom: number) => {
         const res = await fetch(ENDPOINTS.scores(grade, classroom));
         const json = await res.json();
 
-        const transformed: TransformedStudent[] = json.students.map(
-          (student: any) => {
-            const subjects = student.subjects || {};
+        console.log("score api 응답: ", json);
 
-            return {
-              id: student.studentId,
-              name: student.name,
-              grade: student.grade, // 추가
-              classroom: student.classroom, // 추가
-              phoneNum: student.phoneNum, // 추가
-              birthday: student.birthday, // 추가
-              korean: subjects.subject1 ?? null,
-              math: subjects.subject2 ?? null,
-              english: subjects.subject3 ?? null,
-              society: subjects.subject4 ?? null,
-              science: subjects.subject5 ?? null,
-              art: subjects.subject6 ?? null,
-              music: subjects.subject7 ?? null,
-              physical: subjects.subject8 ?? null,
-              totalScore: student.totalScore ?? null,
-              averageScore: student.averageScore ?? null,
-            };
-          }
+        const filtered = json.scores.find(
+          (s: any) => s.grade === grade && s.semester === 1 // semester는 필요에 따라 수정
         );
+
+        if (!filtered) {
+          console.error("해당 학년/학기의 성적이 없습니다.");
+          return;
+        }
+
+        const subjects = filtered.subjects || {};
+
+        const transformed: TransformedStudent[] = [
+          {
+            id: json.studentId,
+            name: json.studentName,
+            grade: json.grade,
+            classroom: classroom,
+            // phoneNum: student.phoneNum,
+            // birthday: student.birthday,
+            phoneNum: "", // 다른 API에서 채움
+            birthday: "",
+            korean: subjects.subject1 ?? null,
+            math: subjects.subject2 ?? null,
+            english: subjects.subject3 ?? null,
+            society: subjects.subject4 ?? null,
+            science: subjects.subject5 ?? null,
+            art: subjects.subject6 ?? null,
+            music: subjects.subject7 ?? null,
+            physical: subjects.subject8 ?? null,
+            totalScore: filtered.totalScore ?? null,
+            averageScore: filtered.averageScore ?? null,
+          },
+        ];
 
         setData(transformed);
       } catch (err) {
