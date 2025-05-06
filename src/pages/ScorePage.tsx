@@ -263,7 +263,8 @@ interface ScorePageProps {
 }
 
 const ScorePage: React.FC<ScorePageProps> = () => {
-  const { selectedStudent } = useSelectedStudentStore();
+  // const { selectedStudent } = useSelectedStudentStore();
+  const { selectedStudent, clearSelectedStudent } = useSelectedStudentStore();
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
@@ -411,6 +412,29 @@ const ScorePage: React.FC<ScorePageProps> = () => {
     }
   };
 
+  // ─ 삭제 핸들러 ───────────────────────────────────
+  const handleDelete = async () => {
+    if (!selectedStudent) {
+      alert("삭제할 학생을 선택하세요.");
+      return;
+    }
+    if (!window.confirm(`${selectedStudent.name} 학생을 삭제하시겠습니까?`)) {
+      return;
+    }
+    try {
+      await fetch(ENDPOINTS.studentInfo(selectedStudent.id), {
+        method: "DELETE",
+      });
+      alert("삭제 완료");
+      clearSelectedStudent();
+      // 목록 갱신을 위해 반 상태를 다시 세팅
+      setSelectedClass((c) => c);
+    } catch (err) {
+      console.error("삭제 실패", err);
+      alert("삭제에 실패했습니다.");
+    }
+  };
+
   return (
     <>
       <StudentInfoBody>
@@ -533,7 +557,13 @@ const ScorePage: React.FC<ScorePageProps> = () => {
         <CrudButton $bgColor="#70C776;" width="5rem" onClick={handleAddClick}>
           학생 추가
         </CrudButton>
-        <CrudButton $bgColor="#FF6969;">삭제</CrudButton>
+        <CrudButton
+          $bgColor="#FF6969"
+          onClick={handleDelete}
+          disabled={!selectedStudent}
+        >
+          삭제
+        </CrudButton>
       </GapBlankBody>
       <GradeTable
         grade={selectedGrade}
