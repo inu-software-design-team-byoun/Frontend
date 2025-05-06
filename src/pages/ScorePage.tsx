@@ -1,5 +1,5 @@
 // ScorePage.tsx
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import ScoreRadarChart from "../components/ScoreRadarChart";
 import { GradeTable } from "../components/GradeTableEx";
@@ -136,8 +136,13 @@ const GridArea = styled.div`
     }
   }
   .item:nth-child(9) {
+    /* border: 1px solid black; */
     grid-row: 3/3;
     grid-column: 3/3;
+
+    div {
+      display: flex;
+    }
     align-items: flex-end;
   }
 `;
@@ -190,7 +195,11 @@ const NormalInput = styled.input`
   }
 `;
 
-const CrudButton = styled.button<{ $bgColor: string; width?: string }>`
+const CrudButton = styled.button<{
+  $bgColor: string;
+  width?: string;
+  isEditing?: boolean;
+}>`
   border: none;
   border-radius: 0.5rem;
 
@@ -199,7 +208,10 @@ const CrudButton = styled.button<{ $bgColor: string; width?: string }>`
   height: 2rem;
 
   /* background-color: #86acff; */
-  background-color: ${(props) => props.$bgColor};
+  // isEditing props를 전달해주지 않은 버튼은 $bgColor로 전달받은 색이 그냥 나오고
+  // isEditing props를 전달받은 버튼은 조건에 따라 색상 변경
+  background-color: ${(props) =>
+    props.isEditing ? "#FFA0A0" : props.$bgColor};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -245,16 +257,15 @@ interface ScorePageProps {
 
 const ScorePage: React.FC<ScorePageProps> = () => {
   const { selectedStudent } = useSelectedStudentStore();
+  const [isEditing, setIsEditing] = useState(false);
 
-  // const getAllStudents = async () => {
-  //   try {
-  //     const res = await fetch(ENDPOINTS.students);
-  //     const json = await res.json();
-  //     console.log("학생리스트: ", json);
-  //   } catch (error) {
-  //     console.log("학생리스트 가져오기 실패 : ", error);
-  //   }
-  // };
+  const handleIsEditing = () => {
+    if (!isEditing) {
+      setIsEditing(true);
+    } else {
+      setIsEditing(false);
+    }
+  };
 
   return (
     <>
@@ -299,7 +310,28 @@ const ScorePage: React.FC<ScorePageProps> = () => {
           <div className="item"></div>
           <div className="item"></div>
           <div className="item">
-            <CrudButton $bgColor="#86acff;">수정</CrudButton>
+            {isEditing ? (
+              <div>
+                <CrudButton $bgColor="gray" onClick={handleIsEditing}>
+                  취소
+                </CrudButton>
+                <CrudButton
+                  $bgColor="#86acff;"
+                  onClick={handleIsEditing}
+                  isEditing={isEditing}
+                >
+                  완료
+                </CrudButton>
+              </div>
+            ) : (
+              <CrudButton
+                $bgColor="#86acff;"
+                onClick={handleIsEditing}
+                isEditing={isEditing}
+              >
+                수정
+              </CrudButton>
+            )}
           </div>
         </GridArea>
         <ChartArea>
