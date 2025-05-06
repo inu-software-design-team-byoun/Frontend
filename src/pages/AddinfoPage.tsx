@@ -242,40 +242,62 @@ export const AddinfoPage: React.FC = () => {
       (grade !== "none" && classNum !== "none" && studentId.trim() !== ""));
 
   const handleSubmit = async () => {
-    const payload = {
-      role,
-      name,
-      phoneNum,
-      birthday,
-      ...(role === "student" && {
-        grade,
-        classNum,
-        studentId,
-      }),
-      ...(role === "parent" && {
-        studentId, // 부모는 자녀 학번
-      }),
-    };
+    // 1. POST할 엔드포인트 결정
+    const url = role === "teacher" ? ENDPOINTS.teachers : ENDPOINTS.students;
 
+    // 2. body payload 생성
+    const bodyData =
+      role === "teacher"
+        ? {
+            name,
+            studentNum: birthday, // 생년월일을 studentNum 필드로
+            phoneNum,
+          }
+        : {
+            role,
+            name,
+            phoneNum,
+            birthday,
+            ...(role === "student" && {
+              grade,
+              classNum,
+              studentId,
+            }),
+            ...(role === "parent" && {
+              studentId,
+            }),
+          };
+
+    // const payload = {
+    //   role,
+    //   name,
+    //   phoneNum,
+    //   birthday,
+    //   ...(role === "student" && {
+    //     grade,
+    //     classNum,
+    //     studentId,
+    //   }),
+    //   ...(role === "parent" && {
+    //     studentId, // 부모는 자녀 학번
+    //   }),
+    // };
+
+    // 3. fetch 요청
     try {
-      const res = await fetch(ENDPOINTS.students, {
+      const res = await fetch(url, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyData),
       });
 
-      if (!res.ok) {
-        throw new Error("등록 실패");
-      }
+      if (!res.ok) throw new Error("등록 실패");
       alert("성공적으로 등록되었습니다.");
       navigate("/");
     } catch (error) {
       alert("등록 중 오류 발생: " + error);
     }
   };
-
   return (
     <Wrapper>
       <BtnForDev link="/login" />
