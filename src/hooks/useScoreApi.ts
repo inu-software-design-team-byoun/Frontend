@@ -4,6 +4,7 @@ import { ENDPOINTS } from "../constants/api";
 
 export type TransformedStudent = {
   id: number;
+  studentNum: number;
   name: string;
   grade: number; // 추가
   classroom: number; // 추가
@@ -47,6 +48,7 @@ export const useScoreApi = (grade: number, classroom: number) => {
         const transformed: TransformedStudent[] = [
           {
             id: json.studentId,
+            studentNum: json.studentNum,
             name: json.studentName,
             grade: json.grade,
             classroom: classroom,

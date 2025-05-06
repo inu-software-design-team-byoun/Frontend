@@ -1,10 +1,11 @@
 // ScorePage.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import ScoreRadarChart from "../components/ScoreRadarChart";
 import { GradeTable } from "../components/GradeTableEx";
 // import { ENDPOINTS } from "../constants/api";
 import { useSelectedStudentStore } from "../store/useSelectedStudentStore";
+import { ENDPOINTS } from "../constants/api";
 
 const StudentInfoBody = styled.div`
   margin-left: 0.5rem;
@@ -148,7 +149,7 @@ const GridArea = styled.div`
 `;
 
 // 원래 144px 짜리 input인데 padding-left:차이로 -12, border 감안 -4,
-const LongInput = styled.input`
+const LongInput = styled.input<{ $isEditing: boolean }>`
   border: 1px solid #7c7c7c;
   border-radius: 0.5rem;
 
@@ -157,7 +158,7 @@ const LongInput = styled.input`
   background-color: white;
   padding: 0 0 0 0.75rem;
   font-weight: bold;
-  color: black;
+  color: ${(props) => (props.$isEditing ? "black" : "gray")};
 
   &::placeholder {
     // 해당 input 태그의 placeholder 색상 바꾸기
@@ -165,9 +166,9 @@ const LongInput = styled.input`
   }
 
   &:focus {
-    border-color: black;
+    /* border-color: black; */
     /* border-width: 1.5px; */
-    outline: 0.5px solid black;
+    outline: ${(props) => (props.$isEditing ? "0.5px solid black" : "none")};
   }
 `;
 
@@ -181,7 +182,7 @@ const NormalInput = styled.input`
   background-color: white;
   padding: 0 0 0 0.75rem;
   font-weight: bold;
-  color: black;
+  color: gray;
 
   &::placeholder {
     // 해당 input 태그의 placeholder 색상 바꾸기
@@ -189,9 +190,10 @@ const NormalInput = styled.input`
   }
 
   &:focus {
-    border-color: black;
-    /* border-width: 1.5px; */
-    outline: 0.5px solid black;
+    /* border-color: black;
+    border-width: 1.5px; */
+    /* outline: 0.5px solid black; */
+    outline: none;
   }
 `;
 
@@ -259,11 +261,42 @@ const ScorePage: React.FC<ScorePageProps> = () => {
   const { selectedStudent } = useSelectedStudentStore();
   const [isEditing, setIsEditing] = useState(false);
 
+  const [editForm, setEditForm] = useState({
+    name: "",
+    phoneNum: "",
+    birthday: "",
+  });
+
+  useEffect(() => {
+    if (selectedStudent) {
+      setEditForm({
+        name: selectedStudent.name,
+        phoneNum: selectedStudent.phoneNum,
+        birthday: selectedStudent.birthday,
+      });
+    }
+  }, [selectedStudent]);
+
   const handleIsEditing = () => {
-    if (!isEditing) {
-      setIsEditing(true);
-    } else {
+    setIsEditing(!isEditing);
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedStudent) return; // 이걸 안해주면 아래 await fetch에서 'possibly null' 경고 나옴
+    try {
+      await fetch(ENDPOINTS.studentInfo(selectedStudent.id), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editForm.name,
+          phoneNum: editForm.phoneNum,
+          birthday: editForm.birthday,
+        }),
+      });
+      alert("수정 완료");
       setIsEditing(false);
+    } catch (err) {
+      console.error("수정 실패", err);
     }
   };
 
@@ -277,7 +310,15 @@ const ScorePage: React.FC<ScorePageProps> = () => {
         <GridArea>
           <div className="item">
             <span>이름</span>
-            <LongInput value={selectedStudent?.name || ""} readOnly />
+            <LongInput
+              // value={selectedStudent?.name || ""}
+              value={editForm.name}
+              readOnly={!isEditing}
+              $isEditing={isEditing}
+              onChange={(e) =>
+                setEditForm({ ...editForm, name: e.target.value })
+              }
+            />
           </div>
           <div className="item">
             <span>학년, 반</span>
@@ -293,11 +334,27 @@ const ScorePage: React.FC<ScorePageProps> = () => {
           </div>
           <div className="item">
             <span>전화번호</span>
-            <LongInput value={selectedStudent?.phoneNum || ""} readOnly />
+            <LongInput
+              // value={selectedStudent?.phoneNum || ""}
+              value={editForm.phoneNum}
+              readOnly={!isEditing}
+              $isEditing={isEditing}
+              onChange={(e) =>
+                setEditForm({ ...editForm, phoneNum: e.target.value })
+              }
+            />
           </div>
           <div className="item">
             <span>생년월일</span>
-            <LongInput value={selectedStudent?.birthday || ""} readOnly />
+            <LongInput
+              // value={selectedStudent?.birthday || ""}
+              value={editForm.birthday}
+              readOnly={!isEditing}
+              $isEditing={isEditing}
+              onChange={(e) =>
+                setEditForm({ ...editForm, birthday: e.target.value })
+              }
+            />
           </div>
           <div className="item">
             <span>총 성적</span>
@@ -312,12 +369,12 @@ const ScorePage: React.FC<ScorePageProps> = () => {
           <div className="item">
             {isEditing ? (
               <div>
-                <CrudButton $bgColor="gray" onClick={handleIsEditing}>
+                <CrudButton $bgColor="#B0B0B0" onClick={handleIsEditing}>
                   취소
                 </CrudButton>
                 <CrudButton
                   $bgColor="#86acff;"
-                  onClick={handleIsEditing}
+                  onClick={handleSubmit}
                   $isEditing={isEditing}
                 >
                   완료

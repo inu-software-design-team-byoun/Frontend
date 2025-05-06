@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useScoreApi } from "../hooks/useScoreApi"; // useGradeApi → useScoreApi
+import { useStudentsListApi } from "../hooks/useStudentListApi";
 
 import GradeRow from "../components/GradeRowEx";
 import { TransformedStudent } from "../hooks/useScoreApi"; // 맨 위 import 추가
@@ -146,14 +147,44 @@ export const GradeTable: React.FC<GradeTableProps> = () => {
   const [selectedGrade, setSelectedGrade] = useState(1);
   const [selectedClass, setSelectedClass] = useState(5);
 
-  const { data } = useScoreApi(selectedGrade, selectedClass);
-  // const { data, loading } = useScoreApi(selectedGrade, selectedClass);
+  // const { data } = useScoreApi(selectedGrade, selectedClass);
+
+  const { data: studentList } = useStudentsListApi(
+    selectedGrade,
+    selectedClass
+  );
+  const { data: scoreData } = useScoreApi(selectedGrade, selectedClass);
+
+  // 학생별 점수 매핑을 위한 Map 생성
+  const scoreMap = new Map<number, TransformedStudent>();
+  scoreData.forEach((s) => scoreMap.set(s.id, s));
+
+  // studentList 기준으로, 점수가 없으면 null 처리
+  const mergedStudents: TransformedStudent[] = studentList.map((stu) => ({
+    id: stu.id,
+    studentNum: stu.studentNum,
+    name: stu.name,
+    grade: stu.grade,
+    classroom: stu.classroom,
+    phoneNum: stu.phoneNum,
+    birthday: stu.birthday,
+    totalScore: scoreMap.get(stu.id)?.totalScore ?? null,
+    averageScore: scoreMap.get(stu.id)?.averageScore ?? null,
+    korean: scoreMap.get(stu.id)?.korean ?? null,
+    math: scoreMap.get(stu.id)?.math ?? null,
+    english: scoreMap.get(stu.id)?.english ?? null,
+    society: scoreMap.get(stu.id)?.society ?? null,
+    science: scoreMap.get(stu.id)?.science ?? null,
+    art: scoreMap.get(stu.id)?.art ?? null,
+    music: scoreMap.get(stu.id)?.music ?? null,
+    physical: scoreMap.get(stu.id)?.physical ?? null,
+  }));
 
   const [students, setStudents] = useState<TransformedStudent[]>([]);
 
-  useEffect(() => {
-    setStudents(data);
-  }, [data]);
+  // useEffect(() => {
+  //   setStudents(data);
+  // }, [data]);
 
   // if (loading) return <div>Loading...</div>;
 
@@ -251,8 +282,17 @@ export const GradeTable: React.FC<GradeTableProps> = () => {
               <col style={{ width: "8%" }} />
               {/* <col style={{ width: "11%" }} /> */}
             </colgroup>
-            <tbody>
+            {/* <tbody>
               {data.map((student) => (
+                <GradeRow
+                  key={student.id}
+                  student={student}
+                  subjects={subjects}
+                />
+              ))}
+            </tbody> */}
+            <tbody>
+              {mergedStudents.map((student) => (
                 <GradeRow
                   key={student.id}
                   student={student}
