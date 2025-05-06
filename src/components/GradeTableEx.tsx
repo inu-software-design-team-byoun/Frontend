@@ -139,27 +139,61 @@ const Select = styled.select<{ $syllable: number }>`
 `;
 
 interface GradeTableProps {
-  grade?: number;
-  classNum?: number;
+  grade: number;
+  classroom: number;
+  onGradeChange: (g: number) => void;
+  onClassChange: (c: number) => void;
 }
 
-export const GradeTable: React.FC<GradeTableProps> = () => {
-  const [selectedGrade, setSelectedGrade] = useState(1);
-  const [selectedClass, setSelectedClass] = useState(5);
+export const GradeTable: React.FC<GradeTableProps> = ({
+  grade,
+  classroom,
+  onGradeChange,
+  onClassChange,
+}) => {
+  // const [selectedGrade, setSelectedGrade] = useState(1);
+  // const [selectedClass, setSelectedClass] = useState(5);
 
-  // const { data } = useScoreApi(selectedGrade, selectedClass);
+  // // const { data } = useScoreApi(selectedGrade, selectedClass);
 
-  const { data: studentList } = useStudentsListApi(
-    selectedGrade,
-    selectedClass
-  );
-  const { data: scoreData } = useScoreApi(selectedGrade, selectedClass);
+  // const { data: studentList } = useStudentsListApi(
+  //   selectedGrade,
+  //   selectedClass
+  // );
+  // const { data: scoreData } = useScoreApi(selectedGrade, selectedClass);
 
-  // 학생별 점수 매핑을 위한 Map 생성
+  // // 학생별 점수 매핑을 위한 Map 생성
+  // const scoreMap = new Map<number, TransformedStudent>();
+  // scoreData.forEach((s) => scoreMap.set(s.id, s));
+
+  // // studentList 기준으로, 점수가 없으면 null 처리
+  // const mergedStudents: TransformedStudent[] = studentList.map((stu) => ({
+  //   id: stu.id,
+  //   studentNum: stu.studentNum,
+  //   name: stu.name,
+  //   grade: stu.grade,
+  //   classroom: stu.classroom,
+  //   phoneNum: stu.phoneNum,
+  //   birthday: stu.birthday,
+  //   totalScore: scoreMap.get(stu.id)?.totalScore ?? null,
+  //   averageScore: scoreMap.get(stu.id)?.averageScore ?? null,
+  //   korean: scoreMap.get(stu.id)?.korean ?? null,
+  //   math: scoreMap.get(stu.id)?.math ?? null,
+  //   english: scoreMap.get(stu.id)?.english ?? null,
+  //   society: scoreMap.get(stu.id)?.society ?? null,
+  //   science: scoreMap.get(stu.id)?.science ?? null,
+  //   art: scoreMap.get(stu.id)?.art ?? null,
+  //   music: scoreMap.get(stu.id)?.music ?? null,
+  //   physical: scoreMap.get(stu.id)?.physical ?? null,
+  // }));
+  // const [students, setStudents] = useState<TransformedStudent[]>([]);
+
+  const { data: studentList } = useStudentsListApi(grade, classroom);
+  const { data: scoreData } = useScoreApi(grade, classroom);
+
   const scoreMap = new Map<number, TransformedStudent>();
   scoreData.forEach((s) => scoreMap.set(s.id, s));
 
-  // studentList 기준으로, 점수가 없으면 null 처리
   const mergedStudents: TransformedStudent[] = studentList.map((stu) => ({
     id: stu.id,
     studentNum: stu.studentNum,
@@ -179,8 +213,6 @@ export const GradeTable: React.FC<GradeTableProps> = () => {
     music: scoreMap.get(stu.id)?.music ?? null,
     physical: scoreMap.get(stu.id)?.physical ?? null,
   }));
-
-  const [students, setStudents] = useState<TransformedStudent[]>([]);
 
   // useEffect(() => {
   //   setStudents(data);
@@ -206,8 +238,10 @@ export const GradeTable: React.FC<GradeTableProps> = () => {
         <ClassArea>
           <Select
             $syllable={3}
-            value={selectedGrade}
-            onChange={(e) => setSelectedGrade(Number(e.target.value))}
+            // value={selectedGrade}
+            // onChange={(e) => setSelectedGrade(Number(e.target.value))}
+            value={grade}
+            onChange={(e) => onGradeChange(Number(e.target.value))}
           >
             <option value="1">1학년</option>
             <option value="2">2학년</option>
@@ -215,8 +249,10 @@ export const GradeTable: React.FC<GradeTableProps> = () => {
           </Select>
           <Select
             $syllable={2}
-            value={selectedClass}
-            onChange={(e) => setSelectedClass(Number(e.target.value))}
+            // value={selectedClass}
+            // onChange={(e) => setSelectedClass(Number(e.target.value))}
+            value={classroom}
+            onChange={(e) => onClassChange(Number(e.target.value))}
           >
             <option value="1">1반</option>
             <option value="2">2반</option>
@@ -292,12 +328,15 @@ export const GradeTable: React.FC<GradeTableProps> = () => {
               ))}
             </tbody> */}
             <tbody>
-              {mergedStudents.map((student) => (
+              {/* {mergedStudents.map((student) => (
                 <GradeRow
                   key={student.id}
                   student={student}
                   subjects={subjects}
                 />
+              ))} */}
+              {mergedStudents.map((stu) => (
+                <GradeRow key={stu.id} student={stu} subjects={subjects} />
               ))}
             </tbody>
           </table>
