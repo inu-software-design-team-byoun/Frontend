@@ -6,7 +6,6 @@ import { useScoreApi } from "../hooks/useScoreApi"; // useGradeApi → useScoreA
 import GradeRow from "../components/GradeRowEx";
 import { TransformedStudent } from "../hooks/useScoreApi"; // 맨 위 import 추가
 import SelectArrow from "../assets/icon/SelectArrow.png";
-import { ENDPOINTS } from "../constants/api";
 
 const Wrapper = styled.div`
   margin-left: 0.5rem;

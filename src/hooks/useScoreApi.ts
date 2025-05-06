@@ -71,8 +71,6 @@ export const useScoreApi = (grade: number, classroom: number) => {
       } catch (err) {
         console.error("Score API fetch error:", err);
         setData([]);
-      } finally {
-        // setLoading(false);
       }
     };
 

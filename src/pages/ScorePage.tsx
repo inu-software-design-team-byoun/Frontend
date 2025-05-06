@@ -198,7 +198,7 @@ const NormalInput = styled.input`
 const CrudButton = styled.button<{
   $bgColor: string;
   width?: string;
-  isEditing?: boolean;
+  $isEditing?: boolean;
 }>`
   border: none;
   border-radius: 0.5rem;
@@ -211,7 +211,7 @@ const CrudButton = styled.button<{
   // isEditing props를 전달해주지 않은 버튼은 $bgColor로 전달받은 색이 그냥 나오고
   // isEditing props를 전달받은 버튼은 조건에 따라 색상 변경
   background-color: ${(props) =>
-    props.isEditing ? "#FFA0A0" : props.$bgColor};
+    props.$isEditing ? "#FFA0A0" : props.$bgColor};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -318,7 +318,7 @@ const ScorePage: React.FC<ScorePageProps> = () => {
                 <CrudButton
                   $bgColor="#86acff;"
                   onClick={handleIsEditing}
-                  isEditing={isEditing}
+                  $isEditing={isEditing}
                 >
                   완료
                 </CrudButton>
@@ -327,7 +327,7 @@ const ScorePage: React.FC<ScorePageProps> = () => {
               <CrudButton
                 $bgColor="#86acff;"
                 onClick={handleIsEditing}
-                isEditing={isEditing}
+                $isEditing={isEditing}
               >
                 수정
               </CrudButton>
