@@ -1,5 +1,5 @@
 # Node.js 20 이상 버전 사용
-FROM node:20 AS build
+FROM node:20.11.1-alpine
 
 WORKDIR /app
 
