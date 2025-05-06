@@ -7,7 +7,8 @@ import ContinueWithGoogleButton from "../assets/img/ContinueWithGoogleButton.svg
 import { ENDPOINTS } from "../constants/api";
 
 import { BtnForDev } from "../components/BtnForDev";
-// import { useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 // import { useGoogleLogin } from "@react-oauth/google";
 
 const Wrapper = styled.div`
@@ -98,16 +99,17 @@ const GoogleLoginButton = styled.button`
 `;
 
 export const LoginPage: React.FC = () => {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
   // URL에 ?token=xxx 가 있으면 저장하고 addinfo로 이동
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
+    const token = params.get("accessToken");
     if (token) {
-      localStorage.setItem("token", token);
+      localStorage.setItem("accessToken", token);
+      navigate("/addinfo");
     }
-  }, []);
+  }, [navigate]);
 
   // const loginWithGoogle = useGoogleLogin({
   //   onSuccess: async (tokenResponse) => {
