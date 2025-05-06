@@ -62,4 +62,4 @@ jobs:
           docker buildx build \
             --platform linux/amd64 \
             --push \
-            -t ${{ secrets.DOCKER_HUB_USERNAME }}/my-react-app:$DOCKER_IMAGE_TAG .
+            -t ${{ secrets.DOCKER_HUB_USERNAME }}/hiedu-react:$DOCKER_IMAGE_TAG .
