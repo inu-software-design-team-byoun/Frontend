@@ -187,13 +187,17 @@ export const AddinfoPage: React.FC = () => {
       (grade !== "none" && classNum !== "none" && studentId.trim() !== ""));
 
   const handleSubmit = async () => {
-    const url = role === "teacher" ? ENDPOINTS.teachers : ENDPOINTS.students;
+    const token = localStorage.getItem("accessToken");
+    console.log("stored:",token);
 
+    if (!token) {alert("로그인 정보가 없음"); return;}
+    // const url = role === "teacher" ? ENDPOINTS.teachers : ENDPOINTS.students;
+    const url = ENDPOINTS.teachers;
     const bodyData =
       role === "teacher"
         ? {
             name,
-            studentNum: birthday,
+            birthday,
             phoneNum,
           }
         : {
@@ -209,7 +213,7 @@ export const AddinfoPage: React.FC = () => {
             ...(role === "parent" && { studentId }),
           };
 
-    const token = localStorage.getItem("token");
+    // const token = localStorage.getItem("token");
 
     try {
       const res = await fetch(url, {
