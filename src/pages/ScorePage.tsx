@@ -456,6 +456,9 @@ const ScorePage: React.FC<ScorePageProps> = () => {
             <span>이름</span>
             <LongInput
               // value={selectedStudent?.name || ""}
+              data-testid={
+                isAdding ? "add-name" : isEditing ? "edit-name" : undefined
+              }
               value={isAdding ? addForm.name : editForm.name}
               readOnly={!(isEditing || isAdding)}
               $isEditing={isEditing || isAdding}
@@ -483,6 +486,9 @@ const ScorePage: React.FC<ScorePageProps> = () => {
             <span>전화번호</span>
             <LongInput
               // value={selectedStudent?.phoneNum || ""}
+              data-testid={
+                isAdding ? "add-phone" : isEditing ? "edit-phone" : undefined
+              }
               value={isAdding ? addForm.phoneNum : editForm.phoneNum}
               readOnly={!(isEditing || isAdding)}
               $isEditing={isEditing || isAdding}
@@ -497,6 +503,13 @@ const ScorePage: React.FC<ScorePageProps> = () => {
             <span>생년월일</span>
             <LongInput
               // value={selectedStudent?.birthday || ""}
+              data-testid={
+                isAdding
+                  ? "add-birthday"
+                  : isEditing
+                    ? "edit-birthday"
+                    : undefined
+              }
               value={isAdding ? addForm.birthday : editForm.birthday}
               readOnly={!(isEditing || isAdding)}
               $isEditing={isEditing || isAdding}
