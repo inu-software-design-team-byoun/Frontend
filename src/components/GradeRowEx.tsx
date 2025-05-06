@@ -10,8 +10,10 @@ interface GradeRowProps {
     classroom: number;
     phoneNum: string;
     birthday: string;
-    totalScore: number;
-    averageScore: number;
+    totalScore: number | null;
+    averageScore: number | null;
+    // totalScore: number;
+    // averageScore: number;
     [key: string]: string | number | null;
   };
   subjects: string[];
@@ -20,6 +22,8 @@ interface GradeRowProps {
 const GradeRow: React.FC<GradeRowProps> = ({ student, subjects }) => {
   // ⬇️ 이 줄을 통해 zustand에 정보 저장
   const handleSelect = async () => {
+    if (student.totalScore == null || student.averageScore == null) return;
+
     await fetchStudentInfo(
       student.id,
       // student.grade,
