@@ -1,6 +1,7 @@
 // AddinfoPage.tsx
 import React, { useState } from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 
 // images, icons
 import BackgroundImage from "../assets/img/LoginBack.png";
@@ -199,6 +200,8 @@ const SignButton = styled.button<{ $bgColor: string }>`
 `;
 
 export const AddinfoPage: React.FC = () => {
+  const navigate = useNavigate();
+
   const [role, setRole] = useState("student");
   const [grade, setGrade] = useState("none");
   const [classNum, setClassNum] = useState("none");
@@ -263,8 +266,11 @@ export const AddinfoPage: React.FC = () => {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("등록 실패");
+      if (!res.ok) {
+        throw new Error("등록 실패");
+      }
       alert("성공적으로 등록되었습니다.");
+      navigate("/");
     } catch (error) {
       alert("등록 중 오류 발생: " + error);
     }
