@@ -12,4 +12,5 @@ export const ENDPOINTS = {
   studentInfo: (id: number) => `${API_BASE_URL}/students/${id}`,
   auth: `${API_BASE_URL}/auth/google`,
   teachers: `${API_BASE_URL}/teachers`,
+  check: `${API_BASE_URL}/auth/check-user`,
 };
