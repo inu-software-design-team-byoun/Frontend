@@ -4,9 +4,18 @@ import { test, expect } from "@playwright/test";
 test.describe("성적 탭 CRUD Flows", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("http://localhost:3012/");
+
+    // ✅ 모든 테스트에서 alert 자동 수락
+    page.on("dialog", async (dialog) => {
+      console.log("Alert message:", dialog.message());
+      await dialog.accept();
+    });
   });
 
   test("학생을 추가하면 테이블에 표시", async ({ page }) => {
+    // alert 자동 수락
+    page.on("dialog", (dialog) => dialog.accept());
+
     await page.getByRole("button", { name: "학생 추가" }).click();
     await page.fill('[data-testid="add-name"]', "테스트학생");
     await page.fill('[data-testid="add-phone"]', "010-9999-9999");
@@ -28,6 +37,9 @@ test.describe("성적 탭 CRUD Flows", () => {
   });
 
   test("학생 정보를 수정하면 테이블에 반영", async ({ page }) => {
+    // alert 자동 수락
+    page.on("dialog", (dialog) => dialog.accept());
+
     const firstNameCell = page
       .locator("table tbody tr")
       .first()
@@ -44,10 +56,19 @@ test.describe("성적 탭 CRUD Flows", () => {
     await expect(editBtn).toBeEnabled();
     await editBtn.click();
 
-    await expect(page.locator("table >> text=수정된학생")).toBeVisible();
+    // GET 학생 목록 (refresh) 호출 대기
+    await page.waitForResponse(
+      (resp) =>
+        resp.request().method() === "GET" &&
+        resp.url().includes("/studentsList") &&
+        resp.status() === 200
+    );
+
+    await expect(page.getByRole("cell", { name: "수정된학생" })).toBeVisible();
   });
 
   test("학생을 삭제하면 테이블에서 제거", async ({ page }) => {
+    // 삭제 confirm 자동 수락
     page.on("dialog", (dialog) => dialog.accept());
 
     const firstRow = page.locator("table tbody tr").first();
