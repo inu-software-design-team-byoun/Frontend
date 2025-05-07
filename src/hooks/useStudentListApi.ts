@@ -1,5 +1,5 @@
 // src/hooks/useStudentsListApi.ts
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ENDPOINTS } from "../constants/api";
 
 export interface StudentBrief {
@@ -15,21 +15,23 @@ export interface StudentBrief {
 export const useStudentsListApi = (
   grade: number,
   classroom: number
-): { data: StudentBrief[] } => {
+): { data: StudentBrief[]; refetch: () => Promise<void> } => {
   const [data, setData] = useState<StudentBrief[]>([]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(ENDPOINTS.studentsList(grade, classroom));
-        if (!res.ok) throw new Error(`${res.status}`);
-        const json: StudentBrief[] = await res.json();
-        setData(json);
-      } catch (err) {
-        console.error("students list fetch error", err);
-      }
-    })();
+  const fetchStudents = useCallback(async () => {
+    try {
+      const res = await fetch(ENDPOINTS.studentsList(grade, classroom));
+      if (!res.ok) throw new Error(`${res.status}`);
+      const json: StudentBrief[] = await res.json();
+      setData(json);
+    } catch (err) {
+      console.error("students list fetch error", err);
+    }
   }, [grade, classroom]);
 
-  return { data };
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
+
+  return { data, refetch: fetchStudents };
 };

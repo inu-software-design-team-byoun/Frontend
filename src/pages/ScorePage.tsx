@@ -274,10 +274,12 @@ const ScorePage: React.FC<ScorePageProps> = () => {
   const [selectedClass, setSelectedClass] = useState(5);
 
   // ── 추가: 해당 학년·반의 학생 목록 가져오기 ──
-  const { data: studentList } = useStudentsListApi(
+  const { data: studentList, refetch: refetchStudentList } = useStudentsListApi(
     selectedGrade,
     selectedClass
   );
+  // GradeTable 리마운트를 위한 키
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const [editForm, setEditForm] = useState({
     name: "",
@@ -382,6 +384,10 @@ const ScorePage: React.FC<ScorePageProps> = () => {
       });
       alert("수정 완료");
       setIsEditing(false);
+
+      // fetch new list + force rerender
+      await refetchStudentList();
+      setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("수정 실패", err);
     }
@@ -414,8 +420,11 @@ const ScorePage: React.FC<ScorePageProps> = () => {
       console.log("생성된 학생:", newStudent);
       alert("학생 추가 완료");
       setIsAdding(false);
-      // 목록 갱신을 위해 같은 반 상태 강제 트리거
-      setSelectedClass((c) => c);
+      // // 목록 갱신을 위해 같은 반 상태 강제 트리거
+      // setSelectedClass((c) => c);
+      await refetchStudentList();
+      // GradeTableEx 훅 재실행을 위해 refereshKey 증가
+      setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("학생 추가 실패", err);
     }
@@ -436,8 +445,10 @@ const ScorePage: React.FC<ScorePageProps> = () => {
       });
       alert("삭제 완료");
       clearSelectedStudent();
-      // 목록 갱신을 위해 반 상태를 다시 세팅
-      setSelectedClass((c) => c);
+
+      // fetch new list + force rerender
+      await refetchStudentList();
+      setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("삭제 실패", err);
       alert("삭제에 실패했습니다.");
@@ -456,6 +467,9 @@ const ScorePage: React.FC<ScorePageProps> = () => {
             <span>이름</span>
             <LongInput
               // value={selectedStudent?.name || ""}
+              data-testid={
+                isAdding ? "add-name" : isEditing ? "edit-name" : undefined
+              }
               value={isAdding ? addForm.name : editForm.name}
               readOnly={!(isEditing || isAdding)}
               $isEditing={isEditing || isAdding}
@@ -483,6 +497,9 @@ const ScorePage: React.FC<ScorePageProps> = () => {
             <span>전화번호</span>
             <LongInput
               // value={selectedStudent?.phoneNum || ""}
+              data-testid={
+                isAdding ? "add-phone" : isEditing ? "edit-phone" : undefined
+              }
               value={isAdding ? addForm.phoneNum : editForm.phoneNum}
               readOnly={!(isEditing || isAdding)}
               $isEditing={isEditing || isAdding}
@@ -497,6 +514,13 @@ const ScorePage: React.FC<ScorePageProps> = () => {
             <span>생년월일</span>
             <LongInput
               // value={selectedStudent?.birthday || ""}
+              data-testid={
+                isAdding
+                  ? "add-birthday"
+                  : isEditing
+                    ? "edit-birthday"
+                    : undefined
+              }
               value={isAdding ? addForm.birthday : editForm.birthday}
               readOnly={!(isEditing || isAdding)}
               $isEditing={isEditing || isAdding}
@@ -575,6 +599,7 @@ const ScorePage: React.FC<ScorePageProps> = () => {
         </CrudButton>
       </GapBlankBody>
       <GradeTable
+        key={refreshKey}
         grade={selectedGrade}
         classroom={selectedClass}
         onGradeChange={setSelectedGrade}
