@@ -131,9 +131,9 @@ const SearchArea = styled.div`
 
 const TableWrapper = styled.div`
   flex: 1;
-  overflow-y: scroll;
-  max-height: 10rem;
-  /* max-height: 36.125rem; */
+  overflow-y: auto;
+  /* max-height: 10rem; */
+  max-height: 36.125rem;
 
   /* padding-right: 6px; */
   /* margin-right: -6px; */
@@ -198,10 +198,6 @@ export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
   onClassChange,
 }) => {
   const { data: studentList } = useStudentsListApi(grade, classroom);
-
-  useEffect(() => {
-    console.log(SearchIcon);
-  }, []);
 
   return (
     <Wrapper>
