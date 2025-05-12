@@ -1,90 +1,53 @@
-//GradeRowEx.tsx
-import React, { useState } from "react";
-import styled from "styled-components";
-
-const CustomInput = styled.input`
-  border: 1px solid #7c7c7c;
-  border-radius: 0.75rem;
-  width: 4rem;
-  height: 1.75rem;
-  background-color: transparent;
-  color: black;
-  font-size: 1rem;
-  text-align: center;
-`;
-
-const EditButton = styled.button`
-  margin: 0 0.25rem;
-  border: none;
-  background-color: transparent;
-  font-size: 1rem;
-  cursor: pointer;
-`;
+// GradeRowEx.tsx
+import React from "react";
+import { fetchStudentInfo } from "../utils/fetchStudentInfo";
 
 interface GradeRowProps {
-  student: { [key: string]: string | number };
+  student: {
+    id: number;
+    studentNum: number;
+    name: string;
+    grade: number;
+    classroom: number;
+    phoneNum: string;
+    birthday: string;
+    totalScore: number | null;
+    averageScore: number | null;
+    // totalScore: number;
+    // averageScore: number;
+    [key: string]: string | number | null;
+  };
   subjects: string[];
-  onDelete?: (id: number) => void;
 }
 
-const GradeRow: React.FC<GradeRowProps> = ({ student, subjects, onDelete }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [nameInput, setNameInput] = useState(student.name as string);
-  const [subjectInputs, setSubjectInputs] = useState<{ [key: string]: string }>(
-    () =>
-      subjects.reduce(
-        (acc, subj) => {
-          acc[subj] = (student[subj] as string) || "";
-          return acc;
-        },
-        {} as { [key: string]: string }
-      )
-  );
-
-  const handleChange = (subject: string, value: string) => {
-    setSubjectInputs((prev) => ({ ...prev, [subject]: value }));
+const GradeRow: React.FC<GradeRowProps> = ({ student, subjects }) => {
+  // ⬇️ 이 줄을 통해 zustand에 정보 저장
+  const handleSelect = async () => {
+    await fetchStudentInfo(
+      student.id,
+      student.totalScore ?? 0,
+      student.averageScore ?? 0
+    );
   };
 
-  const handleSave = () => {
-    // TODO: 실제 저장 처리 (API 연동 등)
-    setIsEditing(false);
-  };
+  // // ── studentNum 뒤 두 자리만 % 연산으로 가져오면, 03 → 3, 11 → 11 ──
+  // const displayNum = student.studentNum % 100;
 
   return (
     <tr>
-      <td>{String(student.id).slice(-2)}</td>
-      <td>
-        {isEditing ? (
-          <CustomInput
-            value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
-          />
-        ) : (
-          nameInput
-        )}
+      {/* 학번 뒤 두 자리만 표시 */}
+      <td>{String(student.studentNum % 100)}</td>
+
+      <td
+        onClick={handleSelect}
+        style={{ cursor: "pointer", fontWeight: "bold" }}
+      >
+        {student.name}
       </td>
       {subjects.map((subj) => (
-        <td key={subj}>
-          {isEditing ? (
-            <CustomInput
-              value={subjectInputs[subj]}
-              onChange={(e) => handleChange(subj, e.target.value)}
-            />
-          ) : (
-            subjectInputs[subj] || "-"
-          )}
-        </td>
+        <td key={subj}>{student[subj] ?? "-"}</td>
       ))}
-      <td>
-        {isEditing ? (
-          <EditButton onClick={handleSave}>✅</EditButton>
-        ) : (
-          <EditButton onClick={() => setIsEditing(true)}>✏️</EditButton>
-        )}
-        <EditButton onClick={() => onDelete?.(student.id as number)}>
-          🗑️
-        </EditButton>
-      </td>
+      <td></td>
     </tr>
   );
 };

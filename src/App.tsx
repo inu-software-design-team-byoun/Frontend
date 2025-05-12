@@ -7,7 +7,10 @@ import { LoginPage } from "./pages/LoginPage";
 import AuthLayout from "./layouts/AuthLayout";
 import AttendancePage from "./pages/AttendancePage";
 import ScoreInputPage from "./pages/ScoreInputPage";
+
 import CounselPage from "./pages/CounselPage";
+
+import { AddinfoPage } from "./pages/AddinfoPage";
 
 const App: React.FC = () => {
   return (
@@ -50,6 +53,14 @@ const App: React.FC = () => {
           element={
             <AuthLayout>
               <LoginPage />
+            </AuthLayout>
+          }
+        />
+        <Route
+          path="/addinfo"
+          element={
+            <AuthLayout>
+              <AddinfoPage />
             </AuthLayout>
           }
         />

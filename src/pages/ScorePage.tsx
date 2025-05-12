@@ -1,10 +1,12 @@
 // ScorePage.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import ScoreRadarChart from "../components/ScoreRadarChart";
-// import ScoreBody from "../components/ScoreBody";
 import { GradeTable } from "../components/GradeTableEx";
-import { useStudentInfoApi } from "../hooks/useStudentInfoApi";
+
+import { useSelectedStudentStore } from "../store/useSelectedStudentStore";
+import { useStudentsListApi } from "../hooks/useStudentListApi";
+import { ENDPOINTS } from "../constants/api";
 
 const StudentInfoBody = styled.div`
   margin-left: 0.5rem;
@@ -136,14 +138,19 @@ const GridArea = styled.div`
     }
   }
   .item:nth-child(9) {
+    /* border: 1px solid black; */
     grid-row: 3/3;
     grid-column: 3/3;
+
+    div {
+      display: flex;
+    }
     align-items: flex-end;
   }
 `;
 
 // 원래 144px 짜리 input인데 padding-left:차이로 -12, border 감안 -4,
-const LongInput = styled.input`
+const LongInput = styled.input<{ $isEditing: boolean }>`
   border: 1px solid #7c7c7c;
   border-radius: 0.5rem;
 
@@ -152,7 +159,7 @@ const LongInput = styled.input`
   background-color: white;
   padding: 0 0 0 0.75rem;
   font-weight: bold;
-  color: black;
+  color: ${(props) => (props.$isEditing ? "black" : "gray")};
 
   &::placeholder {
     // 해당 input 태그의 placeholder 색상 바꾸기
@@ -160,9 +167,9 @@ const LongInput = styled.input`
   }
 
   &:focus {
-    border-color: black;
+    /* border-color: black; */
     /* border-width: 1.5px; */
-    outline: 0.5px solid black;
+    outline: ${(props) => (props.$isEditing ? "0.5px solid black" : "none")};
   }
 `;
 
@@ -176,7 +183,7 @@ const NormalInput = styled.input`
   background-color: white;
   padding: 0 0 0 0.75rem;
   font-weight: bold;
-  color: black;
+  color: gray;
 
   &::placeholder {
     // 해당 input 태그의 placeholder 색상 바꾸기
@@ -184,15 +191,18 @@ const NormalInput = styled.input`
   }
 
   &:focus {
-    border-color: black;
-    /* border-width: 1.5px; */
-    outline: 0.5px solid black;
+    /* border-color: black;
+    border-width: 1.5px; */
+    /* outline: 0.5px solid black; */
+    outline: none;
   }
 `;
 
-// const shortInput = styled.input;
-
-const CrudButton = styled.button<{ $bgColor: string; width?: string }>`
+const CrudButton = styled.button<{
+  $bgColor: string;
+  width?: string;
+  $isEditing?: boolean;
+}>`
   border: none;
   border-radius: 0.5rem;
 
@@ -201,13 +211,21 @@ const CrudButton = styled.button<{ $bgColor: string; width?: string }>`
   height: 2rem;
 
   /* background-color: #86acff; */
-  background-color: ${(props) => props.$bgColor};
+  // isEditing props를 전달해주지 않은 버튼은 $bgColor로 전달받은 색이 그냥 나오고
+  // isEditing props를 전달받은 버튼은 조건에 따라 색상 변경
+  background-color: ${(props) =>
+    props.$isEditing ? "#86acff" : props.$bgColor};
   display: flex;
   justify-content: center;
   align-items: center;
 
   font-weight: bold;
   color: white;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 `;
 
 const ChartArea = styled.div`
@@ -245,13 +263,198 @@ interface ScorePageProps {
   studentId?: number;
 }
 
-const ScorePage: React.FC<ScorePageProps> = ({ studentId = 20401 }) => {
-  const { data, loading } = useStudentInfoApi(studentId);
+const ScorePage: React.FC<ScorePageProps> = () => {
+  // const { selectedStudent } = useSelectedStudentStore();
+  const { selectedStudent, clearSelectedStudent } = useSelectedStudentStore();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
-  if (loading || !data) return <div>Loading...</div>;
+  // grade/class 상태를 ScorePage에서 보관
+  const [selectedGrade, setSelectedGrade] = useState(1);
+  const [selectedClass, setSelectedClass] = useState(5);
 
-  const grade = String(data.studentid)[0];
-  const classNum = Number(String(data.studentid).substring(1, 3));
+  // ── 추가: 해당 학년·반의 학생 목록 가져오기 ──
+  const { data: studentList, refetch: refetchStudentList } = useStudentsListApi(
+    selectedGrade,
+    selectedClass
+  );
+  // GradeTable 리마운트를 위한 키
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const [editForm, setEditForm] = useState({
+    name: "",
+    phoneNum: "",
+    birthday: "",
+  });
+
+  const [addForm, setAddForm] = useState({
+    name: "",
+    phoneNum: "",
+    birthday: "",
+  });
+
+  // 폼 유효성 검사 플래그
+  const canSubmitAdd =
+    addForm.name.trim() !== "" &&
+    addForm.phoneNum.trim() !== "" &&
+    addForm.birthday.trim() !== "";
+
+  const canSubmitEdit =
+    editForm.name.trim() !== "" &&
+    editForm.phoneNum.trim() !== "" &&
+    editForm.birthday.trim() !== "";
+
+  useEffect(() => {
+    if (selectedStudent) {
+      setEditForm({
+        name: selectedStudent.name,
+        phoneNum: selectedStudent.phoneNum,
+        birthday: selectedStudent.birthday,
+      });
+    }
+  }, [selectedStudent]);
+
+  // 수정 모드 진입 핸들러
+  const handleIsEditing = () => {
+    setIsEditing(true);
+  };
+
+  // 수정 취소 핸들러
+  const handleCancelEdit = () => {
+    if (selectedStudent) {
+      setEditForm({
+        name: selectedStudent.name,
+        phoneNum: selectedStudent.phoneNum,
+        birthday: selectedStudent.birthday,
+      });
+    }
+    setIsEditing(false);
+  };
+
+  // 학생 추가 모드 진입 핸들러
+  const handleAddClick = () => {
+    setIsAdding(true);
+    setAddForm({ name: "", phoneNum: "", birthday: "" });
+    // 편집 모드 꺼두기
+    setIsEditing(false);
+  };
+
+  const handleCancelAdd = () => {
+    setIsAdding(false);
+    setAddForm({ name: "", phoneNum: "", birthday: "" });
+  };
+
+  // const handleSubmit = async () => {
+  //   if (!selectedStudent) return; // 이걸 안해주면 아래 await fetch에서 'possibly null' 경고 나옴
+  //   try {
+  //     await fetch(ENDPOINTS.studentInfo(selectedStudent.id), {
+  //       method: "PATCH",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         name: editForm.name,
+  //         phoneNum: editForm.phoneNum,
+  //         birthday: editForm.birthday,
+  //       }),
+  //     });
+  //     alert("수정 완료");
+  //     setIsEditing(false);
+  //   } catch (err) {
+  //     console.error("수정 실패", err);
+  //   }
+  // };
+
+  // 수정 완료 핸들러
+  const handleSubmitEdit = async () => {
+    // 유효성 검사
+    if (!canSubmitEdit) {
+      alert("이름, 전화번호, 생년월일을 모두 입력해주세요.");
+      return;
+    }
+    if (!selectedStudent) return;
+    try {
+      await fetch(ENDPOINTS.studentInfo(selectedStudent.id), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+      // 스토어 업데이트
+      useSelectedStudentStore.getState().setSelectedStudent({
+        ...selectedStudent,
+        ...editForm,
+      });
+      alert("수정 완료");
+      setIsEditing(false);
+
+      // fetch new list + force rerender
+      await refetchStudentList();
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("수정 실패", err);
+    }
+  };
+
+  // 학생 추가 완료 핸들러
+  const handleSubmitAdd = async () => {
+    // 유효성 검사
+    if (!canSubmitAdd) {
+      alert("이름, 전화번호, 생년월일을 모두 입력해주세요.");
+      return;
+    }
+    try {
+      // 자동 학번 부여 로직
+      const order = studentList.length + 1; // 기존 학생 수 + 1
+      const studentNum = selectedGrade * 10000 + selectedClass * 100 + order;
+
+      const body = {
+        studentNum, // 자동 생성된 학번
+        grade: selectedGrade, // lifted state 사용
+        classroom: selectedClass, // lifted state 사용
+        ...addForm,
+      };
+      const res = await fetch(ENDPOINTS.students, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const newStudent = await res.json();
+      console.log("생성된 학생:", newStudent);
+      alert("학생 추가 완료");
+      setIsAdding(false);
+      // // 목록 갱신을 위해 같은 반 상태 강제 트리거
+      // setSelectedClass((c) => c);
+      await refetchStudentList();
+      // GradeTableEx 훅 재실행을 위해 refereshKey 증가
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("학생 추가 실패", err);
+    }
+  };
+
+  // ─ 삭제 핸들러 ───────────────────────────────────
+  const handleDelete = async () => {
+    if (!selectedStudent) {
+      alert("삭제할 학생을 선택하세요.");
+      return;
+    }
+    if (!window.confirm(`${selectedStudent.name} 학생을 삭제하시겠습니까?`)) {
+      return;
+    }
+    try {
+      await fetch(ENDPOINTS.studentInfo(selectedStudent.id), {
+        method: "DELETE",
+      });
+      alert("삭제 완료");
+      clearSelectedStudent();
+
+      // fetch new list + force rerender
+      await refetchStudentList();
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("삭제 실패", err);
+      alert("삭제에 실패했습니다.");
+    }
+  };
+
   return (
     <>
       <StudentInfoBody>
@@ -262,14 +465,28 @@ const ScorePage: React.FC<ScorePageProps> = ({ studentId = 20401 }) => {
         <GridArea>
           <div className="item">
             <span>이름</span>
-            {/* <LongInput placeholder="학생 이름 입력"></LongInput> */}
-            <LongInput value={data.name} readOnly />
+            <LongInput
+              // value={selectedStudent?.name || ""}
+              data-testid={
+                isAdding ? "add-name" : isEditing ? "edit-name" : undefined
+              }
+              value={isAdding ? addForm.name : editForm.name}
+              readOnly={!(isEditing || isAdding)}
+              $isEditing={isEditing || isAdding}
+              onChange={(e) =>
+                isAdding
+                  ? setAddForm({ ...addForm, name: e.target.value })
+                  : setEditForm({ ...editForm, name: e.target.value })
+              }
+            />
           </div>
           <div className="item">
             <span>학년, 반</span>
-            {/* <span className="fixed">2학년 4반</span> */}
             <span className="fixed">
-              {grade}학년 {classNum}반
+              {/* {selectedStudent
+                ? `${selectedStudent.grade}학년 ${selectedStudent.classroom}반`
+                : ""} */}
+              {selectedGrade}학년 {selectedClass}반
             </span>
             <div>
               <button>상담 내역</button>
@@ -278,28 +495,88 @@ const ScorePage: React.FC<ScorePageProps> = ({ studentId = 20401 }) => {
           </div>
           <div className="item">
             <span>전화번호</span>
-            {/* <LongInput placeholder="010-XXXX-XXXX"></LongInput> */}
-            <LongInput value={data.phoneNum} readOnly />
+            <LongInput
+              // value={selectedStudent?.phoneNum || ""}
+              data-testid={
+                isAdding ? "add-phone" : isEditing ? "edit-phone" : undefined
+              }
+              value={isAdding ? addForm.phoneNum : editForm.phoneNum}
+              readOnly={!(isEditing || isAdding)}
+              $isEditing={isEditing || isAdding}
+              onChange={(e) =>
+                isAdding
+                  ? setAddForm({ ...addForm, phoneNum: e.target.value })
+                  : setEditForm({ ...editForm, phoneNum: e.target.value })
+              }
+            />
           </div>
           <div className="item">
             <span>생년월일</span>
-            {/* <LongInput placeholder="YYYY-MM-DD"></LongInput> */}
-            <LongInput value={data.birthday} readOnly />
+            <LongInput
+              // value={selectedStudent?.birthday || ""}
+              data-testid={
+                isAdding
+                  ? "add-birthday"
+                  : isEditing
+                    ? "edit-birthday"
+                    : undefined
+              }
+              value={isAdding ? addForm.birthday : editForm.birthday}
+              readOnly={!(isEditing || isAdding)}
+              $isEditing={isEditing || isAdding}
+              onChange={(e) =>
+                isAdding
+                  ? setAddForm({ ...addForm, birthday: e.target.value })
+                  : setEditForm({ ...editForm, birthday: e.target.value })
+              }
+            />
           </div>
           <div className="item">
             <span>총 성적</span>
-            {/* <NormalInput placeholder="98"></NormalInput> */}
-            <NormalInput value={data.avgScore} readOnly />
+            <NormalInput value={selectedStudent?.totalScore || ""} readOnly />
           </div>
           <div className="item">
             <span>평균 등급</span>
-            {/* <NormalInput placeholder="B+"></NormalInput> */}
-            <NormalInput value={data.avgScore} readOnly />
+            <NormalInput value={selectedStudent?.averageScore || ""} readOnly />
           </div>
           <div className="item"></div>
           <div className="item"></div>
           <div className="item">
-            <CrudButton $bgColor="#86acff;">수정</CrudButton>
+            {isAdding ? (
+              // 추가모드
+              <div>
+                <CrudButton $bgColor="gray" onClick={handleCancelAdd}>
+                  취소
+                </CrudButton>
+                <CrudButton
+                  $bgColor="#86acff"
+                  onClick={handleSubmitAdd}
+                  $isEditing
+                  disabled={!canSubmitAdd}
+                >
+                  완료
+                </CrudButton>
+              </div>
+            ) : isEditing ? (
+              // 수정 모드
+              <div>
+                <CrudButton $bgColor="#B0B0B0" onClick={handleCancelEdit}>
+                  취소
+                </CrudButton>
+                <CrudButton
+                  $bgColor="#86acff"
+                  onClick={handleSubmitEdit}
+                  $isEditing
+                  disabled={!canSubmitEdit}
+                >
+                  완료
+                </CrudButton>
+              </div>
+            ) : (
+              <CrudButton $bgColor="#FFA0A0" onClick={handleIsEditing}>
+                수정
+              </CrudButton>
+            )}
           </div>
         </GridArea>
         <ChartArea>
@@ -310,13 +587,24 @@ const ScorePage: React.FC<ScorePageProps> = ({ studentId = 20401 }) => {
         </ChartArea>
       </StudentInfoBody>
       <GapBlankBody>
-        <CrudButton $bgColor="#70C776;" width="5rem">
+        <CrudButton $bgColor="#70C776;" width="5rem" onClick={handleAddClick}>
           학생 추가
         </CrudButton>
-        <CrudButton $bgColor="#FF6969;">삭제</CrudButton>
+        <CrudButton
+          $bgColor="#FF6969"
+          onClick={handleDelete}
+          disabled={!selectedStudent}
+        >
+          삭제
+        </CrudButton>
       </GapBlankBody>
-      {/* <ScoreBody /> */}
-      <GradeTable />
+      <GradeTable
+        key={refreshKey}
+        grade={selectedGrade}
+        classroom={selectedClass}
+        onGradeChange={setSelectedGrade}
+        onClassChange={setSelectedClass}
+      />
     </>
   );
 };

@@ -1,66 +1,88 @@
+// useScoreApi.ts
 import { useEffect, useState } from "react";
-import { dummyScores } from "../data/dummyScores";
 import { ENDPOINTS } from "../constants/api";
 
 export type TransformedStudent = {
   id: number;
+  studentNum: number;
   name: string;
-  [subject: string]: string | number;
+  grade: number; // 추가
+  classroom: number; // 추가
+  phoneNum: string; // 추가
+  birthday: string; // 추가
+  totalScore: number | null;
+  averageScore: number | null;
+  korean: number | null;
+  math: number | null;
+  english: number | null;
+  society: number | null;
+  science: number | null;
+  art: number | null;
+  music: number | null;
+  physical: number | null;
 };
 
-export const useScoreApi = (grade: number, classNum: number) => {
+export const useScoreApi = (grade: number, classroom: number) => {
   const [data, setData] = useState<TransformedStudent[]>([]);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchScores = async () => {
       try {
-        // 실제 API 사용할 경우
-        // const res = await fetch(ENDPOINTS.studentsList(grade, classNum));
-        // const json = await res.json();
+        const res = await fetch(ENDPOINTS.scores(grade, classroom));
+        const json = await res.json();
+        console.log("score api 응답: ", json);
+        const studentsData: any[] = json.students;
 
-        // ⬇️ dummyScores에서 학년/반 필터
-        const filtered = dummyScores.filter((s) => {
-          const sid = String(s.studentid).padStart(5, "0"); // ex: 20304
-          const sGrade = Number(sid.charAt(0));
-          const sClass = Number(sid.substring(1, 3));
-          return sGrade === grade && sClass === classNum;
-        });
+        // grade, class, semester(1) 매칭
+        const filtered = studentsData.filter(
+          (s) => s.grade === grade && s.class === classroom && s.semester === 1
+        );
 
-        const transformed = filtered.map((student: any) => {
-          const result: TransformedStudent = {
-            id: student.studentid,
-            name: student.name,
-          };
+        // const filtered = json.students.find(
+        //   (s: any) => s.grade === grade && s.semester === 1 // semester는 필요에 따라 수정
+        // );
 
-          const subjects = [
-            "korean",
-            "math",
-            "english",
-            "society",
-            "science",
-            "art",
-            "music",
-            "physical",
-          ];
-          subjects.forEach((subj) => {
-            result[subj] = student[subj];
-          });
+        // if (!filtered) {
+        //   console.error("해당 학년/학기의 성적이 없습니다.");
+        //   return;
+        // }
 
-          return result;
-        });
+        // const subjects = filtered.subjects || {};
+
+        const transformed: TransformedStudent[] = filtered.map((s) => ({
+          id: s.studentId,
+          // studentNum: json.studentNum,
+          studentNum: 0,
+          // name: s.studentName,
+          name: "",
+          grade: s.grade,
+          classroom: s.class,
+          // phoneNum: student.phoneNum,
+          // birthday: student.birthday,
+          phoneNum: "", // 다른 API에서 채움
+          birthday: "",
+          korean: s.subjects.subject1 ?? null,
+          math: s.subjects.subject2 ?? null,
+          english: s.subjects.subject3 ?? null,
+          society: s.subjects.subject4 ?? null,
+          science: s.subjects.subject5 ?? null,
+          art: s.subjects.subject6 ?? null,
+          music: s.subjects.subject7 ?? null,
+          physical: s.subjects.subject8 ?? null,
+          totalScore: s.totalScore ?? null,
+          averageScore: s.averageScore ?? null,
+        }));
 
         setData(transformed);
       } catch (err) {
         console.error("Score API fetch error:", err);
         setData([]);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchScores();
-  }, [grade, classNum]);
+  }, [grade, classroom]);
 
-  return { data, loading };
+  return { data };
 };
