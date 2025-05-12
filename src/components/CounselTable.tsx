@@ -113,5 +113,5 @@ const MainArea = styled.div`
 `;
 
 export const CounselTable: React.FC = () => {
-  return <div>dd</div>;
+  return <div>fine</div>;
 };

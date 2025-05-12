@@ -169,6 +169,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, ref }) => {
     navigate("/attendance");
   };
 
+  const goToCounsel = () => {
+    navigate("/counsel");
+  };
+
   const goToScoreInput = () => {
     navigate("/scoreinput");
   };
@@ -203,7 +207,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, ref }) => {
               </div>
               <span className="menuname">출석부</span>
             </MenuTab>
-            <MenuTab $enabled={currentPath === "/counsel"}>
+            <MenuTab
+              $enabled={currentPath === "/counsel"}
+              onClick={goToCounsel}
+            >
               <div>
                 <img src={listIcon} />
               </div>
