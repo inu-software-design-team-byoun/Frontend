@@ -1,6 +1,8 @@
 // components/CounselModal.tsx
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
+import axios from "axios";
+import { CrudButton } from "./CrudButton";
 
 const Wrapper = styled.div`
   width: 54.25rem;
@@ -75,6 +77,10 @@ const TitleArea = styled.div`
 const ButtonArea = styled.div`
   width: 100%;
   height: 3rem;
+
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 `;
 
 const TableArea = styled.div`
@@ -132,6 +138,8 @@ const RecordTable = styled.table`
 `;
 
 export const CounselModal: React.FC = () => {
+  const [isEditing, setIsEditing] = useState(false);
+
   return (
     <Wrapper>
       <StudentInfoArea></StudentInfoArea>
@@ -141,7 +149,10 @@ export const CounselModal: React.FC = () => {
           <span className="student">- 2번 박존슨 학생 / Total 3</span>
         </TitleArea>
         <TableArea>
-          <ButtonArea />
+          <ButtonArea>
+            <CrudButton $bgColor="#70C776">추가</CrudButton>
+            <CrudButton $bgColor="#FF6969">삭제</CrudButton>
+          </ButtonArea>
           <TopRectangle />
           <RecordTable>
             <colgroup>

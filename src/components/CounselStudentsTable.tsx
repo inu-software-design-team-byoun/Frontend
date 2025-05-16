@@ -1,23 +1,19 @@
 // components/CounselStudentsTable
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import SimpleStudentRow from "./SimpleStudentRow";
 import { useStudentsListApi } from "../hooks/useStudentListApi";
 import SearchIcon from "../assets/icon/SearchIcon.svg";
-// import SearchIcon from "../assets/icon/SearchIcon.svg?url";
-
 import SelectArrow from "../assets/icon/SelectArrow.png";
 
 const Wrapper = styled.div`
   margin-left: 0.5rem;
   margin-right: 3rem;
   width: 14.25rem;
-  /* height: 27rem; // 432px; */
   height: 89vh;
   background-color: white;
   box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.25);
   border-radius: 1rem;
-
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -38,17 +34,12 @@ const BottomRectangle = styled.div`
   background: #feb3ac;
   border-bottom-left-radius: 16px;
   border-bottom-right-radius: 16px;
-
-  /* bottom: 0;
-  position: sticky;
-  z-index: 2; */
 `;
 
 const ClassArea = styled.div`
   width: 100%;
   height: 64px;
   border-bottom: 2px solid #feb3ac;
-
   display: flex;
   align-items: center;
 
@@ -56,7 +47,6 @@ const ClassArea = styled.div`
     margin-left: 2rem;
     width: 4rem;
     height: 2rem;
-
     color: black;
   }
 `;
@@ -66,26 +56,20 @@ const Select = styled.select<{ $syllable: number }>`
   width: ${(props) =>
     props.$syllable === 3 ? "92px" : props.$syllable === 2 ? "80px" : "124px"};
   height: 2.5rem;
-  padding: 0 1rem; // 12px;
+  padding: 0 1rem;
   border: 2px solid #feb3ac;
   border-radius: 0.65rem;
-
   color: black;
   font-family: NanumSquare;
   font-size: 1rem;
   font-weight: bold;
-
   background-color: white;
-
   &:focus {
     outline: none;
-    /* border-color: black; */
   }
-
   appearance: none;
   -webkit-appearance: none;
   background-color: white;
-
   background-image: url(${SelectArrow});
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
@@ -96,33 +80,26 @@ const SearchArea = styled.div`
   width: 100%;
   height: 3rem;
   border-bottom: 2px solid #feb3ac;
-
   display: flex;
   justify-content: center;
   align-items: center;
 
   input {
-    /* width: 188px; // padding이 없을 때 원래 넓이 */
     width: 132px;
     height: 2.25rem;
     border: 1.5px solid #feb3ac;
     border-radius: 0.5rem;
-
     background-color: #fff6f4;
     background-image: url("${SearchIcon}");
     background-position: right 0.625rem center;
     background-repeat: no-repeat;
     background-size: 1rem;
-
     color: gray;
     font-size: 1rem;
-
     padding: 0 2.5rem 0 1rem;
-
     &:focus {
       outline: none;
     }
-
     &::placeholder {
       color: #db9a94;
     }
@@ -132,34 +109,16 @@ const SearchArea = styled.div`
 const TableWrapper = styled.div`
   flex: 1;
   overflow-y: auto;
-  /* max-height: 10rem; */
   max-height: 36.125rem;
-
-  /* padding-right: 6px; */
-  /* margin-right: -6px; */
-
-  /* scrollbar-gutter: stable;  */
-  /* padding-right: 0;  */
-
-  /* &::-webkit-scrollbar {
-    width: 6px;
-  } */
-
-  /* &::-webkit-scrollbar-thumb {
-    background-color: #ccc;
-    border-radius: 3px;
-  } */
 `;
 
 const StyledTable = styled.table`
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-
   col {
     width: 8%;
   }
-
   thead {
     position: sticky;
     top: 0;
@@ -167,18 +126,15 @@ const StyledTable = styled.table`
     z-index: 1;
     border-bottom: 1.5px solid #feb3ac;
   }
-
   th,
   td {
     text-align: center;
     font-size: 1rem;
     height: 2.5rem;
   }
-
   th {
     border: none;
   }
-
   td {
     border-bottom: 1px solid #ccc;
   }
@@ -198,6 +154,8 @@ export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
   onClassChange,
 }) => {
   const { data: studentList } = useStudentsListApi(grade, classroom);
+  const [query, setQuery] = useState("");
+  const filtered = studentList.filter((s) => s.name.includes(query));
 
   return (
     <Wrapper>
@@ -205,8 +163,6 @@ export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
       <ClassArea>
         <Select
           $syllable={3}
-          // value={selectedGrade}
-          // onChange={(e) => setSelectedGrade(Number(e.target.value))}
           value={grade}
           onChange={(e) => onGradeChange(Number(e.target.value))}
         >
@@ -228,8 +184,11 @@ export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
         </Select>
       </ClassArea>
       <SearchArea>
-        <input placeholder="검색어 입력 + Enter"></input>
-        {/* <input placeholder="검색어 입력 + Enter" /> */}
+        <input
+          placeholder="검색어 입력 + Enter"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
       </SearchArea>
       <TableWrapper>
         <StyledTable>
@@ -237,15 +196,8 @@ export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
             <col />
             <col />
           </colgroup>
-          {/* 그냥 번호 이름 안넣는 게 나을 듯 */}
-          {/* <thead>
-            <tr>
-              <th>번호</th>
-              <th>이름</th>
-            </tr>
-          </thead> */}
           <tbody>
-            {studentList.map((stu) => (
+            {filtered.map((stu) => (
               <SimpleStudentRow key={stu.id} student={stu} />
             ))}
           </tbody>
