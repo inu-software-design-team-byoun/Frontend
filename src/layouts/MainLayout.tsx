@@ -6,9 +6,15 @@ import scoreIcon from "../assets/scoreIcon.svg";
 import userIcon from "../assets/userIcon.svg";
 import settingIcon from "../assets/settingIcon.svg";
 import pencilIcon from "../assets/icon/pencilIcon.svg";
-import BellIcon from "../assets/icon/BellIcon..svg";
+import BellIcon from "../assets/icon/BellIcon.svg?react";
 
 import { useNavigate, useLocation } from "react-router-dom";
+
+const BellImg = styled(BellIcon)`
+  /* color: black; */
+  color: #787878;
+  height: 20px;
+`;
 
 export const MainWrapper = styled.div`
   width: 100vw;
@@ -90,16 +96,31 @@ export const UserRole = styled.span`
   }
 `;
 
-const NotificationBell = styled.div`
+const NotificationButton = styled.button`
   /* justify-self: end; // flex-box내에서 이거 안됨 */
   margin-left: auto; // 해당 요소에 좌측 마진을 자동으로 채워라
-  /* border: 1px solid black; */
+
+  border: none;
+  /* background-color: transparent; */
+  background-color: #d9d9d9;
+
+  border-radius: 2rem;
+
   width: 2rem;
   height: 2rem;
 
   display: flex;
   justify-content: center;
   align-items: center;
+
+  cursor: pointer;
+
+  transition: transform 0.2s ease-in-out;
+
+  /* hover 상태일 때, 내부 Bellimg 에 적용 */
+  &:hover ${BellImg} {
+    color: #ffac33; /* 색상 변경 */
+  }
 `;
 
 export const MainMenuBox = styled.div`
@@ -199,9 +220,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, ref }) => {
               <span className="name">비제이</span>
               <span> 선생님</span>
             </UserRole>
-            <NotificationBell>
-              <img src={BellIcon} />
-            </NotificationBell>
+            <NotificationButton>
+              <BellImg />
+            </NotificationButton>
           </UserNameBox>
 
           <MainMenuBox>
