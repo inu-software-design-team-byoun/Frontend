@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import bookIcon from "../assets/bookIcon.svg";
 import listIcon from "../assets/listIcon.svg";
@@ -8,13 +8,132 @@ import settingIcon from "../assets/settingIcon.svg";
 import pencilIcon from "../assets/icon/pencilIcon.svg";
 import BellIcon from "../assets/icon/BellIcon.svg?react";
 
+import { NotiPopOver } from "../components/NotiPopOver";
+
 import { useNavigate, useLocation } from "react-router-dom";
 
-const BellImg = styled(BellIcon)`
-  /* color: black; */
-  color: #787878;
-  height: 20px;
-`;
+type MainLayoutProps = {
+  children: React.ReactNode;
+  // ref?: string;
+};
+
+const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+  const [showNoti, setShowNoti] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const toggleNoti = () => setShowNoti((prev) => !prev);
+
+  const location = useLocation();
+  const currentPath = location.pathname;
+
+  const navigate = useNavigate();
+
+  const goToMain = () => {
+    navigate("/");
+  };
+
+  const goToAttendance = () => {
+    navigate("/attendance");
+  };
+
+  const goToScoreInput = () => {
+    navigate("/scoreinput");
+  };
+
+  // 문서 전체 클릭을 감지한 뒤, 그 클릭이 Wrapper 바깥이면 showNoti = false로 변경
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(e.target as Node)
+      ) {
+        setShowNoti(false);
+      }
+    }
+    if (showNoti) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showNoti]);
+
+  return (
+    <MainWrapper>
+      <SideBarArea>
+        <SideBar>
+          <UserNameBox>
+            <UserLastName>
+              <span>비</span>
+            </UserLastName>
+            <UserRole>
+              <span className="name">비제이</span>
+              <span> 선생님</span>
+            </UserRole>
+            <NotificationWrapper ref={wrapperRef}>
+              <NotificationButton onClick={toggleNoti}>
+                <BellImg />
+              </NotificationButton>
+              <NotiPopOver $visible={showNoti}>새로운 알림</NotiPopOver>
+            </NotificationWrapper>
+          </UserNameBox>
+
+          <MainMenuBox>
+            <span className="menurole">메인메뉴</span>
+            <MenuTab $enabled={currentPath === "/"} onClick={goToMain}>
+              <div>
+                <img src={scoreIcon} />
+              </div>
+              <span className="menuname">성적</span>
+            </MenuTab>
+            <MenuTab
+              $enabled={currentPath === "/attendance"}
+              onClick={goToAttendance}
+            >
+              <div>
+                <img src={bookIcon} />
+              </div>
+              <span className="menuname">출석부</span>
+            </MenuTab>
+            <MenuTab $enabled={currentPath === "/counsel"}>
+              <div>
+                <img src={listIcon} />
+              </div>
+              <span className="menuname">상담내역</span>
+            </MenuTab>
+            <MenuTab
+              $enabled={currentPath === "/scoreinput"}
+              onClick={goToScoreInput}
+            >
+              <div>
+                <img src={pencilIcon} />
+              </div>
+              <span className="menuname">성적 입력</span>
+            </MenuTab>
+          </MainMenuBox>
+          <AccountMenuBox>
+            <span className="menurole">설정</span>
+            <MenuTab $enabled={false}>
+              <div>
+                <img src={userIcon} />
+              </div>
+              <span className="menuname">사용자계정</span>
+            </MenuTab>
+            <MenuTab $enabled={false}>
+              <div>
+                <img src={settingIcon} />
+              </div>
+              <span className="menuname">설정</span>
+            </MenuTab>
+          </AccountMenuBox>
+        </SideBar>
+      </SideBarArea>
+      <MainArea>{children}</MainArea>
+    </MainWrapper>
+  );
+};
+
+export default MainLayout;
 
 export const MainWrapper = styled.div`
   width: 100vw;
@@ -96,9 +215,19 @@ export const UserRole = styled.span`
   }
 `;
 
+export const NotificationWrapper = styled.div`
+  position: relative;
+  display: inline-block;
+  margin-left: auto; // 해당 요소에 좌측 마진을 자동으로 채워기
+`;
+
+const BellImg = styled(BellIcon)`
+  /* color: black; */
+  color: #787878;
+  height: 20px;
+`;
 const NotificationButton = styled.button`
-  /* justify-self: end; // flex-box내에서 이거 안됨 */
-  margin-left: auto; // 해당 요소에 좌측 마진을 자동으로 채워라
+  position: relative;
 
   border: none;
   /* background-color: transparent; */
@@ -184,100 +313,3 @@ export const MainArea = styled.main`
 
   /* border-left: black 1px solid; */
 `;
-
-type MainLayoutProps = {
-  children: React.ReactNode;
-  ref?: string;
-};
-
-const MainLayout: React.FC<MainLayoutProps> = ({ children, ref }) => {
-  const location = useLocation();
-  const currentPath = location.pathname;
-
-  const navigate = useNavigate();
-
-  const goToMain = () => {
-    navigate("/");
-  };
-
-  const goToAttendance = () => {
-    navigate("/attendance");
-  };
-
-  const goToScoreInput = () => {
-    navigate("/scoreinput");
-  };
-
-  return (
-    <MainWrapper>
-      <SideBarArea>
-        <SideBar>
-          <UserNameBox>
-            <UserLastName>
-              <span>비</span>
-            </UserLastName>
-            <UserRole>
-              <span className="name">비제이</span>
-              <span> 선생님</span>
-            </UserRole>
-            <NotificationButton>
-              <BellImg />
-            </NotificationButton>
-          </UserNameBox>
-
-          <MainMenuBox>
-            <span className="menurole">메인메뉴</span>
-            <MenuTab $enabled={currentPath === "/"} onClick={goToMain}>
-              <div>
-                <img src={scoreIcon} />
-              </div>
-              <span className="menuname">성적</span>
-            </MenuTab>
-            <MenuTab
-              $enabled={currentPath === "/attendance"}
-              onClick={goToAttendance}
-            >
-              <div>
-                <img src={bookIcon} />
-              </div>
-              <span className="menuname">출석부</span>
-            </MenuTab>
-            <MenuTab $enabled={currentPath === "/counsel"}>
-              <div>
-                <img src={listIcon} />
-              </div>
-              <span className="menuname">상담내역</span>
-            </MenuTab>
-            <MenuTab
-              $enabled={currentPath === "/scoreinput"}
-              onClick={goToScoreInput}
-            >
-              <div>
-                <img src={pencilIcon} />
-              </div>
-              <span className="menuname">성적 입력</span>
-            </MenuTab>
-          </MainMenuBox>
-          <AccountMenuBox>
-            <span className="menurole">설정</span>
-            <MenuTab $enabled={false}>
-              <div>
-                <img src={userIcon} />
-              </div>
-              <span className="menuname">사용자계정</span>
-            </MenuTab>
-            <MenuTab $enabled={false}>
-              <div>
-                <img src={settingIcon} />
-              </div>
-              <span className="menuname">설정</span>
-            </MenuTab>
-          </AccountMenuBox>
-        </SideBar>
-      </SideBarArea>
-      <MainArea>{children}</MainArea>
-    </MainWrapper>
-  );
-};
-
-export default MainLayout;
