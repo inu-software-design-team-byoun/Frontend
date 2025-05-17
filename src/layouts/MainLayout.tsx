@@ -6,6 +6,8 @@ import scoreIcon from "../assets/scoreIcon.svg";
 import userIcon from "../assets/userIcon.svg";
 import settingIcon from "../assets/settingIcon.svg";
 import pencilIcon from "../assets/icon/pencilIcon.svg";
+import BellIcon from "../assets/icon/BellIcon..svg";
+
 import { useNavigate, useLocation } from "react-router-dom";
 
 export const MainWrapper = styled.div`
@@ -86,6 +88,18 @@ export const UserRole = styled.span`
   .name {
     font-weight: bold;
   }
+`;
+
+const NotificationBell = styled.div`
+  /* justify-self: end; // flex-box내에서 이거 안됨 */
+  margin-left: auto; // 해당 요소에 좌측 마진을 자동으로 채워라
+  /* border: 1px solid black; */
+  width: 2rem;
+  height: 2rem;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 export const MainMenuBox = styled.div`
@@ -179,13 +193,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, ref }) => {
         <SideBar>
           <UserNameBox>
             <UserLastName>
-              <span>앨</span>
+              <span>비</span>
             </UserLastName>
             <UserRole>
-              <span className="name">앨런 튜링</span>
+              <span className="name">비제이</span>
               <span> 선생님</span>
             </UserRole>
+            <NotificationBell>
+              <img src={BellIcon} />
+            </NotificationBell>
           </UserNameBox>
+
           <MainMenuBox>
             <span className="menurole">메인메뉴</span>
             <MenuTab $enabled={currentPath === "/"} onClick={goToMain}>
