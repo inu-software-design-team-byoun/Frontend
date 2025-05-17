@@ -1,3 +1,4 @@
+// MainLayout.tsx
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import bookIcon from "../assets/bookIcon.svg";
@@ -6,7 +7,9 @@ import scoreIcon from "../assets/scoreIcon.svg";
 import userIcon from "../assets/userIcon.svg";
 import settingIcon from "../assets/settingIcon.svg";
 import pencilIcon from "../assets/icon/pencilIcon.svg";
+
 import BellIcon from "../assets/icon/BellIcon.svg?react";
+import DeleteIcon from "../assets/icon/DeleteIcon.svg";
 
 import { NotiPopOver } from "../components/NotiPopOver";
 
@@ -17,9 +20,49 @@ type MainLayoutProps = {
   // ref?: string;
 };
 
+// Notification 타입 정의
+interface Notification {
+  id: number;
+  date: string;
+  text: string;
+}
+
+// 예시 notifications 배열
+const initialNotifications = [
+  {
+    id: 1,
+    date: "2025.05.12 (1일전)",
+    text: "성적이 업데이트되었습니다.",
+  },
+  {
+    id: 2,
+    date: "2025.05.11 (2일전)",
+    text: "피드백이 작성되었습니다.",
+  },
+  {
+    id: 3,
+    date: "2025.05.10 (3일전)",
+    text: "상담 내역이 추가되었습니다.",
+  },
+  {
+    id: 4,
+    date: "2025.05.08 (5일전)",
+    text: "성적이 수정되었습니다.",
+  },
+  {
+    id: 5,
+    date: "2025.05.05 (8일전)",
+    text: "학기 중간고사 일정이 확정되었습니다.",
+  },
+];
+
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [showNoti, setShowNoti] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // 컴포넌트 내부
+  const [notifications, setNotifications] =
+    useState<Notification[]>(initialNotifications);
 
   const toggleNoti = () => setShowNoti((prev) => !prev);
 
@@ -58,23 +101,51 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     };
   }, [showNoti]);
 
+  // 단일 삭제
+  const deleteOne = (id: number) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  // 전체 삭제
+  const deleteAll = () => {
+    setNotifications([]);
+  };
+
   return (
     <MainWrapper>
       <SideBarArea>
         <SideBar>
           <UserNameBox>
             <UserLastName>
-              <span>비</span>
+              <span>구</span>
             </UserLastName>
             <UserRole>
-              <span className="name">비제이</span>
+              <span className="name">구루루</span>
               <span> 선생님</span>
             </UserRole>
             <NotificationWrapper ref={wrapperRef}>
               <NotificationButton onClick={toggleNoti}>
                 <BellImg />
               </NotificationButton>
-              <NotiPopOver $visible={showNoti}>새로운 알림</NotiPopOver>
+              <NotiPopOver $visible={showNoti}>
+                <NotiHeader>알림</NotiHeader>
+                <NotiContent>
+                  {notifications.map((n) => (
+                    <NotiItem key={n.id}>
+                      <span>{n.date}</span>
+                      <DeleteBtn onClick={() => deleteOne(n.id)}>
+                        <img src={DeleteIcon} />
+                      </DeleteBtn>
+                      <p>{n.text}</p>
+                    </NotiItem>
+                  ))}
+                </NotiContent>
+                {notifications.length > 0 ? (
+                  <ClearAllBtn onClick={deleteAll}>모두 지우기</ClearAllBtn>
+                ) : (
+                  <EmptyMsg>표시할 알림이 없습니다.</EmptyMsg>
+                )}
+              </NotiPopOver>
             </NotificationWrapper>
           </UserNameBox>
 
@@ -151,6 +222,7 @@ export const SideBarArea = styled.div`
 
 export const SideBar = styled.div`
   position: fixed; // 브라우저의 전체화면(viewport)를 기준으로 html 요소 배치. 부모 요소로부터 완전히 독립
+  z-index: 10;
 
   margin: 3rem 2.5rem;
   width: 14.5rem;
@@ -250,6 +322,100 @@ const NotificationButton = styled.button`
   &:hover ${BellImg} {
     color: #ffac33; /* 색상 변경 */
   }
+`;
+
+export const NotiHeader = styled.div`
+  flex-shrink: 0; /* 압축 금지 */
+  height: 3.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+
+  border-bottom: 0.5px solid #bdbdbd;
+`;
+
+export const NotiContent = styled.div`
+  flex: 1; /* 남은 공간 전부 차지 */
+  min-height: 0; /* flex 자식이 스크롤될 수 있게 */
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #b5b5b5;
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background-color: #f0f0f0;
+  }
+`;
+
+const NotiItem = styled.div`
+  position: relative; // 내부 Delete 버튼 용
+  border-top: 0.5px solid #bdbdbd;
+  border-bottom: 0.5px solid #bdbdbd;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+
+  /* height: 4.5rem; // 56 -> 72px */
+  min-height: 4.5rem;
+  height: auto;
+
+  span {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+
+    margin: 0.25rem 1.5rem;
+    height: 1.25rem;
+
+    color: #aaaaaa;
+    font-weight: normal;
+  }
+
+  p {
+    margin: 0 1.5rem;
+    height: 1.25rem;
+  }
+
+  img {
+    width: 1rem;
+  }
+`;
+
+// 개별 삭제 버튼
+export const DeleteBtn = styled.button`
+  position: absolute;
+  top: 1.5rem;
+  right: 0.75rem;
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  cursor: pointer;
+`;
+
+// 모두 지우기 버튼
+export const ClearAllBtn = styled.button`
+  align-self: flex-end;
+  margin: 1rem;
+  padding: 0.25rem 0.75rem;
+  border: none;
+  border-radius: 0.25rem;
+  background-color: #f5f5f5;
+  font-size: 1rem;
+  cursor: pointer;
+`;
+
+export const EmptyMsg = styled.div`
+  flex-shrink: 0;
+  padding: 1rem;
+  color: #666;
+  text-align: center;
 `;
 
 export const MainMenuBox = styled.div`
