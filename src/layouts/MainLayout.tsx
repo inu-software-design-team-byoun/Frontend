@@ -63,21 +63,22 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   useEffect(() => {
     webSocket.current = new WebSocket("wss://websocket-url");
-    webSocket.current.onmessage = e => setMessages(prev => [...prev, e.data]);
+    webSocket.current.onmessage = (e) =>
+      setMessages((prev) => [...prev, e.data]);
     return () => webSocket.current?.close();
   }, []);
 
-    // 2) MSW로 모킹된 /api/event 한 번 호출해보기
-    const [events, setEvents] = useState<string[]>([]);
-    useEffect(() => {
-      fetch("http://localhost:8080/api/event")
-        .then(res => res.json())
-        .then(body => {
-          // handlers.ts 에서 `data: ["mocking응답성공"]`
-          setEvents(body.data);
-        })
-        .catch(console.error);
-    }, []);
+  // 2) MSW로 모킹된 /api/event 한 번 호출해보기
+  const [events, setEvents] = useState<string[]>([]);
+  useEffect(() => {
+    fetch("http://localhost:8080/api/event")
+      .then((res) => res.json())
+      .then((body) => {
+        // handlers.ts 에서 `data: ["mocking응답성공"]`
+        setEvents(body.data);
+      })
+      .catch(console.error);
+  }, []);
 
   // useEffect(() => {
   //   webSocket.current = new WebSocket("wss://websocket-url");
@@ -126,6 +127,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   const goToAttendance = () => {
     navigate("/attendance");
+  };
+  const goToCounsel = () => {
+    navigate("/counsel");
   };
 
   const goToScoreInput = () => {
@@ -215,7 +219,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </div>
               <span className="menuname">출석부</span>
             </MenuTab>
-            <MenuTab $enabled={currentPath === "/counsel"}>
+            <MenuTab
+              $enabled={currentPath === "/counsel"}
+              onClick={goToCounsel}
+            >
               <div>
                 <img src={listIcon} />
               </div>
@@ -533,103 +540,3 @@ export const MainArea = styled.main`
 
   /* border-left: black 1px solid; */
 `;
-
-type MainLayoutProps = {
-  children: React.ReactNode;
-  ref?: string;
-};
-
-const MainLayout: React.FC<MainLayoutProps> = ({ children, ref }) => {
-  const location = useLocation();
-  const currentPath = location.pathname;
-
-  const navigate = useNavigate();
-
-  const goToMain = () => {
-    navigate("/");
-  };
-
-  const goToAttendance = () => {
-    navigate("/attendance");
-  };
-
-  const goToCounsel = () => {
-    navigate("/counsel");
-  };
-
-  const goToScoreInput = () => {
-    navigate("/scoreinput");
-  };
-
-  return (
-    <MainWrapper>
-      <SideBarArea>
-        <SideBar>
-          <UserNameBox>
-            <UserLastName>
-              <span>앨</span>
-            </UserLastName>
-            <UserRole>
-              <span className="name">앨런 튜링</span>
-              <span> 선생님</span>
-            </UserRole>
-          </UserNameBox>
-          <MainMenuBox>
-            <span className="menurole">메인메뉴</span>
-            <MenuTab $enabled={currentPath === "/"} onClick={goToMain}>
-              <div>
-                <img src={scoreIcon} />
-              </div>
-              <span className="menuname">성적</span>
-            </MenuTab>
-            <MenuTab
-              $enabled={currentPath === "/attendance"}
-              onClick={goToAttendance}
-            >
-              <div>
-                <img src={bookIcon} />
-              </div>
-              <span className="menuname">출석부</span>
-            </MenuTab>
-            <MenuTab
-              $enabled={currentPath === "/counsel"}
-              onClick={goToCounsel}
-            >
-              <div>
-                <img src={listIcon} />
-              </div>
-              <span className="menuname">상담내역</span>
-            </MenuTab>
-            <MenuTab
-              $enabled={currentPath === "/scoreinput"}
-              onClick={goToScoreInput}
-            >
-              <div>
-                <img src={pencilIcon} />
-              </div>
-              <span className="menuname">성적 입력</span>
-            </MenuTab>
-          </MainMenuBox>
-          <AccountMenuBox>
-            <span className="menurole">설정</span>
-            <MenuTab $enabled={false}>
-              <div>
-                <img src={userIcon} />
-              </div>
-              <span className="menuname">사용자계정</span>
-            </MenuTab>
-            <MenuTab $enabled={false}>
-              <div>
-                <img src={settingIcon} />
-              </div>
-              <span className="menuname">설정</span>
-            </MenuTab>
-          </AccountMenuBox>
-        </SideBar>
-      </SideBarArea>
-      <MainArea>{children}</MainArea>
-    </MainWrapper>
-  );
-};
-
-export default MainLayout;
