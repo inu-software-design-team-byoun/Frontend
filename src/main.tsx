@@ -5,10 +5,32 @@ import { GoogleOAuthProvider } from "@react-oauth/google"; // ✅ 추가
 
 const clientId = "YOUR_GOOGLE_CLIENT_ID"; // 🔑 여기에 실제 클라이언트 ID 입력
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <GoogleOAuthProvider clientId={clientId}>
-      <App />
-    </GoogleOAuthProvider>
-  </StrictMode>
-);
+//const useMsw = true;
+const useMsw = true;
+async function enableMocking() {
+  if (process.env.NODE_ENV === "development" && useMsw) {
+    import("./mocks/browser").then(({ worker }) => worker.start());
+    // const { worker } = await import("./mocks/browser");
+    // await worker.start();
+  }
+}
+
+if (useMsw) {
+  enableMocking().then(() => {
+    createRoot(document.getElementById("root")!).render(
+      <StrictMode>
+        <GoogleOAuthProvider clientId={clientId}>
+          <App />
+        </GoogleOAuthProvider>
+      </StrictMode>
+    );
+  });
+} else {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <GoogleOAuthProvider clientId={clientId}>
+        <App />
+      </GoogleOAuthProvider>
+    </StrictMode>
+  );
+}
