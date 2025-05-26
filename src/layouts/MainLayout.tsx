@@ -58,27 +58,27 @@ const initialNotifications = [
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   // 웹소켓 영역
-  const [messages, setMessages] = useState<string[]>([]);
-  const webSocket = useRef<WebSocket | null>(null);
+  // const [messages, setMessages] = useState<string[]>([]);
+  // const webSocket = useRef<WebSocket | null>(null);
 
-  useEffect(() => {
-    webSocket.current = new WebSocket("wss://websocket-url");
-    webSocket.current.onmessage = (e) =>
-      setMessages((prev) => [...prev, e.data]);
-    return () => webSocket.current?.close();
-  }, []);
+  // useEffect(() => {
+  //   webSocket.current = new WebSocket("wss://websocket-url");
+  //   webSocket.current.onmessage = (e) =>
+  //     setMessages((prev) => [...prev, e.data]);
+  //   return () => webSocket.current?.close();
+  // }, []);
 
   // 2) MSW로 모킹된 /api/event 한 번 호출해보기
-  const [events, setEvents] = useState<string[]>([]);
-  useEffect(() => {
-    fetch("http://localhost:8080/api/event")
-      .then((res) => res.json())
-      .then((body) => {
-        // handlers.ts 에서 `data: ["mocking응답성공"]`
-        setEvents(body.data);
-      })
-      .catch(console.error);
-  }, []);
+  // const [events, setEvents] = useState<string[]>([]);
+  // useEffect(() => {
+  //   fetch("http://localhost:8080/api/event")
+  //     .then((res) => res.json())
+  //     .then((body) => {
+  //       // handlers.ts 에서 `data: ["mocking응답성공"]`
+  //       setEvents(body.data);
+  //     })
+  //     .catch(console.error);
+  // }, []);
 
   // useEffect(() => {
   //   webSocket.current = new WebSocket("wss://websocket-url");
@@ -237,11 +237,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </div>
               <span className="menuname">성적 입력</span>
             </MenuTab>
-            <div>
+            {/* 웹소켓 */}
+            {/* <div>
               {messages?.map((message, index) => (
                 <div key={index}>{message}</div>
               ))}
-            </div>
+            </div> */}
           </MainMenuBox>
           <AccountMenuBox>
             <span className="menurole">설정</span>

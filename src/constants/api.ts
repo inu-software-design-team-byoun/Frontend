@@ -13,4 +13,12 @@ export const ENDPOINTS = {
   auth: `${API_BASE_URL}/auth/google`,
   teachers: `${API_BASE_URL}/teachers`,
   check: `${API_BASE_URL}/auth/check-user`,
+  counsels: `${API_BASE_URL}/counsels`,
+  counselList: (
+    studentId: number,
+    startDate: string,
+    endDate: string,
+    subject: number
+  ) =>
+    `${API_BASE_URL}/counsels?studentId=${studentId}&startDate=${startDate}&endDate=${endDate}&subject=${subject}`,
 };
