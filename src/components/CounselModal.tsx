@@ -351,9 +351,9 @@ const StudentInfoArea = styled.div`
   }
 
   button {
-    width: 8rem;
+    width: 9rem;
     height: 2rem;
-    background-color: #feb3ac;
+    background-color: #e96a5e;
     /* border: 1.5px solid white; */
     border: none;
     border-radius: 0.5rem;
@@ -369,9 +369,11 @@ const StudentInfoArea = styled.div`
     cursor: pointer;
 
     &:hover {
-      background-color: #ff8e83;
+      background-color: #ff796c;
+      /* background-color: #ff8e83; */
+
       border: 1.5px solid white;
-      transition: background-color 0.3s ease;
+      /* transition: background-color 0.3s ease; */
     }
 
     img {
