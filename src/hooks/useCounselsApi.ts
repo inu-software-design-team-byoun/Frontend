@@ -1,29 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { ENDPOINTS } from "../constants/api";
 
-export type Student = {
-  id: number;
-  studentNum: number;
-  name: string;
-  grade: number;
-  classroom: number;
-  phoneNum: string;
-  birthday: string;
-  userId: number | null;
-  picture: string;
-};
-
 export type Counsel = {
   id: number;
-  student: Student;
+
   date: string;
   content: string;
 };
 
 export const useCounselsApi = () => {
   const [counsels, setCounsels] = useState<Counsel[]>([]);
-  const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
@@ -36,17 +23,14 @@ export const useCounselsApi = () => {
         console.log("Counsels API 응답:", res.data);
         if (Array.isArray(res.data)) {
           setCounsels(res.data);
-          if (res.data.length > 0) setStudent(res.data[0].student);
-          else setStudent(null);
         } else {
           setCounsels([]);
-          setStudent(null);
         }
       })
       .catch((err) => {
         console.error("Counsels API 에러:", err);
         setCounsels([]);
-        setStudent(null);
+
         setError(err);
       })
       .finally(() => setLoading(false));
@@ -109,7 +93,7 @@ export const useCounselsApi = () => {
 
   return {
     counsels,
-    student,
+
     loading,
     error,
     fetchCounsels,

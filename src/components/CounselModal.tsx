@@ -3,28 +3,15 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { CrudButton } from "./CrudButton";
 import { useCounselsApi } from "../hooks/useCounselsApi";
+import { useSelectedStudentStore } from "../store/useSelectedStudentStore";
 
 // 아이콘
 import pencilIcon from "../assets/icon/pencilIcon.svg";
 import deleteIcon from "../assets/icon/deleteIcon.svg";
 import OpenBookIcon from "../assets/icon/OpenBookIcon.svg";
 
-// 타입 정의
-type Student = {
-  id: number;
-  studentNum: number;
-  name: string;
-  grade: number;
-  classroom: number;
-  phoneNum: string;
-  birthday: string;
-  userId: number | null;
-  picture: string;
-};
-
 type Counsel = {
   id: number;
-  student: Student;
   date: string;
   content: string;
 };
@@ -34,7 +21,6 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
 }) => {
   const {
     counsels,
-    student,
     loading,
     error,
     fetchCounsels,
@@ -42,6 +28,8 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
     addCounsel,
     updateCounsel,
   } = useCounselsApi();
+
+  const { selectedStudent } = useSelectedStudentStore(); // 선택된 학생 정보 가져오기
 
   const [isAdding, setIsAdding] = useState(false); // 등록 상태 관리
   const [editingCounselId, setEditingCounselId] = useState<number | null>(null); // 수정 상태 관리
@@ -109,15 +97,15 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
           <div>로딩 중...</div>
         ) : error ? (
           <div>에러 발생: 데이터를 불러올 수 없습니다.</div>
-        ) : student ? (
+        ) : selectedStudent ? (
           <div>
             <PictureInput />
             <div>
               <p>
-                {student.grade}학년 {student.classroom}반{" "}
-                {student.studentNum % 100}번
+                {selectedStudent.grade}학년 {selectedStudent.classroom}반{" "}
+                {/* {selectedStudent.studentNum % 100}번 */}
               </p>
-              <p>{student.name}</p>
+              <p>{selectedStudent.name}</p>
               {/* <p>전화번호</p> */}
               {/* <p>{student.phoneNum}</p> */}
               {/* <p>{student.birthday}</p> */}
@@ -134,9 +122,10 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
         <TitleArea>
           <span className="title">행동특성 누가기록</span>
           <span className="student">
-            {student
-              ? `- ${student.studentNum % 100}번 ${student.name} 학생 / Total ${counsels.length}`
-              : ""}
+            {selectedStudent
+              ? `- ${selectedStudent.name} 학생 / Total ${counsels.length}`
+              : // ? `- ${selectedStudent.studentNum % 100}번 ${selectedStudent.name} 학생 / Total ${counsels.length}`
+                ""}
           </span>
         </TitleArea>
         <TableArea>

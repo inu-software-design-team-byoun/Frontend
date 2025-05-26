@@ -134,10 +134,10 @@ const ClassArea = styled.div`
   align-items: center;
 `;
 
-const ClassSelect = styled.select<{ syllable: number }>`
-  margin-left: ${(props) => (props.syllable === 3 ? "1.25rem" : "1rem")};
+const ClassSelect = styled.select<{ $syllable: number }>`
+  margin-left: ${(props) => (props.$syllable === 3 ? "1.25rem" : "1rem")};
   width: ${(props) =>
-    props.syllable === 3 ? "92px" : props.syllable === 2 ? "80px" : "124px"};
+    props.$syllable === 3 ? "92px" : props.$syllable === 2 ? "80px" : "124px"};
   height: 2.5rem;
   padding: 0 1rem; // 12px;
   border: 2px solid #54b25c;
@@ -290,7 +290,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
         <TopRectangle />
         <ClassArea>
           <ClassSelect
-            syllable={3}
+            $syllable={3}
 
             //  value={selectedGrade}
             //  onChange={(e) => setSelectedGrade(e.target.value)}
@@ -301,7 +301,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
           </ClassSelect>
 
           <ClassSelect
-            syllable={2}
+            $syllable={2}
 
             //  value={selectedClass}
             //  onChange={(e) => setSelectedClass(e.target.value)}

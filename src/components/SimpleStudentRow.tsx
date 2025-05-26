@@ -1,10 +1,10 @@
 import React from "react";
 import styled from "styled-components";
-// import { StudentBrief } from "../hooks/useStudentListApi";
-import { SelectedStudent } from "../store/useSelectedStudentStore";
+import { StudentBrief } from "../hooks/useStudentListApi";
+// import { SelectedStudent } from "../store/useSelectedStudentStore";
 
 interface SimpleStudentRowProps {
-  student: SelectedStudent;
+  student: StudentBrief;
   onClick?: () => void;
   $isSelected?: boolean; // 선택 여부를 나타내는 새로운 prop
 }

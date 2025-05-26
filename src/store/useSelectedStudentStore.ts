@@ -1,5 +1,6 @@
 // store/useSelectedStudentStore.ts
 import { create } from "zustand";
+import { StudentBrief } from "../hooks/useStudentListApi";
 
 export interface SelectedStudent {
   id: number;
@@ -13,8 +14,8 @@ export interface SelectedStudent {
 }
 
 interface SelectedStudentStore {
-  selectedStudent: SelectedStudent | null;
-  setSelectedStudent: (student: SelectedStudent) => void;
+  selectedStudent: SelectedStudent | StudentBrief | null;
+  setSelectedStudent: (student: SelectedStudent | StudentBrief) => void;
   clearSelectedStudent: () => void;
 }
 
