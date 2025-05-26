@@ -6,9 +6,11 @@ import { useCounselsApi } from "../hooks/useCounselsApi";
 import { useSelectedStudentStore } from "../store/useSelectedStudentStore";
 
 // 아이콘
-import pencilIcon from "../assets/icon/pencilIcon.svg";
+import editIcon from "../assets/icon/editIcon.svg";
 import deleteIcon from "../assets/icon/deleteIcon.svg";
 import OpenBookIcon from "../assets/icon/OpenBookIcon.svg";
+import saveIcon from "../assets/icon/saveIcon.svg";
+import backIcon from "../assets/icon/backIcon.svg";
 
 type Counsel = {
   id: number;
@@ -152,10 +154,10 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
           <RecordTable>
             <colgroup>
               <col style={{ width: "10%" }} />
-              <col style={{ width: "20%" }} />
-              <col style={{ width: "40%" }} />
+              <col style={{ width: "10rem" }} />
+              <col style={{ width: "13rem" }} />
               <col style={{ width: "15%" }} />
-              <col style={{ width: "10%" }} />
+              <col style={{ width: "3.5rem" }} />
             </colgroup>
             <thead>
               <tr>
@@ -163,7 +165,7 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
                 <th>상담일자</th>
                 <th>상담내역</th>
                 <th>담당교사</th>
-                <th>수정/삭제</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -214,21 +216,36 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
                         )}
                       </td>
                       <td>{/* 담당교사 정보 없음 */}</td>
-                      <td>
+                      <td className="crud">
                         {editingCounselId === counsel.id ? (
                           <>
-                            <CrudButton
-                              $bgColor="#70C776"
+                            <div
+                              style={{
+                                display: "inline-block",
+                                cursor: "pointer",
+                              }}
                               onClick={handleEditCounselComplete}
                             >
-                              완료
-                            </CrudButton>
-                            <CrudButton
-                              $bgColor="#FF6969"
+                              <img
+                                src={saveIcon}
+                                alt="저장"
+                                style={{ width: "16px" }}
+                              />
+                            </div>
+                            <div
+                              style={{
+                                display: "inline-block",
+                                cursor: "pointer",
+                                marginLeft: "0.5rem",
+                              }}
                               onClick={handleEditCounselCancel}
                             >
-                              취소
-                            </CrudButton>
+                              <img
+                                src={backIcon}
+                                alt="저장"
+                                style={{ width: "16px" }}
+                              />
+                            </div>
                           </>
                         ) : (
                           <>
@@ -239,7 +256,11 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
                               }}
                               onClick={() => handleEditCounselStart(counsel)}
                             >
-                              <img src={pencilIcon} alt="수정" />
+                              <img
+                                src={editIcon}
+                                alt="수정"
+                                style={{ width: "16px" }}
+                              />
                             </div>
                             <div
                               style={{
@@ -252,7 +273,11 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
                                 deleteCounsel(counsel.id)
                               }
                             >
-                              <img src={deleteIcon} alt="삭제" />
+                              <img
+                                src={deleteIcon}
+                                alt="삭제"
+                                style={{ width: "15px" }}
+                              />
                             </div>
                           </>
                         )}
@@ -264,6 +289,7 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
                       <td>New</td>
                       <td>
                         <input
+                          style={{ width: "136px" }}
                           type="date"
                           value={newCounsel.date}
                           onChange={(e) =>
@@ -461,9 +487,11 @@ const RecordTable = styled.table`
 
   width: 100%;
   height: 35rem;
+  border-collapse: collapse;
 
-  border-bottom-left-radius: 1rem;
-  border-bottom-right-radius: 1rem;
+  // 이건 collapse에서 적용 안됨.
+  /* border-bottom-left-radius: 1rem; */
+  /* border-bottom-right-radius: 1rem; */
 
   thead {
     position: sticky;
@@ -473,8 +501,11 @@ const RecordTable = styled.table`
   }
 
   tbody {
-    border-spacing: 0;
-    gap: 0;
+    border-bottom-left-radius: 1rem;
+  }
+
+  tr {
+    /* border-bottom: 2px solid #ccc; */
   }
 
   th,
@@ -483,7 +514,6 @@ const RecordTable = styled.table`
     font-size: 1rem;
     height: 2.5rem;
     border: 1px solid #ccc;
-    border-collapse: collapse;
   }
 
   th {
@@ -491,5 +521,9 @@ const RecordTable = styled.table`
   }
 
   td {
+  }
+
+  td.crud {
+    /* border: 1px solid black; */
   }
 `;
