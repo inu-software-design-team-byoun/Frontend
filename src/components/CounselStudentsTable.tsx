@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import SimpleStudentRow from "./SimpleStudentRow";
 import { useStudentsListApi } from "../hooks/useStudentListApi";
+import { useSelectedStudentStore } from "../store/useSelectedStudentStore";
 import SearchIcon from "../assets/icon/SearchIcon.svg";
 import SelectArrow from "../assets/icon/SelectArrow.png";
 
@@ -153,6 +154,7 @@ export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
   onGradeChange,
   onClassChange,
 }) => {
+  const { selectedStudent, setSelectedStudent } = useSelectedStudentStore();
   const { data: studentList } = useStudentsListApi(grade, classroom);
   const [query, setQuery] = useState("");
   const filtered = studentList.filter((s) => s.name.includes(query));
@@ -198,7 +200,12 @@ export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
           </colgroup>
           <tbody>
             {filtered.map((stu) => (
-              <SimpleStudentRow key={stu.id} student={stu} />
+              <SimpleStudentRow
+                key={stu.id}
+                student={stu}
+                onClick={() => setSelectedStudent(stu)}
+                $isSelected={selectedStudent?.id === stu.id}
+              />
             ))}
           </tbody>
         </StyledTable>

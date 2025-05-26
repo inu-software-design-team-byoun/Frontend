@@ -1,15 +1,15 @@
 // store/useSelectedStudentStore.ts
 import { create } from "zustand";
 
-interface SelectedStudent {
+export interface SelectedStudent {
   id: number;
   name: string;
   grade: number;
   classroom: number;
   phoneNum: string;
   birthday: string;
-  totalScore: number;
-  averageScore: number;
+  totalScore?: number;
+  averageScore?: number;
 }
 
 interface SelectedStudentStore {
