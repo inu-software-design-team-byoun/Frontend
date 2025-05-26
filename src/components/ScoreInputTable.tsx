@@ -82,15 +82,15 @@ const ClassArea = styled.div`
   align-items: center;
 `;
 
-const ClassSelect = styled.select<{ syllable: number }>`
-  margin-left: ${(props) => (props.syllable === 3 ? "1.25rem" : "1rem")};
+const ClassSelect = styled.select<{ $syllable: number }>`
+  margin-left: ${(props) => (props.$syllable === 3 ? "1.25rem" : "1rem")};
 
   width: ${(props) => {
-    if (props.syllable >= 4) {
-      return `${80 + props.syllable * 8}px`;
-    } else if (props.syllable === 3) {
+    if (props.$syllable >= 4) {
+      return `${80 + props$syllable * 8}px`;
+    } else if (props.$syllable === 3) {
       return "92px";
-    } else if (props.syllable === 2) {
+    } else if (props.$syllable === 2) {
       return "80px";
     } else {
       return "124px";
@@ -215,7 +215,7 @@ export const ScoreInputTable: React.FC<ScoreInputTableProps> = ({
         </TitleArea>
         <ClassArea>
           <ClassSelect
-            syllable={3}
+            $syllable={3}
 
             //  value={selectedGrade}
             //  onChange={(e) => setSelectedGrade(e.target.value)}
@@ -225,7 +225,7 @@ export const ScoreInputTable: React.FC<ScoreInputTableProps> = ({
             <option value="3">3학년</option>
           </ClassSelect>
           <ClassSelect
-            syllable={2}
+            $syllable={2}
 
             //  value={selectedClass}
             //  onChange={(e) => setSelectedClass(e.target.value)}
@@ -238,7 +238,7 @@ export const ScoreInputTable: React.FC<ScoreInputTableProps> = ({
             <option value="6">6반</option>
           </ClassSelect>
           <ClassSelect
-            syllable={6}
+            $syllable={6}
 
             //  value={selectedClass}
             //  onChange={(e) => setSelectedClass(e.target.value)}
@@ -249,7 +249,7 @@ export const ScoreInputTable: React.FC<ScoreInputTableProps> = ({
             <option value="4">2학기 기말</option>
           </ClassSelect>
           <ClassSelect
-            syllable={8}
+            $syllable={8}
 
             //  value={selectedClass}
             //  onChange={(e) => setSelectedClass(e.target.value)}
