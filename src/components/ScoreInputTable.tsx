@@ -87,7 +87,7 @@ const ClassSelect = styled.select<{ $syllable: number }>`
 
   width: ${(props) => {
     if (props.$syllable >= 4) {
-      return `${80 + props$syllable * 8}px`;
+      return `${80 + props.$syllable * 8}px`;
     } else if (props.$syllable === 3) {
       return "92px";
     } else if (props.$syllable === 2) {
