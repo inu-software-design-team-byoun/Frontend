@@ -14,6 +14,7 @@ import DeleteIcon from "../assets/icon/DeleteIcon.svg";
 import { NotiPopOver } from "../components/NotiPopOver";
 
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuthStore } from "../hooks/useAuthStore";
 
 type MainLayoutProps = {
   children: React.ReactNode;
@@ -106,6 +107,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   //   }
   // };
 
+  // id 관련
+  const userId = useAuthStore((state) => state.userId);
+
+  useEffect(() => {
+    console.log("현재 로그인한 유저 ID : ", userId);
+  }, [userId]);
+
   // 그전 영역
   const [showNoti, setShowNoti] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -136,6 +144,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     navigate("/scoreinput");
   };
 
+  // 알림 관련
   // 문서 전체 클릭을 감지한 뒤, 그 클릭이 Wrapper 바깥이면 showNoti = false로 변경
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -163,6 +172,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const deleteAll = () => {
     setNotifications([]);
   };
+
+  // 알림 API 요청 (임시로 구현)
+  const fetchNotifications = async (userId: number) => {
+    try {
+      const response = await fetch(`/api/notifications?userId=${userId}`);
+      const data = await response.json();
+      console.log("Fetched notifications:", data);
+      return data;
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [userId]);
 
   return (
     <MainWrapper>
