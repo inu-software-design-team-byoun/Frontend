@@ -1,5 +1,5 @@
 // ScorePage.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import ScoreRadarChart from "../components/ScoreRadarChart";
 import { GradeTable } from "../components/GradeTableEx";
@@ -469,6 +469,56 @@ const ScorePage: React.FC<ScorePageProps> = () => {
       ]
     : [0, 0, 0, 0, 0];
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleUploadImage = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "hiedu_preset");
+
+    const res = await fetch(
+      "https://api.cloudinary.com/v1_1/djkwtwi2i/image/upload",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const data = await res.json();
+    return data.secure_url; // 업로드된 이미지의 URL
+  };
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedStudent) return;
+
+    try {
+      const imageUrl = await handleUploadImage(file);
+
+      await fetch(ENDPOINTS.studentInfo(selectedStudent.id), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ picture: imageUrl }),
+      });
+
+      useSelectedStudentStore.getState().setSelectedStudent({
+        ...selectedStudent,
+        picture: imageUrl,
+      });
+
+      alert("사진 등록 완료");
+    } catch (err) {
+      console.error("이미지 업로드 실패", err);
+      alert("이미지 업로드에 실패했습니다.");
+    }
+  };
+
+  useEffect(() => {
+    fileInputRef.current?.addEventListener("change", onFileChange);
+    return () =>
+      fileInputRef.current?.removeEventListener("change", onFileChange);
+  }, [selectedStudent]);
+
   return (
     <>
       <StudentInfoBody>
@@ -478,7 +528,19 @@ const ScorePage: React.FC<ScorePageProps> = () => {
           ) : (
             <div>아직 사진이 등록되지 않았습니다.</div>
           )}
-          <ChangePictureButton>이미지 등록/변경</ChangePictureButton>
+          <input
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            ref={fileInputRef}
+          />
+          <ChangePictureButton
+            onClick={() => {
+              fileInputRef.current?.click();
+            }}
+          >
+            이미지 등록/변경
+          </ChangePictureButton>
         </PictureArea>
         <GridArea>
           <div className="item">
