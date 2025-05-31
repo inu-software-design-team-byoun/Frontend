@@ -7,8 +7,8 @@ import ContinueWithGoogleButton from "../assets/img/ContinueWithGoogleButton.svg
 import { ENDPOINTS } from "../constants/api";
 
 import { BtnForDev } from "../components/BtnForDev";
-import { Navigate } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../hooks/useAuthStore";
 // import { useGoogleLogin } from "@react-oauth/google";
 
 const Wrapper = styled.div`
@@ -99,6 +99,8 @@ const GoogleLoginButton = styled.button`
 `;
 
 export const LoginPage: React.FC = () => {
+  const userId = useAuthStore((state) => state.userId);
+
   const navigate = useNavigate();
 
   // URL에 ?token=xxx 가 있으면 저장하고 addinfo로 이동
@@ -107,26 +109,37 @@ export const LoginPage: React.FC = () => {
       const params = new URLSearchParams(window.location.search);
       const token = params.get("token");
       if (!token) return;
-  
-      localStorage.setItem("accessToken", token);
-  
+
+      // localStorage.setItem("accessToken", token);
+
       try {
         const res = await fetch(ENDPOINTS.check + `?token=${token}`);
         const result = await res.json();
-  
+
+        // userId를 세션스토리지에 저장하는 예시. 나중에 userId를 받아오는 response body에 맞춰 진행 예정
+        const id = result.id;
+        useAuthStore.getState().setAuth(id, token); // zustand에 저장 -> sessionStorage에 저장
+
         if (result.exists) {
-          window.location.href = "/"; // 유저 있음 → 메인으로
+          // window.location.href = "/"; // 유저 있음 → 메인으로
+          // 비동기와 비동기가 아닌 함수간의 차이로 인해 redirect가 setAuth()보다 먼저 되는 경우를 방지
+          navigate("/");
         } else {
-          window.location.href = "/addinfo"; // 유저 없음 → 추가정보 페이지
+          // window.location.href = "/addinfo"; // 유저 없음 → 추가정보 페이지
+          navigate("/addinfo");
         }
       } catch (e) {
         console.error("check-user 요청 실패", e);
       }
     };
-  
-    checkTokenAndRedirect();
-  }, []);
 
+    checkTokenAndRedirect();
+  }, [navigate]);
+
+  // React 컴포넌트는 다음 렌더링 주기에서 userId를 반영하므로 출력용 useEffect를 따로 구현
+  useEffect(() => {
+    console.log("현재 로그인한 유저 id:", userId);
+  }, [userId]);
 
   // const loginWithGoogle = useGoogleLogin({
   //   onSuccess: async (tokenResponse) => {
