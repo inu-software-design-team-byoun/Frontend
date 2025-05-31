@@ -1,5 +1,5 @@
 // components/GradeTableEx.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import { useScoreApi } from "../hooks/useScoreApi"; // useGradeApi → useScoreApi
 import { useStudentsListApi } from "../hooks/useStudentListApi";
@@ -7,6 +7,8 @@ import { useStudentsListApi } from "../hooks/useStudentListApi";
 import GradeRow from "../components/GradeRowEx";
 import { TransformedStudent } from "../hooks/useScoreApi"; // 맨 위 import 추가
 import SelectArrow from "../assets/icon/SelectArrow.png";
+import { useStudentScoreStore } from "../store/useStudentScoreStore";
+import isEqual from "lodash/isEqual";
 
 const Wrapper = styled.div`
   margin-left: 0.5rem;
@@ -230,6 +232,13 @@ export const GradeTable: React.FC<GradeTableProps> = ({
     "music",
     "physical",
   ];
+
+  useEffect(() => {
+    const current = useStudentScoreStore.getState().students;
+    if (!isEqual(current, mergedStudents)) {
+      useStudentScoreStore.getState().setStudents(mergedStudents);
+    }
+  }, [mergedStudents]);
 
   return (
     <Wrapper>

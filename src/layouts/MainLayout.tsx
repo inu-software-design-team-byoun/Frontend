@@ -15,6 +15,7 @@ import { NotiPopOver } from "../components/NotiPopOver";
 import { io, Socket } from "socket.io-client";
 
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuthStore } from "../hooks/useAuthStore";
 
 type MainLayoutProps = {
   children: React.ReactNode;
@@ -32,6 +33,63 @@ interface Notification {
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+  // 웹소켓 영역
+  // const [messages, setMessages] = useState<string[]>([]);
+  // const webSocket = useRef<WebSocket | null>(null);
+
+  // useEffect(() => {
+  //   webSocket.current = new WebSocket("wss://websocket-url");
+  //   webSocket.current.onmessage = (e) =>
+  //     setMessages((prev) => [...prev, e.data]);
+  //   return () => webSocket.current?.close();
+  // }, []);
+
+  // 2) MSW로 모킹된 /api/event 한 번 호출해보기
+  // const [events, setEvents] = useState<string[]>([]);
+  // useEffect(() => {
+  //   fetch("http://localhost:8080/api/event")
+  //     .then((res) => res.json())
+  //     .then((body) => {
+  //       // handlers.ts 에서 `data: ["mocking응답성공"]`
+  //       setEvents(body.data);
+  //     })
+  //     .catch(console.error);
+  // }, []);
+
+  // useEffect(() => {
+  //   webSocket.current = new WebSocket("wss://websocket-url");
+  //   webSocket.current.onopen = () => {
+  //     console.log("WebSocket 연결!");
+  //   };
+  //   webSocket.current.onclose = (error) => {
+  //     console.log(error);
+  //   };
+  //   webSocket.current.onerror = (error) => {
+  //     console.log(error);
+  //   };
+  //   webSocket.current.onmessage = (event: MessageEvent) => {
+  //     setMessages((prev) => [...prev, event.data]);
+  //   };
+
+  //   return () => {
+  //     webSocket.current?.close();
+  //   };
+  // }, []);
+
+  // const sendMessage = (message) => {
+  //   if (webSocket.current.readyState === WebSocket.OPEN) {
+  //     webSocket.current.send(message);
+  //   }
+  // };
+
+  // id 관련
+  const userId = useAuthStore((state) => state.userId);
+
+  useEffect(() => {
+    console.log("현재 로그인한 유저 ID : ", userId);
+  }, [userId]);
+
+  // 그전 영역
   const [showNoti, setShowNoti] = useState(false);
   
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -54,11 +112,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const goToAttendance = () => {
     navigate("/attendance");
   };
+  const goToCounsel = () => {
+    navigate("/counsel");
+  };
 
   const goToScoreInput = () => {
     navigate("/scoreinput");
   };
 
+  // 알림 관련
   // 문서 전체 클릭을 감지한 뒤, 그 클릭이 Wrapper 바깥이면 showNoti = false로 변경
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -117,6 +179,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     setNotifications([]);
   };
 
+  // 알림 API 요청 (임시로 구현)
+  const fetchNotifications = async (userId: number) => {
+    try {
+      const response = await fetch(`/api/notifications?userId=${userId}`);
+      const data = await response.json();
+      console.log("Fetched notifications:", data);
+      return data;
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [userId]);
+
   return (
     <MainWrapper>
       <SideBarArea>
@@ -172,7 +251,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </div>
               <span className="menuname">출석부</span>
             </MenuTab>
-            <MenuTab $enabled={currentPath === "/counsel"}>
+            <MenuTab
+              $enabled={currentPath === "/counsel"}
+              onClick={goToCounsel}
+            >
               <div>
                 <img src={listIcon} />
               </div>
@@ -187,6 +269,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </div>
               <span className="menuname">성적 입력</span>
             </MenuTab>
+            {/* 웹소켓 */}
+            {/* <div>
+              {messages?.map((message, index) => (
+                <div key={index}>{message}</div>
+              ))}
+            </div> */}
           </MainMenuBox>
           <AccountMenuBox>
             <span className="menurole">설정</span>
