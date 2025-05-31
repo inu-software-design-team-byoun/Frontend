@@ -27,16 +27,13 @@ const COLOR = {
   BLACK: "#000000",
 };
 
-const ScoreRadarChart: React.FC = () => {
-  // 팀 점수 예시 데이터
-  const teamScores = [8, 5, 6, 7, 8];
-
+const ScoreRadarChart: React.FC<{ scores: number[] }> = ({ scores }) => {
   const chartData = {
     labels: ["국어", "수학", "영어", "사회", "과학"],
     datasets: [
       {
-        label: "팀 점수",
-        data: teamScores,
+        label: "학생 점수",
+        data: scores,
         backgroundColor: "rgba(255, 108, 61, 0.2)",
       },
       {
