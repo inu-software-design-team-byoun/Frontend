@@ -10,6 +10,7 @@ export interface StudentBrief {
   classroom: number;
   phoneNum: string;
   birthday: string;
+  picture: string;
 }
 
 export const useStudentsListApi = (

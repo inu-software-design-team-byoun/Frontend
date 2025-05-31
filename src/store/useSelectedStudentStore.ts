@@ -11,6 +11,7 @@ export interface SelectedStudent {
   birthday: string;
   totalScore?: number;
   averageScore?: number;
+  picture?: string;
 }
 
 interface SelectedStudentStore {

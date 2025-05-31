@@ -7,6 +7,7 @@ import { GradeTable } from "../components/GradeTableEx";
 import { useSelectedStudentStore } from "../store/useSelectedStudentStore";
 import { useStudentsListApi } from "../hooks/useStudentListApi";
 import { ENDPOINTS } from "../constants/api";
+import { useStudentScoreStore } from "../store/useStudentScoreStore";
 
 const StudentInfoBody = styled.div`
   margin-left: 0.5rem;
@@ -32,6 +33,20 @@ const PictureArea = styled.div`
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
+
+  div {
+    width: 7.5rem;
+    height: 10rem;
+    /* padding: 1rem; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #b5b5b5;
+    background-color: #e9e8e8;
+    color: #888;
+    font-size: 0.8rem;
+    text-align: center;
+  }
 `;
 
 const PictureInput = styled.img`
@@ -275,10 +290,9 @@ interface ScorePageProps {
 }
 
 const ScorePage: React.FC<ScorePageProps> = () => {
-  // const { selectedStudent } = useSelectedStudentStore();
   const { selectedStudent, clearSelectedStudent } = useSelectedStudentStore();
   const [isEditing, setIsEditing] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
+  const [isAdding, setIsAdding] = useState(false); // grade/class 상태를 ScorePage에서 보관
 
   // grade/class 상태를 ScorePage에서 보관
   const [selectedGrade, setSelectedGrade] = useState(1);
@@ -287,7 +301,7 @@ const ScorePage: React.FC<ScorePageProps> = () => {
   // ── 추가: 해당 학년·반의 학생 목록 가져오기 ──
   const { data: studentList, refetch: refetchStudentList } = useStudentsListApi(
     selectedGrade,
-    selectedClass
+    selectedClass // GradeTable 리마운트를 위한 키
   );
   // GradeTable 리마운트를 위한 키
   const [refreshKey, setRefreshKey] = useState(0);
@@ -304,7 +318,6 @@ const ScorePage: React.FC<ScorePageProps> = () => {
     birthday: "",
   });
 
-  // 폼 유효성 검사 플래그
   const canSubmitAdd =
     addForm.name.trim() !== "" &&
     addForm.phoneNum.trim() !== "" &&
@@ -330,7 +343,6 @@ const ScorePage: React.FC<ScorePageProps> = () => {
     setIsEditing(true);
   };
 
-  // 수정 취소 핸들러
   const handleCancelEdit = () => {
     if (selectedStudent) {
       setEditForm({
@@ -342,11 +354,9 @@ const ScorePage: React.FC<ScorePageProps> = () => {
     setIsEditing(false);
   };
 
-  // 학생 추가 모드 진입 핸들러
   const handleAddClick = () => {
     setIsAdding(true);
     setAddForm({ name: "", phoneNum: "", birthday: "" });
-    // 편집 모드 꺼두기
     setIsEditing(false);
   };
 
@@ -355,26 +365,6 @@ const ScorePage: React.FC<ScorePageProps> = () => {
     setAddForm({ name: "", phoneNum: "", birthday: "" });
   };
 
-  // const handleSubmit = async () => {
-  //   if (!selectedStudent) return; // 이걸 안해주면 아래 await fetch에서 'possibly null' 경고 나옴
-  //   try {
-  //     await fetch(ENDPOINTS.studentInfo(selectedStudent.id), {
-  //       method: "PATCH",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({
-  //         name: editForm.name,
-  //         phoneNum: editForm.phoneNum,
-  //         birthday: editForm.birthday,
-  //       }),
-  //     });
-  //     alert("수정 완료");
-  //     setIsEditing(false);
-  //   } catch (err) {
-  //     console.error("수정 실패", err);
-  //   }
-  // };
-
-  // 수정 완료 핸들러
   const handleSubmitEdit = async () => {
     // 유효성 검사
     if (!canSubmitEdit) {
@@ -396,7 +386,6 @@ const ScorePage: React.FC<ScorePageProps> = () => {
       alert("수정 완료");
       setIsEditing(false);
 
-      // fetch new list + force rerender
       await refetchStudentList();
       setRefreshKey((k) => k + 1);
     } catch (err) {
@@ -412,7 +401,7 @@ const ScorePage: React.FC<ScorePageProps> = () => {
       return;
     }
     try {
-      // 자동 학번 부여 로직
+      // 기존 학생 수 + 1    // 자동 학번 부여 로직
       const order = studentList.length + 1; // 기존 학생 수 + 1
       const studentNum = selectedGrade * 10000 + selectedClass * 100 + order;
 
@@ -457,7 +446,6 @@ const ScorePage: React.FC<ScorePageProps> = () => {
       alert("삭제 완료");
       clearSelectedStudent();
 
-      // fetch new list + force rerender
       await refetchStudentList();
       setRefreshKey((k) => k + 1);
     } catch (err) {
@@ -466,18 +454,36 @@ const ScorePage: React.FC<ScorePageProps> = () => {
     }
   };
 
+  const students = useStudentScoreStore((state) => state.students);
+  const selectedStudentScore = selectedStudent
+    ? students.find((stu) => stu.id === selectedStudent.id)
+    : null;
+
+  const studentScores = selectedStudentScore
+    ? [
+        selectedStudentScore.korean ?? 0,
+        selectedStudentScore.math ?? 0,
+        selectedStudentScore.english ?? 0,
+        selectedStudentScore.society ?? 0,
+        selectedStudentScore.science ?? 0,
+      ]
+    : [0, 0, 0, 0, 0];
+
   return (
     <>
       <StudentInfoBody>
         <PictureArea>
-          <PictureInput />
+          {selectedStudent?.picture ? (
+            <PictureInput src={selectedStudent.picture} />
+          ) : (
+            <div>아직 사진이 등록되지 않았습니다.</div>
+          )}
           <ChangePictureButton>이미지 등록/변경</ChangePictureButton>
         </PictureArea>
         <GridArea>
           <div className="item">
             <span>이름</span>
             <LongInput
-              // value={selectedStudent?.name || ""}
               data-testid={
                 isAdding ? "add-name" : isEditing ? "edit-name" : undefined
               }
@@ -494,9 +500,6 @@ const ScorePage: React.FC<ScorePageProps> = () => {
           <div className="item">
             <span>학년, 반</span>
             <span className="fixed">
-              {/* {selectedStudent
-                ? `${selectedStudent.grade}학년 ${selectedStudent.classroom}반`
-                : ""} */}
               {selectedGrade}학년 {selectedClass}반
             </span>
             <div>
@@ -507,7 +510,6 @@ const ScorePage: React.FC<ScorePageProps> = () => {
           <div className="item">
             <span>전화번호</span>
             <LongInput
-              // value={selectedStudent?.phoneNum || ""}
               data-testid={
                 isAdding ? "add-phone" : isEditing ? "edit-phone" : undefined
               }
@@ -524,7 +526,6 @@ const ScorePage: React.FC<ScorePageProps> = () => {
           <div className="item">
             <span>생년월일</span>
             <LongInput
-              // value={selectedStudent?.birthday || ""}
               data-testid={
                 isAdding
                   ? "add-birthday"
@@ -593,7 +594,7 @@ const ScorePage: React.FC<ScorePageProps> = () => {
         <ChartArea>
           <span>평균 점수</span>
           <div>
-            <ScoreRadarChart />
+            <ScoreRadarChart scores={studentScores} />
           </div>
         </ChartArea>
       </StudentInfoBody>

@@ -26,6 +26,7 @@ export const fetchStudentInfo = async (
         classroom: matched.classroom,
         phoneNum: matched.phoneNum,
         birthday: matched.birthday,
+        picture: matched.picture || null, // ""해야되나?
         totalScore, // GradeRowEx에서 props로 넘겨준 totalScore, averageScore
         averageScore, // GradeRowEx에서는 이 두 변수를 미리 학년,반별 성적에서 받아온 상태였기 때문
       });
