@@ -32,50 +32,23 @@ const ScoreRadarChart: React.FC<{ scores: number[] }> = ({ scores }) => {
     labels: ["국어", "수학", "영어", "사회", "과학"],
     datasets: [
       {
-        label: "학생 점수",
+        // label: "학생 점수", // 중복이라 제거
         data: scores,
         backgroundColor: "rgba(255, 108, 61, 0.2)",
       },
-      {
-        label: "배경1",
-        data: [2.5, 2.5, 2.5, 2.5, 2.5],
+      ...[20, 40, 60, 80, 100].map((v) => ({
+        label: `배경${v}`,
+        data: Array(5).fill(v),
         borderColor: COLOR.GRAY_A4,
         backgroundColor: "white",
         borderWidth: 1,
         pointBackgroundColor: "transparent",
         pointBorderColor: "transparent",
-      },
-      {
-        label: "배경2",
-        data: [5, 5, 5, 5, 5],
-        borderColor: COLOR.GRAY_A4,
-        backgroundColor: "white",
-        borderWidth: 1,
-        pointBackgroundColor: "transparent",
-        pointBorderColor: "transparent",
-      },
-      {
-        label: "배경3",
-        data: [7.5, 7.5, 7.5, 7.5, 7.5],
-        borderColor: COLOR.GRAY_A4,
-        backgroundColor: "white",
-        borderWidth: 1,
-        pointBackgroundColor: "transparent",
-        pointBorderColor: "transparent",
-      },
-      {
-        label: "배경4",
-        data: [10, 10, 10, 10, 10],
-        borderColor: COLOR.GRAY_A4,
-        backgroundColor: "white",
-        borderWidth: 1,
-        pointBackgroundColor: "transparent",
-        pointBorderColor: "transparent",
-      },
+      })),
     ],
   };
 
-  const chartOptions: ChartOptions<"radar"> & ChartOptions = {
+  const chartOptions: ChartOptions<"radar"> = {
     elements: {
       line: {
         borderWidth: 2,
@@ -87,8 +60,10 @@ const ScoreRadarChart: React.FC<{ scores: number[] }> = ({ scores }) => {
     },
     scales: {
       r: {
+        suggestedMin: 0,
+        suggestedMax: 100,
         ticks: {
-          stepSize: 2.5,
+          stepSize: 20,
           display: false,
         },
         grid: {
@@ -105,18 +80,12 @@ const ScoreRadarChart: React.FC<{ scores: number[] }> = ({ scores }) => {
         angleLines: {
           display: false,
         },
-        suggestedMin: 0,
-        suggestedMax: 10,
       },
     },
     plugins: {
-      legend: {
-        display: false,
-      },
+      legend: { display: false },
     },
-    animation: {
-      duration: 0,
-    },
+    animation: { duration: 500 },
   };
 
   return <Radar data={chartData} options={chartOptions} />;
