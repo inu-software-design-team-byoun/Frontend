@@ -33,6 +33,20 @@ const PictureArea = styled.div`
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
+
+  div {
+    width: 7.5rem;
+    height: 10rem;
+    /* padding: 1rem; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #b5b5b5;
+    background-color: #e9e8e8;
+    color: #888;
+    font-size: 0.8rem;
+    text-align: center;
+  }
 `;
 
 const PictureInput = styled.img`
@@ -459,7 +473,11 @@ const ScorePage: React.FC<ScorePageProps> = () => {
     <>
       <StudentInfoBody>
         <PictureArea>
-          <PictureInput />
+          {selectedStudent?.picture ? (
+            <PictureInput src={selectedStudent.picture} />
+          ) : (
+            <div>아직 사진이 등록되지 않았습니다.</div>
+          )}
           <ChangePictureButton>이미지 등록/변경</ChangePictureButton>
         </PictureArea>
         <GridArea>
