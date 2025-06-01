@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import ScoreRadarChart from "../components/ScoreRadarChart";
-import { GradeTable } from "../components/GradeTableEx";
+import { GradeTable } from "../components/GradeTable";
 
 import { useSelectedStudentStore } from "../store/useSelectedStudentStore";
 import { useStudentsListApi } from "../hooks/useStudentListApi";
