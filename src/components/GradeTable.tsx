@@ -7,7 +7,7 @@ import { useStudentsListApi } from "../hooks/useStudentListApi";
 import GradeRow from "./GradeRow";
 import { TransformedStudent } from "../hooks/useScoreApi"; // 맨 위 import 추가
 import SelectArrow from "../assets/icon/SelectArrow.png";
-import { useStudentScoreStore } from "../store/useStudentScoreStore";
+import { useStudentScoreStore } from "../stores/useStudentScoreStore";
 import isEqual from "lodash/isEqual";
 
 const Wrapper = styled.div`

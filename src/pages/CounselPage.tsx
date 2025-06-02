@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { CounselStudentsTable } from "../components/CounselStudentsTable";
 import { styled } from "styled-components";
 import { CounselModal } from "../components/CounselModal";
-import { useSelectedStudentStore } from "../store/useSelectedStudentStore";
+import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
 
 const CounselPage: React.FC = () => {
   const [selectedGrade, setSelectedGrade] = useState(1);

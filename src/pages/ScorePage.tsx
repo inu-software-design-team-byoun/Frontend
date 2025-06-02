@@ -4,10 +4,406 @@ import styled from "styled-components";
 import ScoreRadarChart from "../components/ScoreRadarChart";
 import { GradeTable } from "../components/GradeTable";
 
-import { useSelectedStudentStore } from "../store/useSelectedStudentStore";
+import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
 import { useStudentsListApi } from "../hooks/useStudentListApi";
 import { ENDPOINTS } from "../constants/api";
-import { useStudentScoreStore } from "../store/useStudentScoreStore";
+import { useStudentScoreStore } from "../stores/useStudentScoreStore";
+
+const ScorePage: React.FC<ScorePageProps> = () => {
+  const { selectedStudent, clearSelectedStudent } = useSelectedStudentStore();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isAdding, setIsAdding] = useState(false); // grade/class 상태를 ScorePage에서 보관
+
+  // grade/class 상태를 ScorePage에서 보관
+  const [selectedGrade, setSelectedGrade] = useState(1);
+  const [selectedClass, setSelectedClass] = useState(5);
+
+  // ── 추가: 해당 학년·반의 학생 목록 가져오기 ──
+  const { data: studentList, refetch: refetchStudentList } = useStudentsListApi(
+    selectedGrade,
+    selectedClass // GradeTable 리마운트를 위한 키
+  );
+  // GradeTable 리마운트를 위한 키
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const [editForm, setEditForm] = useState({
+    name: "",
+    phoneNum: "",
+    birthday: "",
+  });
+
+  const [addForm, setAddForm] = useState({
+    name: "",
+    phoneNum: "",
+    birthday: "",
+  });
+
+  const canSubmitAdd =
+    addForm.name.trim() !== "" &&
+    addForm.phoneNum.trim() !== "" &&
+    addForm.birthday.trim() !== "";
+
+  const canSubmitEdit =
+    editForm.name.trim() !== "" &&
+    editForm.phoneNum.trim() !== "" &&
+    editForm.birthday.trim() !== "";
+
+  useEffect(() => {
+    if (selectedStudent) {
+      setEditForm({
+        name: selectedStudent.name,
+        phoneNum: selectedStudent.phoneNum,
+        birthday: selectedStudent.birthday,
+      });
+    }
+  }, [selectedStudent]);
+
+  // 수정 모드 진입 핸들러
+  const handleIsEditing = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    if (selectedStudent) {
+      setEditForm({
+        name: selectedStudent.name,
+        phoneNum: selectedStudent.phoneNum,
+        birthday: selectedStudent.birthday,
+      });
+    }
+    setIsEditing(false);
+  };
+
+  const handleAddClick = () => {
+    setIsAdding(true);
+    setAddForm({ name: "", phoneNum: "", birthday: "" });
+    setIsEditing(false);
+  };
+
+  const handleCancelAdd = () => {
+    setIsAdding(false);
+    setAddForm({ name: "", phoneNum: "", birthday: "" });
+  };
+
+  const handleSubmitEdit = async () => {
+    // 유효성 검사
+    if (!canSubmitEdit) {
+      alert("이름, 전화번호, 생년월일을 모두 입력해주세요.");
+      return;
+    }
+    if (!selectedStudent) return;
+    try {
+      await fetch(ENDPOINTS.studentInfo(selectedStudent.id), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+      // 스토어 업데이트
+      useSelectedStudentStore.getState().setSelectedStudent({
+        ...selectedStudent,
+        ...editForm,
+      });
+      alert("수정 완료");
+      setIsEditing(false);
+
+      await refetchStudentList();
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("수정 실패", err);
+    }
+  };
+
+  // 학생 추가 완료 핸들러
+  const handleSubmitAdd = async () => {
+    // 유효성 검사
+    if (!canSubmitAdd) {
+      alert("이름, 전화번호, 생년월일을 모두 입력해주세요.");
+      return;
+    }
+    try {
+      // 기존 학생 수 + 1    // 자동 학번 부여 로직
+      const order = studentList.length + 1; // 기존 학생 수 + 1
+      const studentNum = selectedGrade * 10000 + selectedClass * 100 + order;
+
+      const body = {
+        studentNum, // 자동 생성된 학번
+        grade: selectedGrade, // lifted state 사용
+        classroom: selectedClass, // lifted state 사용
+        ...addForm,
+      };
+      const res = await fetch(ENDPOINTS.students, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const newStudent = await res.json();
+      console.log("생성된 학생:", newStudent);
+      alert("학생 추가 완료");
+      setIsAdding(false);
+      // // 목록 갱신을 위해 같은 반 상태 강제 트리거
+      // setSelectedClass((c) => c);
+      await refetchStudentList();
+      // GradeTableEx 훅 재실행을 위해 refreshKey 증가
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("학생 추가 실패", err);
+    }
+  };
+
+  // ─ 삭제 핸들러 ───────────────────────────────────
+  const handleDelete = async () => {
+    if (!selectedStudent) {
+      alert("삭제할 학생을 선택하세요.");
+      return;
+    }
+    if (!window.confirm(`${selectedStudent.name} 학생을 삭제하시겠습니까?`)) {
+      return;
+    }
+    try {
+      await fetch(ENDPOINTS.studentInfo(selectedStudent.id), {
+        method: "DELETE",
+      });
+      alert("삭제 완료");
+      clearSelectedStudent();
+
+      await refetchStudentList();
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("삭제 실패", err);
+      alert("삭제에 실패했습니다.");
+    }
+  };
+
+  const students = useStudentScoreStore((state) => state.students);
+  const selectedStudentScore = selectedStudent
+    ? students.find((stu) => stu.id === selectedStudent.id)
+    : null;
+
+  const studentScores = selectedStudentScore
+    ? [
+        selectedStudentScore.korean ?? 0,
+        selectedStudentScore.math ?? 0,
+        selectedStudentScore.english ?? 0,
+        selectedStudentScore.society ?? 0,
+        selectedStudentScore.science ?? 0,
+      ]
+    : [0, 0, 0, 0, 0];
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleUploadImage = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "hiedu_preset");
+
+    const res = await fetch(
+      "https://api.cloudinary.com/v1_1/djkwtwi2i/image/upload",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const data = await res.json();
+    return data.secure_url; // 업로드된 이미지의 URL
+  };
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedStudent) return;
+
+    try {
+      const imageUrl = await handleUploadImage(file);
+
+      await fetch(ENDPOINTS.studentInfo(selectedStudent.id), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ picture: imageUrl }),
+      });
+
+      useSelectedStudentStore.getState().setSelectedStudent({
+        ...selectedStudent,
+        picture: imageUrl,
+      });
+
+      alert("사진 등록 완료");
+    } catch (err) {
+      console.error("이미지 업로드 실패", err);
+      alert("이미지 업로드에 실패했습니다.");
+    }
+  };
+
+  useEffect(() => {
+    fileInputRef.current?.addEventListener("change", onFileChange);
+    return () =>
+      fileInputRef.current?.removeEventListener("change", onFileChange);
+  }, [selectedStudent]);
+
+  return (
+    <>
+      <StudentInfoBody>
+        <PictureArea>
+          {selectedStudent?.picture ? (
+            <PictureInput src={selectedStudent.picture} />
+          ) : (
+            <div>아직 사진이 등록되지 않았습니다.</div>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            ref={fileInputRef}
+          />
+          <ChangePictureButton
+            onClick={() => {
+              fileInputRef.current?.click();
+            }}
+          >
+            이미지 등록/변경
+          </ChangePictureButton>
+        </PictureArea>
+        <GridArea>
+          <div className="item">
+            <span>이름</span>
+            <LongInput
+              data-testid={
+                isAdding ? "add-name" : isEditing ? "edit-name" : undefined
+              }
+              value={isAdding ? addForm.name : editForm.name}
+              readOnly={!(isEditing || isAdding)}
+              $isEditing={isEditing || isAdding}
+              onChange={(e) =>
+                isAdding
+                  ? setAddForm({ ...addForm, name: e.target.value })
+                  : setEditForm({ ...editForm, name: e.target.value })
+              }
+            />
+          </div>
+          <div className="item">
+            <span>학년, 반</span>
+            <span className="fixed">
+              {selectedGrade}학년 {selectedClass}반
+            </span>
+            <div>
+              <button>상담 내역</button>
+              <button>피드백</button>
+            </div>
+          </div>
+          <div className="item">
+            <span>전화번호</span>
+            <LongInput
+              data-testid={
+                isAdding ? "add-phone" : isEditing ? "edit-phone" : undefined
+              }
+              value={isAdding ? addForm.phoneNum : editForm.phoneNum}
+              readOnly={!(isEditing || isAdding)}
+              $isEditing={isEditing || isAdding}
+              onChange={(e) =>
+                isAdding
+                  ? setAddForm({ ...addForm, phoneNum: e.target.value })
+                  : setEditForm({ ...editForm, phoneNum: e.target.value })
+              }
+            />
+          </div>
+          <div className="item">
+            <span>생년월일</span>
+            <LongInput
+              data-testid={
+                isAdding
+                  ? "add-birthday"
+                  : isEditing
+                    ? "edit-birthday"
+                    : undefined
+              }
+              value={isAdding ? addForm.birthday : editForm.birthday}
+              readOnly={!(isEditing || isAdding)}
+              $isEditing={isEditing || isAdding}
+              onChange={(e) =>
+                isAdding
+                  ? setAddForm({ ...addForm, birthday: e.target.value })
+                  : setEditForm({ ...editForm, birthday: e.target.value })
+              }
+            />
+          </div>
+          <div className="item">
+            <span>총 성적</span>
+            <NormalInput value={selectedStudent?.totalScore || ""} readOnly />
+          </div>
+          <div className="item">
+            <span>평균 등급</span>
+            <NormalInput value={selectedStudent?.averageScore || ""} readOnly />
+          </div>
+          <div className="item"></div>
+          <div className="item"></div>
+          <div className="item">
+            {isAdding ? (
+              // 추가모드
+              <div>
+                <CrudButton $bgColor="gray" onClick={handleCancelAdd}>
+                  취소
+                </CrudButton>
+                <CrudButton
+                  $bgColor="#86acff"
+                  onClick={handleSubmitAdd}
+                  $isEditing
+                  disabled={!canSubmitAdd}
+                >
+                  완료
+                </CrudButton>
+              </div>
+            ) : isEditing ? (
+              // 수정 모드
+              <div>
+                <CrudButton $bgColor="#B0B0B0" onClick={handleCancelEdit}>
+                  취소
+                </CrudButton>
+                <CrudButton
+                  $bgColor="#86acff"
+                  onClick={handleSubmitEdit}
+                  $isEditing
+                  disabled={!canSubmitEdit}
+                >
+                  완료
+                </CrudButton>
+              </div>
+            ) : (
+              <CrudButton $bgColor="#FFA0A0" onClick={handleIsEditing}>
+                수정
+              </CrudButton>
+            )}
+          </div>
+        </GridArea>
+        <ChartArea>
+          <span>평균 점수</span>
+          <div>
+            <ScoreRadarChart scores={studentScores} />
+          </div>
+        </ChartArea>
+      </StudentInfoBody>
+      <GapBlankBody>
+        <CrudButton $bgColor="#70C776;" width="5rem" onClick={handleAddClick}>
+          학생 추가
+        </CrudButton>
+        <CrudButton
+          $bgColor="#FF6969"
+          onClick={handleDelete}
+          disabled={!selectedStudent}
+        >
+          삭제
+        </CrudButton>
+      </GapBlankBody>
+      <GradeTable
+        key={refreshKey}
+        grade={selectedGrade}
+        classroom={selectedClass}
+        onGradeChange={setSelectedGrade}
+        onClassChange={setSelectedClass}
+      />
+    </>
+  );
+};
+
+export default ScorePage;
 
 const StudentInfoBody = styled.div`
   margin-left: 0.5rem;
@@ -288,399 +684,3 @@ const GapBlankBody = styled.div`
 interface ScorePageProps {
   studentId?: number;
 }
-
-const ScorePage: React.FC<ScorePageProps> = () => {
-  const { selectedStudent, clearSelectedStudent } = useSelectedStudentStore();
-  const [isEditing, setIsEditing] = useState(false);
-  const [isAdding, setIsAdding] = useState(false); // grade/class 상태를 ScorePage에서 보관
-
-  // grade/class 상태를 ScorePage에서 보관
-  const [selectedGrade, setSelectedGrade] = useState(1);
-  const [selectedClass, setSelectedClass] = useState(5);
-
-  // ── 추가: 해당 학년·반의 학생 목록 가져오기 ──
-  const { data: studentList, refetch: refetchStudentList } = useStudentsListApi(
-    selectedGrade,
-    selectedClass // GradeTable 리마운트를 위한 키
-  );
-  // GradeTable 리마운트를 위한 키
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const [editForm, setEditForm] = useState({
-    name: "",
-    phoneNum: "",
-    birthday: "",
-  });
-
-  const [addForm, setAddForm] = useState({
-    name: "",
-    phoneNum: "",
-    birthday: "",
-  });
-
-  const canSubmitAdd =
-    addForm.name.trim() !== "" &&
-    addForm.phoneNum.trim() !== "" &&
-    addForm.birthday.trim() !== "";
-
-  const canSubmitEdit =
-    editForm.name.trim() !== "" &&
-    editForm.phoneNum.trim() !== "" &&
-    editForm.birthday.trim() !== "";
-
-  useEffect(() => {
-    if (selectedStudent) {
-      setEditForm({
-        name: selectedStudent.name,
-        phoneNum: selectedStudent.phoneNum,
-        birthday: selectedStudent.birthday,
-      });
-    }
-  }, [selectedStudent]);
-
-  // 수정 모드 진입 핸들러
-  const handleIsEditing = () => {
-    setIsEditing(true);
-  };
-
-  const handleCancelEdit = () => {
-    if (selectedStudent) {
-      setEditForm({
-        name: selectedStudent.name,
-        phoneNum: selectedStudent.phoneNum,
-        birthday: selectedStudent.birthday,
-      });
-    }
-    setIsEditing(false);
-  };
-
-  const handleAddClick = () => {
-    setIsAdding(true);
-    setAddForm({ name: "", phoneNum: "", birthday: "" });
-    setIsEditing(false);
-  };
-
-  const handleCancelAdd = () => {
-    setIsAdding(false);
-    setAddForm({ name: "", phoneNum: "", birthday: "" });
-  };
-
-  const handleSubmitEdit = async () => {
-    // 유효성 검사
-    if (!canSubmitEdit) {
-      alert("이름, 전화번호, 생년월일을 모두 입력해주세요.");
-      return;
-    }
-    if (!selectedStudent) return;
-    try {
-      await fetch(ENDPOINTS.studentInfo(selectedStudent.id), {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm),
-      });
-      // 스토어 업데이트
-      useSelectedStudentStore.getState().setSelectedStudent({
-        ...selectedStudent,
-        ...editForm,
-      });
-      alert("수정 완료");
-      setIsEditing(false);
-
-      await refetchStudentList();
-      setRefreshKey((k) => k + 1);
-    } catch (err) {
-      console.error("수정 실패", err);
-    }
-  };
-
-  // 학생 추가 완료 핸들러
-  const handleSubmitAdd = async () => {
-    // 유효성 검사
-    if (!canSubmitAdd) {
-      alert("이름, 전화번호, 생년월일을 모두 입력해주세요.");
-      return;
-    }
-    try {
-      // 기존 학생 수 + 1    // 자동 학번 부여 로직
-      const order = studentList.length + 1; // 기존 학생 수 + 1
-      const studentNum = selectedGrade * 10000 + selectedClass * 100 + order;
-
-      const body = {
-        studentNum, // 자동 생성된 학번
-        grade: selectedGrade, // lifted state 사용
-        classroom: selectedClass, // lifted state 사용
-        ...addForm,
-      };
-      const res = await fetch(ENDPOINTS.students, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const newStudent = await res.json();
-      console.log("생성된 학생:", newStudent);
-      alert("학생 추가 완료");
-      setIsAdding(false);
-      // // 목록 갱신을 위해 같은 반 상태 강제 트리거
-      // setSelectedClass((c) => c);
-      await refetchStudentList();
-      // GradeTableEx 훅 재실행을 위해 refereshKey 증가
-      setRefreshKey((k) => k + 1);
-    } catch (err) {
-      console.error("학생 추가 실패", err);
-    }
-  };
-
-  // ─ 삭제 핸들러 ───────────────────────────────────
-  const handleDelete = async () => {
-    if (!selectedStudent) {
-      alert("삭제할 학생을 선택하세요.");
-      return;
-    }
-    if (!window.confirm(`${selectedStudent.name} 학생을 삭제하시겠습니까?`)) {
-      return;
-    }
-    try {
-      await fetch(ENDPOINTS.studentInfo(selectedStudent.id), {
-        method: "DELETE",
-      });
-      alert("삭제 완료");
-      clearSelectedStudent();
-
-      await refetchStudentList();
-      setRefreshKey((k) => k + 1);
-    } catch (err) {
-      console.error("삭제 실패", err);
-      alert("삭제에 실패했습니다.");
-    }
-  };
-
-  const students = useStudentScoreStore((state) => state.students);
-  const selectedStudentScore = selectedStudent
-    ? students.find((stu) => stu.id === selectedStudent.id)
-    : null;
-
-  const studentScores = selectedStudentScore
-    ? [
-        selectedStudentScore.korean ?? 0,
-        selectedStudentScore.math ?? 0,
-        selectedStudentScore.english ?? 0,
-        selectedStudentScore.society ?? 0,
-        selectedStudentScore.science ?? 0,
-      ]
-    : [0, 0, 0, 0, 0];
-
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const handleUploadImage = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "hiedu_preset");
-
-    const res = await fetch(
-      "https://api.cloudinary.com/v1_1/djkwtwi2i/image/upload",
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-
-    const data = await res.json();
-    return data.secure_url; // 업로드된 이미지의 URL
-  };
-
-  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !selectedStudent) return;
-
-    try {
-      const imageUrl = await handleUploadImage(file);
-
-      await fetch(ENDPOINTS.studentInfo(selectedStudent.id), {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ picture: imageUrl }),
-      });
-
-      useSelectedStudentStore.getState().setSelectedStudent({
-        ...selectedStudent,
-        picture: imageUrl,
-      });
-
-      alert("사진 등록 완료");
-    } catch (err) {
-      console.error("이미지 업로드 실패", err);
-      alert("이미지 업로드에 실패했습니다.");
-    }
-  };
-
-  useEffect(() => {
-    fileInputRef.current?.addEventListener("change", onFileChange);
-    return () =>
-      fileInputRef.current?.removeEventListener("change", onFileChange);
-  }, [selectedStudent]);
-
-  return (
-    <>
-      <StudentInfoBody>
-        <PictureArea>
-          {selectedStudent?.picture ? (
-            <PictureInput src={selectedStudent.picture} />
-          ) : (
-            <div>아직 사진이 등록되지 않았습니다.</div>
-          )}
-          <input
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            ref={fileInputRef}
-          />
-          <ChangePictureButton
-            onClick={() => {
-              fileInputRef.current?.click();
-            }}
-          >
-            이미지 등록/변경
-          </ChangePictureButton>
-        </PictureArea>
-        <GridArea>
-          <div className="item">
-            <span>이름</span>
-            <LongInput
-              data-testid={
-                isAdding ? "add-name" : isEditing ? "edit-name" : undefined
-              }
-              value={isAdding ? addForm.name : editForm.name}
-              readOnly={!(isEditing || isAdding)}
-              $isEditing={isEditing || isAdding}
-              onChange={(e) =>
-                isAdding
-                  ? setAddForm({ ...addForm, name: e.target.value })
-                  : setEditForm({ ...editForm, name: e.target.value })
-              }
-            />
-          </div>
-          <div className="item">
-            <span>학년, 반</span>
-            <span className="fixed">
-              {selectedGrade}학년 {selectedClass}반
-            </span>
-            <div>
-              <button>상담 내역</button>
-              <button>피드백</button>
-            </div>
-          </div>
-          <div className="item">
-            <span>전화번호</span>
-            <LongInput
-              data-testid={
-                isAdding ? "add-phone" : isEditing ? "edit-phone" : undefined
-              }
-              value={isAdding ? addForm.phoneNum : editForm.phoneNum}
-              readOnly={!(isEditing || isAdding)}
-              $isEditing={isEditing || isAdding}
-              onChange={(e) =>
-                isAdding
-                  ? setAddForm({ ...addForm, phoneNum: e.target.value })
-                  : setEditForm({ ...editForm, phoneNum: e.target.value })
-              }
-            />
-          </div>
-          <div className="item">
-            <span>생년월일</span>
-            <LongInput
-              data-testid={
-                isAdding
-                  ? "add-birthday"
-                  : isEditing
-                    ? "edit-birthday"
-                    : undefined
-              }
-              value={isAdding ? addForm.birthday : editForm.birthday}
-              readOnly={!(isEditing || isAdding)}
-              $isEditing={isEditing || isAdding}
-              onChange={(e) =>
-                isAdding
-                  ? setAddForm({ ...addForm, birthday: e.target.value })
-                  : setEditForm({ ...editForm, birthday: e.target.value })
-              }
-            />
-          </div>
-          <div className="item">
-            <span>총 성적</span>
-            <NormalInput value={selectedStudent?.totalScore || ""} readOnly />
-          </div>
-          <div className="item">
-            <span>평균 등급</span>
-            <NormalInput value={selectedStudent?.averageScore || ""} readOnly />
-          </div>
-          <div className="item"></div>
-          <div className="item"></div>
-          <div className="item">
-            {isAdding ? (
-              // 추가모드
-              <div>
-                <CrudButton $bgColor="gray" onClick={handleCancelAdd}>
-                  취소
-                </CrudButton>
-                <CrudButton
-                  $bgColor="#86acff"
-                  onClick={handleSubmitAdd}
-                  $isEditing
-                  disabled={!canSubmitAdd}
-                >
-                  완료
-                </CrudButton>
-              </div>
-            ) : isEditing ? (
-              // 수정 모드
-              <div>
-                <CrudButton $bgColor="#B0B0B0" onClick={handleCancelEdit}>
-                  취소
-                </CrudButton>
-                <CrudButton
-                  $bgColor="#86acff"
-                  onClick={handleSubmitEdit}
-                  $isEditing
-                  disabled={!canSubmitEdit}
-                >
-                  완료
-                </CrudButton>
-              </div>
-            ) : (
-              <CrudButton $bgColor="#FFA0A0" onClick={handleIsEditing}>
-                수정
-              </CrudButton>
-            )}
-          </div>
-        </GridArea>
-        <ChartArea>
-          <span>평균 점수</span>
-          <div>
-            <ScoreRadarChart scores={studentScores} />
-          </div>
-        </ChartArea>
-      </StudentInfoBody>
-      <GapBlankBody>
-        <CrudButton $bgColor="#70C776;" width="5rem" onClick={handleAddClick}>
-          학생 추가
-        </CrudButton>
-        <CrudButton
-          $bgColor="#FF6969"
-          onClick={handleDelete}
-          disabled={!selectedStudent}
-        >
-          삭제
-        </CrudButton>
-      </GapBlankBody>
-      <GradeTable
-        key={refreshKey}
-        grade={selectedGrade}
-        classroom={selectedClass}
-        onGradeChange={setSelectedGrade}
-        onClassChange={setSelectedClass}
-      />
-    </>
-  );
-};
-
-export default ScorePage;

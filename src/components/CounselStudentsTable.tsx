@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import SimpleStudentRow from "./SimpleStudentRow";
 import { useStudentsListApi } from "../hooks/useStudentListApi";
-import { useSelectedStudentStore } from "../store/useSelectedStudentStore";
+import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
 import SearchIcon from "../assets/icon/SearchIcon.svg";
 import SelectArrow from "../assets/icon/SelectArrow.png";
 
