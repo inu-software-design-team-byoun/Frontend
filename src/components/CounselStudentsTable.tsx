@@ -7,6 +7,80 @@ import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
 import SearchIcon from "../assets/icon/SearchIcon.svg";
 import SelectArrow from "../assets/icon/SelectArrow.png";
 
+interface CounselStudentsTableProps {
+  grade: number;
+  classroom: number;
+  onGradeChange: (g: number) => void;
+  onClassChange: (c: number) => void;
+}
+
+export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
+  grade,
+  classroom,
+  onGradeChange,
+  onClassChange,
+}) => {
+  const { selectedStudent, setSelectedStudent } = useSelectedStudentStore();
+  const { data: studentList } = useStudentsListApi(grade, classroom);
+  const [query, setQuery] = useState("");
+  const filtered = studentList.filter((s) => s.name.includes(query));
+
+  return (
+    <Wrapper>
+      <TopRectangle />
+      <ClassArea>
+        <Select
+          $syllable={3}
+          value={grade}
+          onChange={(e) => onGradeChange(Number(e.target.value))}
+        >
+          <option value="1">1학년</option>
+          <option value="2">2학년</option>
+          <option value="3">3학년</option>
+        </Select>
+        <Select
+          $syllable={2}
+          value={classroom}
+          onChange={(e) => onClassChange(Number(e.target.value))}
+        >
+          <option value="1">1반</option>
+          <option value="2">2반</option>
+          <option value="3">3반</option>
+          <option value="4">4반</option>
+          <option value="5">5반</option>
+          <option value="6">6반</option>
+        </Select>
+      </ClassArea>
+      <SearchArea>
+        <input
+          placeholder="검색어 입력 + Enter"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </SearchArea>
+      <TableWrapper>
+        <StyledTable>
+          <colgroup>
+            <col />
+            <col />
+          </colgroup>
+          <tbody>
+            {filtered.map((stu) => (
+              <SimpleStudentRow
+                key={stu.id}
+                student={stu}
+                onClick={() => setSelectedStudent(stu)}
+                $isSelected={selectedStudent?.id === stu.id}
+              />
+            ))}
+          </tbody>
+        </StyledTable>
+      </TableWrapper>
+      <BottomRectangle />
+    </Wrapper>
+  );
+};
+
 const Wrapper = styled.div`
   margin-left: 0.5rem;
   margin-right: 3rem;
@@ -140,77 +214,3 @@ const StyledTable = styled.table`
     border-bottom: 1px solid #ccc;
   }
 `;
-
-interface CounselStudentsTableProps {
-  grade: number;
-  classroom: number;
-  onGradeChange: (g: number) => void;
-  onClassChange: (c: number) => void;
-}
-
-export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
-  grade,
-  classroom,
-  onGradeChange,
-  onClassChange,
-}) => {
-  const { selectedStudent, setSelectedStudent } = useSelectedStudentStore();
-  const { data: studentList } = useStudentsListApi(grade, classroom);
-  const [query, setQuery] = useState("");
-  const filtered = studentList.filter((s) => s.name.includes(query));
-
-  return (
-    <Wrapper>
-      <TopRectangle />
-      <ClassArea>
-        <Select
-          $syllable={3}
-          value={grade}
-          onChange={(e) => onGradeChange(Number(e.target.value))}
-        >
-          <option value="1">1학년</option>
-          <option value="2">2학년</option>
-          <option value="3">3학년</option>
-        </Select>
-        <Select
-          $syllable={2}
-          value={classroom}
-          onChange={(e) => onClassChange(Number(e.target.value))}
-        >
-          <option value="1">1반</option>
-          <option value="2">2반</option>
-          <option value="3">3반</option>
-          <option value="4">4반</option>
-          <option value="5">5반</option>
-          <option value="6">6반</option>
-        </Select>
-      </ClassArea>
-      <SearchArea>
-        <input
-          placeholder="검색어 입력 + Enter"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </SearchArea>
-      <TableWrapper>
-        <StyledTable>
-          <colgroup>
-            <col />
-            <col />
-          </colgroup>
-          <tbody>
-            {filtered.map((stu) => (
-              <SimpleStudentRow
-                key={stu.id}
-                student={stu}
-                onClick={() => setSelectedStudent(stu)}
-                $isSelected={selectedStudent?.id === stu.id}
-              />
-            ))}
-          </tbody>
-        </StyledTable>
-      </TableWrapper>
-      <BottomRectangle />
-    </Wrapper>
-  );
-};

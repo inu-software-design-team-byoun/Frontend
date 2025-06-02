@@ -33,174 +33,6 @@ type AttendanceMap = {
   };
 };
 
-const Wrapper = styled.div`
-  margin-left: 0.5rem;
-  margin-right: 3rem;
-  width: 71.5rem;
-  /* height: 47.625rem; // 762px; */
-  height: 89vh;
-  background-color: white;
-  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.25);
-  border-radius: 1rem;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-`;
-
-const TopRectangle = styled.div`
-  width: 100%;
-  height: 1.5rem;
-  background: #63ce6a;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-`;
-
-const BottomRectangle = styled.div`
-  width: 100%;
-  height: 1.5rem;
-  background: #63ce6a;
-  border-bottom-left-radius: 16px;
-  border-bottom-right-radius: 16px;
-`;
-
-const MainArea = styled.div`
-  color: black;
-
-  overflow-x: auto;
-  max-height: 500px;
-
-  /* border-collapse: collapse; */
-  /* width: 100%; */
-
-  // 스크롤 바 커스터마이징
-  &::-webkit-scrollbar {
-    height: 8px; // 가로 스크롤 높이
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: #b5b5b5; // thumb 색상
-    border-radius: 4px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background-color: #f0f0f0; // 트랙 색상
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background-color: #999999;
-  }
-
-  &::-webkit-scrollbar-thumb:active {
-    background-color: #777777;
-  }
-
-  table {
-    position: relative; // ✅ sticky 기준!
-    border-collapse: collapse;
-    width: max-content;
-    table-layout: fixed;
-  }
-
-  th {
-    width: 92px;
-    border-bottom: 1.5px solid #54b25c;
-    height: 2.5rem;
-    text-align: center;
-    font-size: 1rem;
-
-    white-space: nowrap;
-    padding: 0;
-  }
-
-  td {
-    width: 92px;
-    border-bottom: 1px solid #ccc;
-    height: 2.5rem;
-    text-align: center;
-    font-size: 1rem;
-
-    white-space: nowrap;
-    padding: 0;
-  }
-`;
-
-const ClassArea = styled.div`
-  width: 100%;
-  height: 64px;
-  border-bottom: 2px solid #54b25c;
-
-  display: flex;
-  align-items: center;
-`;
-
-const ClassSelect = styled.select<{ $syllable: number }>`
-  margin-left: ${(props) => (props.$syllable === 3 ? "1.25rem" : "1rem")};
-  width: ${(props) =>
-    props.$syllable === 3 ? "92px" : props.$syllable === 2 ? "80px" : "124px"};
-  height: 2.5rem;
-  padding: 0 1rem; // 12px;
-  border: 2px solid #54b25c;
-  border-radius: 0.65rem;
-
-  color: black;
-  font-family: NanumSquare;
-  font-size: 1rem;
-  font-weight: 900;
-
-  background-color: white;
-
-  &:focus {
-    outline: none;
-    /* border-color: black; */
-  }
-
-  appearance: none;
-  -webkit-appearance: none;
-  background-color: white;
-
-  background-image: url(${SelectArrow});
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 0.75rem;
-`;
-
-const FixedColNum = styled.th`
-  position: sticky;
-  left: 0px;
-  z-index: 3;
-  background: white;
-
-  width: 92px;
-`;
-
-const FixedColName = styled.th`
-  position: sticky;
-  left: 92px;
-  z-index: 3;
-  background: white;
-
-  width: 92px;
-`;
-
-const FixedCellNum = styled.td`
-  position: sticky;
-  left: 0%;
-  background: white;
-  z-index: 2;
-
-  width: 92px;
-`;
-
-const FixedCellName = styled.td`
-  position: sticky;
-  left: 92px;
-  background: white;
-  z-index: 2;
-
-  width: 92px;
-`;
-
 // 사전에 정의한 type Attendance 중에서 props로 받을 수 있게 설정
 const AttendanceSelect = styled.select<{ $status: Attendance }>`
   padding-left: 8px;
@@ -378,3 +210,171 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
     </Wrapper>
   );
 };
+
+const Wrapper = styled.div`
+  margin-left: 0.5rem;
+  margin-right: 3rem;
+  width: 71.5rem;
+  /* height: 47.625rem; // 762px; */
+  height: 89vh;
+  background-color: white;
+  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.25);
+  border-radius: 1rem;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+`;
+
+const TopRectangle = styled.div`
+  width: 100%;
+  height: 1.5rem;
+  background: #63ce6a;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+`;
+
+const BottomRectangle = styled.div`
+  width: 100%;
+  height: 1.5rem;
+  background: #63ce6a;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+`;
+
+const MainArea = styled.div`
+  color: black;
+
+  overflow-x: auto;
+  max-height: 500px;
+
+  /* border-collapse: collapse; */
+  /* width: 100%; */
+
+  // 스크롤 바 커스터마이징
+  &::-webkit-scrollbar {
+    height: 8px; // 가로 스크롤 높이
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #b5b5b5; // thumb 색상
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: #f0f0f0; // 트랙 색상
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: #999999;
+  }
+
+  &::-webkit-scrollbar-thumb:active {
+    background-color: #777777;
+  }
+
+  table {
+    position: relative; // ✅ sticky 기준!
+    border-collapse: collapse;
+    width: max-content;
+    table-layout: fixed;
+  }
+
+  th {
+    width: 92px;
+    border-bottom: 1.5px solid #54b25c;
+    height: 2.5rem;
+    text-align: center;
+    font-size: 1rem;
+
+    white-space: nowrap;
+    padding: 0;
+  }
+
+  td {
+    width: 92px;
+    border-bottom: 1px solid #ccc;
+    height: 2.5rem;
+    text-align: center;
+    font-size: 1rem;
+
+    white-space: nowrap;
+    padding: 0;
+  }
+`;
+
+const ClassArea = styled.div`
+  width: 100%;
+  height: 64px;
+  border-bottom: 2px solid #54b25c;
+
+  display: flex;
+  align-items: center;
+`;
+
+const ClassSelect = styled.select<{ $syllable: number }>`
+  margin-left: ${(props) => (props.$syllable === 3 ? "1.25rem" : "1rem")};
+  width: ${(props) =>
+    props.$syllable === 3 ? "92px" : props.$syllable === 2 ? "80px" : "124px"};
+  height: 2.5rem;
+  padding: 0 1rem; // 12px;
+  border: 2px solid #54b25c;
+  border-radius: 0.65rem;
+
+  color: black;
+  font-family: NanumSquare;
+  font-size: 1rem;
+  font-weight: 900;
+
+  background-color: white;
+
+  &:focus {
+    outline: none;
+    /* border-color: black; */
+  }
+
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: white;
+
+  background-image: url(${SelectArrow});
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 0.75rem;
+`;
+
+const FixedColNum = styled.th`
+  position: sticky;
+  left: 0px;
+  z-index: 3;
+  background: white;
+
+  width: 92px;
+`;
+
+const FixedColName = styled.th`
+  position: sticky;
+  left: 92px;
+  z-index: 3;
+  background: white;
+
+  width: 92px;
+`;
+
+const FixedCellNum = styled.td`
+  position: sticky;
+  left: 0%;
+  background: white;
+  z-index: 2;
+
+  width: 92px;
+`;
+
+const FixedCellName = styled.td`
+  position: sticky;
+  left: 92px;
+  background: white;
+  z-index: 2;
+
+  width: 92px;
+`;
