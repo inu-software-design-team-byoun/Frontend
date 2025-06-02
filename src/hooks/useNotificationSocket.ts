@@ -7,7 +7,6 @@ export interface NotificationPayload {
   date: string; // ISO 문자열 (예: "2025-06-03T12:34:56.789Z")
 }
 
-
 const DEFAULT_WS_URL = import.meta.env.VITE_BACKEND_SOCKET_URL;
 
 export function useNotificationSocket({

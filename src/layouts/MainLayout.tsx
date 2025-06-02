@@ -12,7 +12,10 @@ import BellIcon from "../assets/icon/BellIcon.svg?react";
 import DeleteIcon from "../assets/icon/DeleteIcon.svg";
 
 import { NotiPopOver } from "../components/NotiPopOver";
-import { useNotificationSocket, NotificationPayload } from "../hooks/useNotificationSocket";
+import {
+  useNotificationSocket,
+  NotificationPayload,
+} from "../hooks/useNotificationSocket";
 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../hooks/useAuthStore";
@@ -34,19 +37,46 @@ interface Notification {
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   // id 관련
   const userId = useAuthStore((state) => state.userId);
+  const setUserId = useAuthStore((state) => state.setUserId);
+  const fetchUserId = async () => {
+    try {
+      const token = useAuthStore.getState().accessToken; // Retrieve token from zustand store
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/auth/userId`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Add token to Authorization header
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch user ID");
+      }
+      const data = await response.json();
+      const id = data.userId;
+      // console.log("Fetched user ID:", id);
+      // // zustand에 userId 저장
+      setUserId(id);
+      console.log("zustand userId:", userId);
+
+      return;
+    } catch (error) {
+      console.error("Error fetching user ID:", error);
+      return null;
+    }
+  };
 
   useEffect(() => {
-    console.log("현재 로그인한 유저 ID : ", userId);
-  }, [userId]);
+    fetchUserId();
+  }, []);
 
   // 그전 영역
   const [showNoti, setShowNoti] = useState(false);
-  
+
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   // 컴포넌트 내부
   const [notifications, setNotifications] = useState<Notification[]>([]);
-
 
   const toggleNoti = () => setShowNoti((prev) => !prev);
 
@@ -91,7 +121,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   // 알림 소켓 연결 (커스텀 훅 사용)
   useNotificationSocket({
-    userId: "12", // 임시 하드코딩
+    userId: String(userId), // 임시 하드코딩
     wsUrl,
     onNotification: (data: NotificationPayload) => {
       const formattedDate = new Date(data.date).toLocaleString("ko-KR", {
@@ -116,39 +146,27 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     },
   });
 
-
   // 단일 삭제 (백엔드 연동)
   const deleteOne = async (id: number) => {
-    await fetch(`${import.meta.env.VITE_BACKEND_API_BASE_URL}/notifications/${id}`, {
-      method: "DELETE",
-    });
+    await fetch(
+      `${import.meta.env.VITE_BACKEND_API_BASE_URL}/notifications/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
   // 전체 삭제 (백엔드 연동)
   const deleteAll = async () => {
-    await fetch(`${import.meta.env.VITE_BACKEND_API_BASE_URL}/notifications/user/${userId}`, {
-      method: "DELETE",
-    });
+    await fetch(
+      `${import.meta.env.VITE_BACKEND_API_BASE_URL}/notifications/user/${userId}`,
+      {
+        method: "DELETE",
+      }
+    );
     setNotifications([]);
   };
-
-  // 알림 API 요청 (임시로 구현)
-  // const fetchNotifications = async (userId: number) => {
-  //   try {
-  //     const response = await fetch(`/api/notifications?userId=${userId}`);
-  //     const data = await response.json();
-  //     console.log("Fetched notifications:", data);
-  //     return data;
-  //   } catch (error) {
-  //     console.error("Failed to fetch notifications:", error);
-  //     return [];
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   fetchNotifications();
-  // }, [userId]);
 
   return (
     <MainWrapper>
