@@ -14,9 +14,9 @@ export const ENDPOINTS = {
     classroom: number // 학년, 반 별 학생 조회
   ) => `${API_BASE_URL}/students?grade=${grade}&classroom=${classroom}`,
   studentInfo: (id: number) => `${API_BASE_URL}/students/${id}`,
-  auth: `${API_BASE_URL}/auth/google`,
+  auth: `${API_BASE_URL}/auth/google`, // LoginPage
   teachers: `${API_BASE_URL}/teachers`,
-  check: `${API_BASE_URL}/auth/check-user`,
+  check: `${API_BASE_URL}/auth/check-user`, // Loginpage
   counsels: `${API_BASE_URL}/counsels`,
   counselList: (
     studentId: number,
