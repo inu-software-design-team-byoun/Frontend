@@ -25,15 +25,14 @@ type AttendanceMap = {
   };
 };
 
-// ─────────────────────────────────────────────────────────────────
-// 변경된 셀 한 건을 표현하는 타입 (note 필드 추가)
+// 변경된 셀 한 건을 표현하는 타입 (note 필드 포함)
 interface ChangedItem {
   studentId: number;
   studentName: string;
   date: string; // YYYY-MM-DD
   origStatus: Attendance;
   newStatus: Attendance;
-  note: string; // ← 행별 사유 입력용
+  note: string;
 }
 
 interface AttendanceTableProps {
@@ -156,9 +155,16 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   };
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 4. “수정하기” 버튼 클릭 → 변경된 항목을 찾아서 changedItems에 저장 → 모달 표시
+  // STEP 4. “초기화” 버튼 클릭 → attendanceData를 originalData로 되돌림
+  const handleReset = () => {
+    // 원래 상태 그대로 복사
+    setAttendanceData(JSON.parse(JSON.stringify(originalData)));
+    // hasChanges는 useEffect에서 자동으로 false가 됩니다.
+  };
+
+  // ─────────────────────────────────────────────────────────────
+  // STEP 5. “수정하기” 버튼 클릭 → 변경된 항목 추려서 changedItems에 저장 → 모달 표시
   const handleModifyClick = () => {
-    // originalData vs attendanceData 비교하여 ChangedItem 배열 생성
     const diffs: ChangedItem[] = [];
 
     studentList.forEach((stu: StudentBrief) => {
@@ -189,17 +195,16 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   };
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 5. 모달에서 “확인” 클릭 시 POST /attendances 요청
+  // STEP 6. 모달에서 “확인” 클릭 시 POST /attendances 요청
   const handleConfirm = useCallback(async () => {
     try {
-      // changedItems 배열을 순회하며 POST 요청
       await Promise.all(
         changedItems.map(async (item) => {
           const body = {
             studentId: item.studentId,
             date: item.date,
             status: item.newStatus,
-            note: item.note.trim(), // ← 행별 입력된 note 사용
+            note: item.note.trim(),
           };
           const res = await fetch(ENDPOINTS.createAttendance, {
             method: "POST",
@@ -214,7 +219,6 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
           await res.json();
         })
       );
-      // 성공하면 originalData를 최신화하고 모달 닫기
       setOriginalData(attendanceData);
       setHasChanges(false);
       setShowConfirmModal(false);
@@ -226,12 +230,12 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   }, [attendanceData, changedItems]);
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 6. 화면에 보여줄 “검색 결과” 학생 목록
+  // STEP 7. 화면에 보여줄 “검색 결과” 학생 목록
   const filteredStudents = studentList.filter((s) => s.name.includes(query));
 
   return (
     <Wrapper>
-      {/* ─── 상단: 학년·반 드롭다운 + 수정 버튼 ─── */}
+      {/* ─── 상단: 학년·반 드롭다운 + 초기화 & 수정 버튼 ─── */}
       <TopRectangle />
       <ClassArea>
         <ClassSelect
@@ -257,6 +261,12 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
           <option value="6">6반</option>
         </ClassSelect>
 
+        {/* 초기화 버튼: 수정하기 전에 방금 바꾼 셀들을 모두 원래대로 되돌림 */}
+        <ResetButton disabled={!hasChanges} onClick={handleReset}>
+          초기화
+        </ResetButton>
+
+        {/* 수정하기 버튼: 변경사항이 있을 때만 활성화 */}
         <ModifyButton disabled={!hasChanges} onClick={handleModifyClick}>
           수정하기
         </ModifyButton>
@@ -265,7 +275,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
       {/* ─── 검색 입력창 ─── */}
       <SearchArea>
         <input
-          placeholder="검색어 입력(이름)"
+          placeholder="이름으로 검색 + Enter"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -303,13 +313,19 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                 <FixedCellName>{student.name}</FixedCellName>
 
                 {weekdays.map((dateStr) => {
+                  const origStatus: Attendance =
+                    originalData[student.id]?.[dateStr] ?? "출석";
                   const currStatus: Attendance =
                     attendanceData[student.id]?.[dateStr] ?? "출석";
+
+                  // ★ 변경된 셀인지 여부 판정
+                  const isChanged = origStatus !== currStatus;
 
                   return (
                     <td key={`${student.id}-${dateStr}`}>
                       <AttendanceSelect
                         $status={currStatus}
+                        $isChanged={isChanged}
                         value={currStatus}
                         onChange={(e) =>
                           handleChange(
@@ -334,7 +350,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
 
       <BottomRectangle />
 
-      {/* ─── 변경사항 확인용 모달 (표 형태로 변경사항 나열, 개별 note 칸 포함) ─── */}
+      {/* ─── 변경사항 확인용 모달 (표 형태로 변경사항 나열, 개별 note 입력 칸 포함) ─── */}
       {showConfirmModal && (
         <ModalOverlay>
           <ModalBox>
@@ -347,7 +363,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                   <th>날짜</th>
                   <th>기존 상태</th>
                   <th>변경된 상태</th>
-                  <th>사유 입력</th> {/* 새로운 열 */}
+                  <th>사유 입력</th>
                 </tr>
               </thead>
               <tbody>
@@ -361,12 +377,8 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                       <RowNoteInput
                         value={item.note}
                         onChange={(e) => {
-                          // 각 행의 note만 업데이트
                           const updated = [...changedItems];
-                          updated[i] = {
-                            ...updated[i],
-                            note: e.target.value,
-                          };
+                          updated[i] = { ...updated[i], note: e.target.value };
                           setChangedItems(updated);
                         }}
                         placeholder="사유 작성"
@@ -427,9 +439,10 @@ const ClassArea = styled.div`
   border-bottom: 2px solid #54b25c;
   display: flex;
   align-items: center;
-  position: relative; /* 수정 버튼 절대 위치용 */
+  position: relative; /* 절대 위치된 버튼들을 위한 기준 */
 `;
 
+/* 학년/반 선택 */
 const ClassSelect = styled.select<{ $syllable: number }>`
   margin-left: ${(props) => (props.$syllable === 3 ? "1.25rem" : "1rem")};
   width: ${(props) =>
@@ -455,6 +468,33 @@ const ClassSelect = styled.select<{ $syllable: number }>`
   }
 `;
 
+/* ─── 초기화 버튼 ─── */
+const ResetButton = styled.button`
+  position: absolute;
+  right: 8rem; /* 수정하기 버튼 왼쪽에 배치 */
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+
+  background-color: ${(props: { disabled?: boolean }) =>
+    props.disabled ? "#f0f0f0" : "#e0e0e0"};
+  color: ${(props: { disabled?: boolean }) =>
+    props.disabled ? "#aaa" : "#333"};
+
+  &:hover {
+    background-color: ${(props: { disabled?: boolean }) =>
+      props.disabled ? "#f0f0f0" : "#d5d5d5"};
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+`;
+
+/* ─── 수정하기 버튼 ─── */
 const ModifyButton = styled.button`
   position: absolute;
   right: 1.5rem;
@@ -536,7 +576,6 @@ const MainArea = styled.div`
     white-space: nowrap;
   }
 
-  /* 스크롤바 커스터마이징 (선택 사항) */
   &::-webkit-scrollbar {
     height: 8px;
     width: 8px;
@@ -585,7 +624,11 @@ const FixedCellName = styled.td`
   width: 120px;
 `;
 
-const AttendanceSelect = styled.select<{ $status: Attendance }>`
+// AttendanceSelect에 $isChanged prop까지 추가해서 “방금 바뀐 셀”을 구분한다
+const AttendanceSelect = styled.select<{
+  $status: Attendance;
+  $isChanged: boolean;
+}>`
   padding-left: 8px;
   font-weight: bold;
   border-radius: 0.65rem;
@@ -597,23 +640,37 @@ const AttendanceSelect = styled.select<{ $status: Attendance }>`
   background-position: right 0.5rem center;
   background-size: 0.75rem;
 
-  /* 드롭다운 모양(테두리/배경/화살표) */
-  background-image: ${(props) =>
-    `url(${props.$status === "출석" ? SelectArrow : ""})`};
-  border: 1.5px solid
-    ${(props) =>
+  /* ── 1) “방금 바뀐” 셀 */
+  ${(props) =>
+    props.$isChanged && props.$status === "지각"
+      ? `
+    border: 2px solid #FC8D4C;
+    background-color: #FFF1E8;
+    color: #FC8D4C;
+  `
+      : props.$isChanged && props.$status === "결석"
+        ? `
+    border: 2px solid #FF6969;
+    background-color: #FFEAEA;
+    color: #FF6969;
+  `
+        : /* ── 2) “원래 서버 데이터” 또는 그냥 출석 */ `
+    border: 1.5px solid ${
       props.$status === "출석"
         ? "#b9b9b9"
         : props.$status === "지각"
           ? "#FC8D4C"
-          : "#FF6969"};
-  background-color: ${(props) =>
-    props.$status === "출석"
-      ? "white"
-      : props.$status === "지각"
-        ? "#FC8D4C"
-        : "#FF6969"};
-  color: ${(props) => (props.$status === "출석" ? "black" : "white")};
+          : "#FF6969"
+    };
+    background-color: ${
+      props.$status === "출석"
+        ? "white"
+        : props.$status === "지각"
+          ? "#FC8D4C"
+          : "#FF6969"
+    };
+    color: ${props.$status === "출석" ? "black" : "white"};
+  `}
 
   &:focus {
     outline: none;
@@ -621,7 +678,7 @@ const AttendanceSelect = styled.select<{ $status: Attendance }>`
 `;
 
 // ─────────────────────────────────────────────────────────────────
-// 확인/취소 모달 (표 형태로 변경사항 나열, 개별 note 입력 칸 포함)
+// 확인/취소 모달 (표에 “사유 입력” 칸까지 포함)
 const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -639,7 +696,7 @@ const ModalBox = styled.div`
   background: white;
   padding: 1.5rem;
   border-radius: 0.75rem;
-  width: 600px;
+  width: 650px;
   max-height: 80vh;
   overflow-y: auto;
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
