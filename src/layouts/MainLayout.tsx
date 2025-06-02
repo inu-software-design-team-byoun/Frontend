@@ -12,6 +12,7 @@ import BellIcon from "../assets/icon/BellIcon.svg?react";
 import DeleteIcon from "../assets/icon/DeleteIcon.svg";
 
 import { NotiPopOver } from "../components/NotiPopOver";
+import { io, Socket } from "socket.io-client";
 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../hooks/useAuthStore";
@@ -21,41 +22,15 @@ type MainLayoutProps = {
   // ref?: string;
 };
 
+const baseUrl = import.meta.env.BACKEND_API_BASE_URL;
+let socket: Socket;
+
 // Notification 타입 정의
 interface Notification {
   id: number;
   date: string;
   text: string;
 }
-
-// 예시 notifications 배열
-const initialNotifications = [
-  {
-    id: 1,
-    date: "2025.05.12 (1일전)",
-    text: "성적이 업데이트되었습니다.",
-  },
-  {
-    id: 2,
-    date: "2025.05.11 (2일전)",
-    text: "피드백이 작성되었습니다.",
-  },
-  {
-    id: 3,
-    date: "2025.05.10 (3일전)",
-    text: "상담 내역이 추가되었습니다.",
-  },
-  {
-    id: 4,
-    date: "2025.05.08 (5일전)",
-    text: "성적이 수정되었습니다.",
-  },
-  {
-    id: 5,
-    date: "2025.05.05 (8일전)",
-    text: "학기 중간고사 일정이 확정되었습니다.",
-  },
-];
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   // 웹소켓 영역
@@ -116,11 +91,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   // 그전 영역
   const [showNoti, setShowNoti] = useState(false);
+  
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   // 컴포넌트 내부
-  const [notifications, setNotifications] =
-    useState<Notification[]>(initialNotifications);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
 
   const toggleNoti = () => setShowNoti((prev) => !prev);
 
@@ -162,6 +138,36 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showNoti]);
+
+  // 소켓 연결 및 알림 수신
+  useEffect(() => {
+    const userId = "teacher1";
+
+    socket = io(baseUrl, {
+      query: { userId },
+      transports: ["websocket"],
+    });
+
+    socket.on("notification", (data: { message: string }) => {
+      const now = new Date();
+      const formattedDate = `${now.getFullYear()}.${String(
+        now.getMonth() + 1
+      ).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")} (오늘)`;
+
+      setNotifications((prev) => [
+        {
+          id: Date.now(),
+          date: formattedDate,
+          text: data.message,
+        },
+        ...prev,
+      ]);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   // 단일 삭제
   const deleteOne = (id: number) => {
