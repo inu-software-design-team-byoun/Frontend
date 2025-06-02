@@ -1,27 +1,32 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+import { io, Socket } from "socket.io-client";
 
-export interface Notification {
-  id: number;
-  date: string;
-  text: string;
+export interface NotificationPayload {
+  message: string;
 }
 
-export function useNotificationSocket(onNotify: (n: Notification) => void) {
-  const wsRef = useRef<WebSocket>();
+const DEFAULT_WS_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
 
+export function useNotificationSocket({
+  userId,
+  onNotification,
+  wsUrl = DEFAULT_WS_URL,
+}: {
+  userId: string | undefined;
+  onNotification: (payload: NotificationPayload) => void;
+  wsUrl?: string;
+}) {
   useEffect(() => {
-    const ws = new WebSocket("wss://localhost:3000/ws/notifications");
+    if (!userId) return;
+    const socket: Socket = io(wsUrl, {
+      query: { userId },
+      transports: ["websocket"],
+    });
 
-    wsRef.current = ws;
-    ws.onopen = () => console.log("WS connected");
-    ws.onmessage = (e) => {
-      const n: Notification = JSON.parse(e.data);
-      onNotify(n);
-    };
+    socket.on("notification", onNotification);
+
     return () => {
-      ws.close();
+      socket.disconnect();
     };
-  }, [onNotify]);
-
-  return wsRef;
+  }, [userId, wsUrl]);
 }
