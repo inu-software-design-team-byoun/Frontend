@@ -2,9 +2,13 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const ENDPOINTS = {
+  // 반별 학생조회
   scores: (grade: number, classroom: number) =>
     `${API_BASE_URL}/scores/classroom?grade=${grade}&classroom=${classroom}`,
-  students: `${API_BASE_URL}/students`, // 전체 학생 조회
+  // 학생별 성적 생성 및 수정
+  patchScore: `${API_BASE_URL}/scores`,
+  // 전체 학생 조회
+  students: `${API_BASE_URL}/students`,
   studentsList: (
     grade: number,
     classroom: number // 학년, 반 별 학생 조회

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { CrudButton } from "./CrudButton";
 import { useCounselsApi } from "../hooks/useCounselsApi";
-import { useSelectedStudentStore } from "../store/useSelectedStudentStore";
+import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
 
 // 아이콘
 import editIcon from "../assets/icon/editIcon.svg";

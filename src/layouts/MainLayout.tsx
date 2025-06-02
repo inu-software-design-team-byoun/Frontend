@@ -119,6 +119,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     setNotifications([]);
   };
 
+  // 알림 API 요청 (임시로 구현)
+  // const fetchNotifications = async (userId: number) => {
+  //   try {
+  //     const response = await fetch(`/api/notifications?userId=${userId}`);
+  //     const data = await response.json();
+  //     console.log("Fetched notifications:", data);
+  //     return data;
+  //   } catch (error) {
+  //     console.error("Failed to fetch notifications:", error);
+  //     return [];
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   fetchNotifications();
+  // }, [userId]);
+
   return (
     <MainWrapper>
       <SideBarArea>

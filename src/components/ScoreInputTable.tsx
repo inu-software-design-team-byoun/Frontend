@@ -1,6 +1,207 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import styled from "styled-components";
 import SelectArrow from "../assets/icon/SelectArrow.png";
+import { useStudentsListApi } from "../hooks/useStudentListApi";
+import { useScoreApi } from "../hooks/useScoreApi";
+import { CrudButton } from "./CrudButton";
+import { usePatchScoreApi } from "../hooks/usePatchScoreApi";
+
+export const ScoreInputTable: React.FC = () => {
+  // 학년, 반 선택값 상태 관리
+  const [grade, setGrade] = useState(1);
+  const [classNum, setClassNum] = useState(5);
+  const [enabledSubject, setEnabledSubject] = useState("국어");
+
+  // 수정 중 여부 조건부 렌더링을 위한 useState
+  const [isEditing, setIsEditing] = useState(false);
+  const [editScores, setEditScores] = useState<Record<number, string>>({});
+  const { patchScore } = usePatchScoreApi();
+
+  const handleEditStart = () => {
+    // 원점수 초기값 세팅
+    const initial: Record<number, string> = {};
+    studentList.forEach((stu) => {
+      const score = scoreMap.get(stu.id);
+      initial[stu.id] =
+        score?.korean !== null && score?.korean !== undefined
+          ? String(score.korean)
+          : "";
+    });
+    setEditScores(initial);
+    setIsEditing(true);
+  };
+
+  // 클릭시 변경사항을 무시하고 취소
+  const handleEditCancel = () => {
+    setIsEditing(false);
+    setEditScores({});
+  };
+
+  // 클릭 시 변경사항이 있는 지 확인하고 았으면 patch 요청 및 재렌더링
+  const handleEditDone = async () => {
+    // 변경된 값만 PATCH
+    const promises = studentList.map(async (stu) => {
+      const inputVal = editScores[stu.id];
+      if (inputVal === undefined) return;
+      const numVal = inputVal === "" ? null : Number(inputVal);
+      const score = scoreMap.get(stu.id);
+      // 기존 값과 다를 때만 patch
+      if ((score?.korean ?? null) !== numVal && inputVal !== "") {
+        await patchScore({
+          studentId: stu.id,
+          grade,
+          subjectName: enabledSubject,
+          value: Number(inputVal),
+        });
+      }
+    });
+    await Promise.all(promises);
+    setIsEditing(false);
+    setEditScores({});
+    refetch();
+  };
+
+  // 학생 목록, 성적 데이터 불러오기
+  const { data: studentList, refetch } = useStudentsListApi(grade, classNum);
+  const { data: scoreData } = useScoreApi(grade, classNum);
+
+  // 학생 id로 성적 매핑
+  const scoreMap = useMemo(() => {
+    const map = new Map<
+      number,
+      {
+        korean: number | null;
+        averageScore: number | null;
+        rank: number | null;
+        total: number | null;
+        grade: string | null;
+      }
+    >();
+    scoreData.forEach((s: any) => {
+      map.set(s.id, {
+        korean: s.korean ?? null,
+        averageScore: s.averageScore ?? null,
+        rank: s.rank ?? null,
+        total: s.total ?? null,
+        grade: s.grade ?? null,
+      });
+    });
+    return map;
+  }, [scoreData]);
+
+  return (
+    <Wrapper>
+      <div>
+        <TopRectangle />
+        <TitleArea>
+          <span className="title">성적 입력</span>
+          <span className="subject">{enabledSubject}</span>
+        </TitleArea>
+        <ClassArea>
+          <ClassSelect
+            $syllable={3}
+            value={grade}
+            onChange={(e) => setGrade(Number(e.target.value))}
+          >
+            <option value="1">1학년</option>
+            <option value="2">2학년</option>
+            <option value="3">3학년</option>
+          </ClassSelect>
+          <ClassSelect
+            $syllable={2}
+            value={classNum}
+            onChange={(e) => setClassNum(Number(e.target.value))}
+          >
+            <option value="1">1반</option>
+            <option value="2">2반</option>
+            <option value="3">3반</option>
+            <option value="4">4반</option>
+            <option value="5">5반</option>
+            <option value="6">6반</option>
+          </ClassSelect>
+          {/* 학기, 학년도는 일단 비활성화 */}
+          <ClassSelect $syllable={6} disabled>
+            <option>1학기 중간</option>
+          </ClassSelect>
+          <ClassSelect $syllable={8} disabled>
+            <option>2024 학년도</option>
+          </ClassSelect>
+          <div>
+            {!isEditing ? (
+              <CrudButton $bgColor="#86ACFF" onClick={handleEditStart}>
+                수정
+              </CrudButton>
+            ) : (
+              <>
+                <CrudButton $bgColor="gray" onClick={handleEditCancel}>
+                  취소
+                </CrudButton>
+                <CrudButton $bgColor="#70C776" onClick={handleEditDone}>
+                  완료
+                </CrudButton>
+              </>
+            )}
+          </div>
+        </ClassArea>
+        <ScrollArea>
+          <MainArea>
+            <colgroup>
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "16%" }} />
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "12%" }} />
+            </colgroup>
+            <thead>
+              <tr>
+                <th>번호</th>
+                <th>이름</th>
+                <th className="rawscore">원점수</th>
+                <th>과목평균</th>
+                <th>석차등급</th>
+                <th>응시자수</th>
+                <th>등급</th>
+              </tr>
+            </thead>
+            <tbody>
+              {studentList.map((stu, idx) => {
+                const score = scoreMap.get(stu.id);
+                return (
+                  <tr key={stu.id}>
+                    <td>{String(stu.studentNum % 100)}</td>
+                    <td>{stu.name}</td>
+                    <td>
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={editScores[stu.id] ?? ""}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setEditScores((prev) => ({ ...prev, [stu.id]: v }));
+                          }}
+                          style={{ width: "4rem" }}
+                        />
+                      ) : (
+                        (score?.korean ?? "-")
+                      )}
+                    </td>
+                    <td>{score?.averageScore ?? "-"}</td>
+                    <td>{score?.rank ?? "-"}</td>
+                    <td>{score?.total ?? "-"}</td>
+                    <td>{score?.grade ?? "-"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </MainArea>
+        </ScrollArea>
+      </div>
+      <BottomRectangle />
+    </Wrapper>
+  );
+};
 
 const Wrapper = styled.div`
   margin-left: 0.5rem;
@@ -80,6 +281,14 @@ const ClassArea = styled.div`
 
   display: flex;
   align-items: center;
+
+  div {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    margin-right: 1.75rem;
+    /* align-self: flex-end; // 안되네*/
+  }
 `;
 
 const ClassSelect = styled.select<{ $syllable: number }>`
@@ -194,109 +403,8 @@ const MainArea = styled.table`
   tbody::-webkit-scrollbar-track {
     background-color: #f0f0f0;
   }
+
+  .rawscore {
+    color: #00990d;
+  }
 `;
-
-interface ScoreInputTableProps {
-  grade?: number;
-  classNum?: number;
-}
-
-export const ScoreInputTable: React.FC<ScoreInputTableProps> = () =>
-  // {grade = 2,classNum = 3,}
-  {
-    return (
-      <Wrapper>
-        <div>
-          <TopRectangle />
-          <TitleArea>
-            <span className="title">성적 입력</span>
-            <span className="subject">국어</span>
-          </TitleArea>
-          <ClassArea>
-            <ClassSelect
-              $syllable={3}
-
-              //  value={selectedGrade}
-              //  onChange={(e) => setSelectedGrade(e.target.value)}
-            >
-              <option value="1">1학년</option>
-              <option value="2">2학년</option>
-              <option value="3">3학년</option>
-            </ClassSelect>
-            <ClassSelect
-              $syllable={2}
-
-              //  value={selectedClass}
-              //  onChange={(e) => setSelectedClass(e.target.value)}
-            >
-              <option value="1">1반</option>
-              <option value="2">2반</option>
-              <option value="3">3반</option>
-              <option value="4">4반</option>
-              <option value="5">5반</option>
-              <option value="6">6반</option>
-            </ClassSelect>
-            <ClassSelect
-              $syllable={6}
-
-              //  value={selectedClass}
-              //  onChange={(e) => setSelectedClass(e.target.value)}
-            >
-              <option value="1">1학기 중간</option>
-              <option value="2">1학기 기말</option>
-              <option value="3">2학기 중간</option>
-              <option value="4">2학기 기말</option>
-            </ClassSelect>
-            <ClassSelect
-              $syllable={8}
-
-              //  value={selectedClass}
-              //  onChange={(e) => setSelectedClass(e.target.value)}
-            >
-              <option value="2024">2024 학년도</option>
-              <option value="2025">2025 학년도</option>
-            </ClassSelect>
-          </ClassArea>
-          <ScrollArea>
-            <MainArea>
-              <colgroup>
-                <col style={{ width: "8%" }} />
-                <col style={{ width: "8%" }} />
-                <col style={{ width: "8%" }} />
-                <col style={{ width: "8%" }} />
-                <col style={{ width: "8%" }} />
-                <col style={{ width: "8%" }} />
-                <col style={{ width: "8%" }} />
-              </colgroup>
-              <thead>
-                <tr>
-                  <th>번호</th>
-                  <th>이름</th>
-                  <th>원점수</th>
-                  <th>과목평균</th>
-                  <th>석차등급</th>
-                  <th>응시자수</th>
-                  <th>등급</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {Array.from({ length: 15 }).map((_, idx) => (
-                  <tr key={idx}>
-                    <td>{idx + 1}</td>
-                    <td>홍길동</td>
-                    <td>95</td>
-                    <td>84</td>
-                    <td>3</td>
-                    <td>29</td>
-                    <td>B+</td>
-                  </tr>
-                ))}
-              </tbody>
-            </MainArea>
-          </ScrollArea>
-        </div>
-        <BottomRectangle />
-      </Wrapper>
-    );
-  };

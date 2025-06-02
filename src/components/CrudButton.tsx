@@ -26,13 +26,19 @@ export const CrudButton = styled.button<{
 
   cursor: pointer;
 
+  // 마우스를 올릴 때는 바로 바뀌고 뗄 때는 천천히 바뀌게 구현
+  // 1. 마우스 올릴 때
   &:hover {
     color: ${(props) => props.$bgColor};
     background-color: white;
     border: 1.5px solid ${(props) => props.$bgColor};
+  }
+
+  // 2. 마우스 뗄 떼
+  &:not(:hover) {
     transition: // border는 바로 바뀌는 게 더 자연스러운 듯
-      background-color 0.2s ease,
-      color 0.2s ease;
+      background-color 0.2s ease-in-out,
+      color 0.2s ease-in-out;
   }
 
   &:disabled {

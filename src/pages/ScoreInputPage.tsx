@@ -6,7 +6,7 @@ import { ScoreInputTable } from "../components/ScoreInputTable";
 const ScoreInputPage: React.FC = () => {
   return (
     <>
-      <ScoreInputTable grade={2} classNum={3} />
+      <ScoreInputTable />
     </>
   );
 };
