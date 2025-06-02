@@ -12,7 +12,7 @@ import { getWeekdays } from "../utils/getWeekdays";
 const weekdays = getWeekdays(
   new Date("2025-03-01"),
   new Date("2025-06-30"),
-  [] // 필요하면 공휴일 배열을 넣으세요
+  [] // 필요하면 공휴일 배열 추가
 );
 
 // “출석”, “지각”, “결석” 세 가지 상태 타입
@@ -24,6 +24,17 @@ type AttendanceMap = {
     [date: string]: Attendance;
   };
 };
+
+// ─────────────────────────────────────────────────────────────────
+// 변경된 셀 한 건을 표현하는 타입 (note 필드 추가)
+interface ChangedItem {
+  studentId: number;
+  studentName: string;
+  date: string; // YYYY-MM-DD
+  origStatus: Attendance;
+  newStatus: Attendance;
+  note: string; // ← 행별 사유 입력용
+}
 
 interface AttendanceTableProps {
   grade: number;
@@ -45,18 +56,22 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   const [query, setQuery] = useState<string>("");
 
   // 3) 출결 데이터 저장용 state
-  //   - attendanceData: 화면에 표시 중인 “최신” 상태
-  //   - originalData: 서버에서 마지막으로 받아온(또는 저장한) 기준 상태
   const [attendanceData, setAttendanceData] = useState<AttendanceMap>({});
   const [originalData, setOriginalData] = useState<AttendanceMap>({});
 
-  // 4) 변경사항 여부 감지용 플래그
+  // 4) 변경사항 감지용 플래그
   const [hasChanges, setHasChanges] = useState<boolean>(false);
 
+  // 5) 모달 표시 여부
+  const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
+
+  // 6) 변경된 항목들 목록 (모달에 표로 보여줄 데이터)
+  const [changedItems, setChangedItems] = useState<ChangedItem[]>([]);
+
   // ─────────────────────────────────────────────────────────────
-  // STEP 1. studentList 또는 grade/classNum이 바뀔 때마다 “출석 초기화 + 서버 조회”
+  // STEP 1. studentList 또는 grade/classNum 바뀔 때마다 “출석 초기화 + 서버 조회”
   useEffect(() => {
-    // 1-1) 모든 셀을 “출석”으로 초기 세팅
+    // 모든 셀을 “출석”으로 초기 세팅
     const initialMap: AttendanceMap = {};
     studentList.forEach((stu: StudentBrief) => {
       initialMap[stu.id] = {};
@@ -65,14 +80,12 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
       });
     });
 
-    // 1-2) 학년·반별 출석정보를 한 번에 가져오기
+    // 학년·반별 출석정보를 한 번에 가져오기
     const fetchClassAttendance = async () => {
-      // initialMap 복사해서 mergedMap 생성
       const mergedMap: AttendanceMap = JSON.parse(JSON.stringify(initialMap));
 
-      // 쿼리 파라미터 세팅 (시작/끝 날짜는 필수 아님)
-      const startDate = weekdays[0]; // 예: "2025-03-01"
-      const endDate = weekdays[weekdays.length - 1]; // 예: "2025-06-30"
+      const startDate = weekdays[0];
+      const endDate = weekdays[weekdays.length - 1];
       const url = ENDPOINTS.attendancesByClass(
         grade,
         classNum,
@@ -91,7 +104,6 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
           note: string;
         }> = await res.json();
 
-        // 받은 배열을 순회하며 mergedMap 덮어쓰기
         arr.forEach((rec) => {
           const ymd = rec.date.slice(0, 10);
           const sid = rec.student.id;
@@ -103,7 +115,6 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
         console.error("class attendance fetch error:", err);
       }
 
-      // 1-3) mergedMap을 originalData와 attendanceData에 저장
       setOriginalData(mergedMap);
       setAttendanceData(mergedMap);
     };
@@ -112,7 +123,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   }, [studentList, grade, classNum]);
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 2. attendanceData 또는 originalData가 바뀔 때마다 “변경사항 감지”
+  // STEP 2. attendanceData 혹은 originalData가 바뀔 때 “변경사항 여부” 검사
   useEffect(() => {
     if (studentList.length === 0) {
       setHasChanges(false);
@@ -145,37 +156,51 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   };
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 4. “수정하기” 버튼 클릭 시: 변경된 셀만 POST /attendances로 전송
-  const handleSave = useCallback(async () => {
-    interface ChangedItem {
-      studentId: number;
-      date: string;
-      status: Attendance;
-    }
-    const changedItems: ChangedItem[] = [];
+  // STEP 4. “수정하기” 버튼 클릭 → 변경된 항목을 찾아서 changedItems에 저장 → 모달 표시
+  const handleModifyClick = () => {
+    // originalData vs attendanceData 비교하여 ChangedItem 배열 생성
+    const diffs: ChangedItem[] = [];
 
-    // 4-1) 변경된 셀 찾기
-    for (const stu of studentList) {
+    studentList.forEach((stu: StudentBrief) => {
       const sid = stu.id;
       for (const dateStr of weekdays) {
         const orig = originalData[sid]?.[dateStr] ?? "출석";
         const curr = attendanceData[sid]?.[dateStr] ?? "출석";
         if (orig !== curr) {
-          changedItems.push({ studentId: sid, date: dateStr, status: curr });
+          diffs.push({
+            studentId: sid,
+            studentName: stu.name,
+            date: dateStr,
+            origStatus: orig,
+            newStatus: curr,
+            note: "", // ← 빈 문자열로 초기화
+          });
         }
       }
-    }
+    });
 
-    if (changedItems.length === 0) {
+    if (diffs.length === 0) {
       alert("변경된 내용이 없습니다.");
       return;
     }
 
-    // 4-2) POST /attendances 요청 보내기
+    setChangedItems(diffs);
+    setShowConfirmModal(true);
+  };
+
+  // ─────────────────────────────────────────────────────────────
+  // STEP 5. 모달에서 “확인” 클릭 시 POST /attendances 요청
+  const handleConfirm = useCallback(async () => {
     try {
+      // changedItems 배열을 순회하며 POST 요청
       await Promise.all(
-        changedItems.map(async ({ studentId, date, status }) => {
-          const body = { studentId, date, status, note: "" };
+        changedItems.map(async (item) => {
+          const body = {
+            studentId: item.studentId,
+            date: item.date,
+            status: item.newStatus,
+            note: item.note.trim(), // ← 행별 입력된 note 사용
+          };
           const res = await fetch(ENDPOINTS.createAttendance, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -183,25 +208,25 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
           });
           if (!res.ok) {
             throw new Error(
-              `POST attendance failed: ${res.status} for ${studentId}-${date}`
+              `❌ POST failed (${res.status}) for ${item.studentName} - ${item.date}`
             );
           }
-          await res.json(); // 필요하다면 응답 데이터를 사용
+          await res.json();
         })
       );
-
-      // 4-3) 성공 시 originalData 동기화 & 버튼 비활성화
+      // 성공하면 originalData를 최신화하고 모달 닫기
       setOriginalData(attendanceData);
       setHasChanges(false);
-      alert("✅ 출결 정보가 성공적으로 저장되었습니다.");
+      setShowConfirmModal(false);
+      alert("✅ 모든 출결 정보가 성공적으로 저장되었습니다.");
     } catch (err) {
       console.error("failed to save attendance data:", err);
       alert("❌ 출결 저장 중 오류가 발생했습니다. 다시 시도해주세요.");
     }
-  }, [attendanceData, originalData, studentList]);
+  }, [attendanceData, changedItems]);
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 5. 화면에 보여줄 “검색 결과” 학생 목록
+  // STEP 6. 화면에 보여줄 “검색 결과” 학생 목록
   const filteredStudents = studentList.filter((s) => s.name.includes(query));
 
   return (
@@ -232,8 +257,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
           <option value="6">6반</option>
         </ClassSelect>
 
-        {/* ─── 수정하기 버튼 ─── */}
-        <ModifyButton disabled={!hasChanges} onClick={handleSave}>
+        <ModifyButton disabled={!hasChanges} onClick={handleModifyClick}>
           수정하기
         </ModifyButton>
       </ClassArea>
@@ -241,7 +265,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
       {/* ─── 검색 입력창 ─── */}
       <SearchArea>
         <input
-          placeholder="이름으로 검색 + Enter"
+          placeholder="검색어 입력(이름)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -279,14 +303,9 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                 <FixedCellName>{student.name}</FixedCellName>
 
                 {weekdays.map((dateStr) => {
-                  // 원래 서버 데이터 혹은 마지막 저장된 상태
-                  const origStatus: Attendance =
-                    originalData[student.id]?.[dateStr] ?? "출석";
-                  // 화면에 보여주는 현재 상태
                   const currStatus: Attendance =
                     attendanceData[student.id]?.[dateStr] ?? "출석";
 
-                  // 항상 드롭다운을 보여주도록 유지
                   return (
                     <td key={`${student.id}-${dateStr}`}>
                       <AttendanceSelect
@@ -314,6 +333,61 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
       </MainArea>
 
       <BottomRectangle />
+
+      {/* ─── 변경사항 확인용 모달 (표 형태로 변경사항 나열, 개별 note 칸 포함) ─── */}
+      {showConfirmModal && (
+        <ModalOverlay>
+          <ModalBox>
+            <ModalTitle>변경사항 확인</ModalTitle>
+
+            <ModalTable>
+              <thead>
+                <tr>
+                  <th>학생 이름</th>
+                  <th>날짜</th>
+                  <th>기존 상태</th>
+                  <th>변경된 상태</th>
+                  <th>사유 입력</th> {/* 새로운 열 */}
+                </tr>
+              </thead>
+              <tbody>
+                {changedItems.map((item, i) => (
+                  <tr key={i}>
+                    <td>{item.studentName}</td>
+                    <td>{item.date}</td>
+                    <td>{item.origStatus}</td>
+                    <td>{item.newStatus}</td>
+                    <td>
+                      <RowNoteInput
+                        value={item.note}
+                        onChange={(e) => {
+                          // 각 행의 note만 업데이트
+                          const updated = [...changedItems];
+                          updated[i] = {
+                            ...updated[i],
+                            note: e.target.value,
+                          };
+                          setChangedItems(updated);
+                        }}
+                        placeholder="사유 작성"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </ModalTable>
+
+            <ModalButtons>
+              <ModalButtonCancel onClick={() => setShowConfirmModal(false)}>
+                취소
+              </ModalButtonCancel>
+              <ModalButtonConfirm onClick={handleConfirm}>
+                확인
+              </ModalButtonConfirm>
+            </ModalButtons>
+          </ModalBox>
+        </ModalOverlay>
+      )}
     </Wrapper>
   );
 };
@@ -353,7 +427,7 @@ const ClassArea = styled.div`
   border-bottom: 2px solid #54b25c;
   display: flex;
   align-items: center;
-  position: relative; /* 수정 버튼 절대 배치용 */
+  position: relative; /* 수정 버튼 절대 위치용 */
 `;
 
 const ClassSelect = styled.select<{ $syllable: number }>`
@@ -433,7 +507,7 @@ const SearchArea = styled.div`
 const MainArea = styled.div`
   flex: 1;
   overflow-x: auto;
-  max-height: calc(100% - 128px); /* 헤더·풋터·검색영역 제외 */
+  max-height: calc(100% - 128px);
 
   table {
     position: relative; /* sticky 기준 */
@@ -462,6 +536,7 @@ const MainArea = styled.div`
     white-space: nowrap;
   }
 
+  /* 스크롤바 커스터마이징 (선택 사항) */
   &::-webkit-scrollbar {
     height: 8px;
     width: 8px;
@@ -510,7 +585,6 @@ const FixedCellName = styled.td`
   width: 120px;
 `;
 
-// 드롭다운이 항상 뜨도록 수정: “평소에도 출결 상태를 드롭다운으로 선택할 수 있다”
 const AttendanceSelect = styled.select<{ $status: Attendance }>`
   padding-left: 8px;
   font-weight: bold;
@@ -518,7 +592,7 @@ const AttendanceSelect = styled.select<{ $status: Attendance }>`
   width: 4rem;
   height: 1.75rem;
   font-size: 0.85rem;
-  appearance: none; /* 기본 브라우저 화살표 숨기기 */
+  appearance: none; /* 기본 화살표 숨기기 */
   background-repeat: no-repeat;
   background-position: right 0.5rem center;
   background-size: 0.75rem;
@@ -543,5 +617,105 @@ const AttendanceSelect = styled.select<{ $status: Attendance }>`
 
   &:focus {
     outline: none;
+  }
+`;
+
+// ─────────────────────────────────────────────────────────────────
+// 확인/취소 모달 (표 형태로 변경사항 나열, 개별 note 입력 칸 포함)
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+`;
+
+const ModalBox = styled.div`
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
+`;
+
+const ModalTitle = styled.div`
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 0.75rem;
+`;
+
+const ModalTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+
+  th,
+  td {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+  }
+
+  tbody tr:nth-child(even) {
+    background: #fafafa;
+  }
+`;
+
+const RowNoteInput = styled.input`
+  width: 100%;
+  font-size: 0.9rem;
+  padding: 0.25rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+
+  &:focus {
+    outline: none;
+    border-color: #54b25c;
+  }
+`;
+
+const ModalButtons = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+`;
+
+const ModalButton = styled.button`
+  padding: 0.4rem 0.8rem;
+  margin-left: 0.5rem;
+  border: none;
+  border-radius: 0.3rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+`;
+
+const ModalButtonCancel = styled(ModalButton)`
+  background-color: #ccc;
+  color: #333;
+
+  &:hover {
+    background-color: #b3b3b3;
+  }
+`;
+
+const ModalButtonConfirm = styled(ModalButton)`
+  background-color: #54b25c;
+  color: white;
+
+  &:hover {
+    background-color: #45a049;
   }
 `;
