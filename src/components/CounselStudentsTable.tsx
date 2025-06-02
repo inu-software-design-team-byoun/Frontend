@@ -53,7 +53,7 @@ export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
       </ClassArea>
       <SearchArea>
         <input
-          placeholder="검색어 입력 + Enter"
+          placeholder="검색어 입력"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />

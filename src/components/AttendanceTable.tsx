@@ -108,7 +108,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
       {/* 검색 영역 */}
       <SearchArea>
         <input
-          placeholder="이름으로 검색 + Enter"
+          placeholder="이름으로 검색"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
