@@ -7,7 +7,7 @@ import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
 
 // 아이콘
 import editIcon from "../assets/icon/editIcon.svg";
-import deleteIcon from "../assets/icon/deleteIcon.svg";
+import deleteIcon from "../assets/icon/DeleteIcon.svg";
 import OpenBookIcon from "../assets/icon/OpenBookIcon.svg";
 import saveIcon from "../assets/icon/saveIcon.svg";
 import backIcon from "../assets/icon/backIcon.svg";
