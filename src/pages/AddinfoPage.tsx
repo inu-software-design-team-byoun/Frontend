@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../hooks/useAuthStore";
 
 // images, icons
 import BackgroundImage from "../assets/img/LoginBack.png";
@@ -187,12 +188,18 @@ export const AddinfoPage: React.FC = () => {
       (grade !== "none" && classNum !== "none" && studentId.trim() !== ""));
 
   const handleSubmit = async () => {
-    const token = localStorage.getItem("accessToken");
-    console.log("stored:",token);
+    // const token = localStorage.getItem("accessToken"); // 이건 구글에서 주는 토큰인거같고
+    const token = useAuthStore.getState().accessToken; // 이건 백엔드가 주는 토큰(애초에 개발자도구에 안보임. zustand)
 
-    if (!token) {alert("로그인 정보가 없음"); return;}
-    // const url = role === "teacher" ? ENDPOINTS.teachers : ENDPOINTS.students;
-    const url = ENDPOINTS.teachers;
+    console.log("stored:", token);
+
+    if (!token) {
+      alert("로그인 정보가 없음");
+      return;
+    }
+
+    const url = role === "teacher" ? ENDPOINTS.teachers : ENDPOINTS.students;
+    // const url = ENDPOINTS.teachers;
     const bodyData =
       role === "teacher"
         ? {
