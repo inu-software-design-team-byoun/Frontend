@@ -1,11 +1,19 @@
 // ScorePage.tsx
-import React from "react";
+import React, { useState } from "react";
 import { AttendanceTable } from "../components/AttendanceTable";
 
 const AttendancePage: React.FC = () => {
+  const [selectedGrade, setSelectedGrade] = useState(1);
+  const [selectedClass, setSelectedClass] = useState(5);
+
   return (
     <>
-      <AttendanceTable grade={2} classNum={3} />
+      <AttendanceTable
+        grade={selectedGrade}
+        classNum={selectedClass}
+        onGradeChange={setSelectedGrade}
+        onClassChange={setSelectedClass}
+      />
     </>
   );
 };
