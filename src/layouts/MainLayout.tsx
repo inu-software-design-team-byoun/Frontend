@@ -91,31 +91,45 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   // 알림 소켓 연결 (커스텀 훅 사용)
   useNotificationSocket({
-    userId: userId ? String(userId) : undefined,
+    userId: "12", // 임시 하드코딩
     wsUrl,
     onNotification: (data: NotificationPayload) => {
-      const now = new Date();
-      const formattedDate = `${now.getFullYear()}.${String(
-        now.getMonth() + 1
-      ).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")} (오늘)`;
-      setNotifications((prev) => [
-        {
-          id: Date.now(),
-          date: formattedDate,
-          text: data.message,
-        },
-        ...prev,
-      ]);
+      const formattedDate = new Date(data.date).toLocaleString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+
+      setNotifications((prev) => {
+        const exists = prev.some((n) => n.id === data.id);
+        if (exists) return prev; // 중복이면 추가 안 함
+
+        return [
+          {
+            id: data.id,
+            date: formattedDate,
+            text: data.message,
+          },
+          ...prev,
+        ];
+      });
     },
   });
 
-  // 단일 삭제
-  const deleteOne = (id: number) => {
+
+  // 단일 삭제 (백엔드 연동)
+  const deleteOne = async (id: number) => {
+    await fetch(`${import.meta.env.VITE_BACKEND_API_BASE_URL}/notifications/${id}`, {
+      method: "DELETE",
+    });
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
-  // 전체 삭제
-  const deleteAll = () => {
+  // 전체 삭제 (백엔드 연동)
+  const deleteAll = async () => {
+    await fetch(`${import.meta.env.VITE_BACKEND_API_BASE_URL}/notifications/user/${userId}`, {
+      method: "DELETE",
+    });
     setNotifications([]);
   };
 
