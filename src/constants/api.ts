@@ -25,4 +25,33 @@ export const ENDPOINTS = {
     subject: number
   ) =>
     `${API_BASE_URL}/counsels?studentId=${studentId}&startDate=${startDate}&endDate=${endDate}&subject=${subject}`,
+
+  // 반별 출석정보 조회 (GET)
+  attendancesByClass: (
+    grade: number,
+    classroom: number,
+    startDate?: string,
+    endDate?: string
+  ) => {
+    const params = new URLSearchParams();
+    params.append("grade", String(grade));
+    params.append("classroom", String(classroom));
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    return `${API_BASE_URL}/attendances?${params.toString()}`;
+  },
+  // 개별 학생별 출석정보 조회 (GET)
+  attendancesByStudent: (
+    studentId: number,
+    startDate: string,
+    endDate: string
+  ) => {
+    const params = new URLSearchParams();
+    params.append("studentId", String(studentId));
+    params.append("startDate", startDate);
+    params.append("endDate", endDate);
+    return `${API_BASE_URL}/attendances?${params.toString()}`;
+  },
+  // 출결정보 생성 (POST)
+  createAttendance: `${API_BASE_URL}/attendances`,
 };
