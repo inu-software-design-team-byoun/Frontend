@@ -7,7 +7,7 @@ import { useSelectedStudentStore } from "../store/useSelectedStudentStore";
 
 // 아이콘
 import editIcon from "../assets/icon/editIcon.svg";
-import deleteIcon from "../assets/icon/deleteIcon.svg";
+import DeleteIcon from "../assets/icon/DeleteIcon.svg";
 import OpenBookIcon from "../assets/icon/OpenBookIcon.svg";
 import saveIcon from "../assets/icon/saveIcon.svg";
 import backIcon from "../assets/icon/backIcon.svg";
@@ -274,7 +274,7 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
                               }
                             >
                               <img
-                                src={deleteIcon}
+                                src={DeleteIcon}
                                 alt="삭제"
                                 style={{ width: "15px" }}
                               />
