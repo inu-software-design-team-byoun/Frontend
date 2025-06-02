@@ -1,6 +1,6 @@
 // hooks/fetchStudentInfo.ts
 import { ENDPOINTS } from "../constants/api";
-import { useSelectedStudentStore } from "../store/useSelectedStudentStore";
+import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
 
 export const fetchStudentInfo = async (
   studentId: number,
