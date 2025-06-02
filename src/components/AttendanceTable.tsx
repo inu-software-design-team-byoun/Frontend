@@ -2,8 +2,9 @@
 import React, { useEffect, useState, useCallback } from "react";
 import styled from "styled-components";
 import { useStudentsListApi, StudentBrief } from "../hooks/useStudentListApi";
-import SelectArrow from "../assets/icon/SelectArrow.png";
 import { ENDPOINTS } from "../constants/api";
+
+import SelectArrow from "../assets/icon/SelectArrow.png";
 
 const dayKor = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -355,7 +356,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
         <ModalOverlay>
           <ModalBox>
             <ModalTitle>변경사항 확인</ModalTitle>
-
+            <p>다음 변경사항대로 출결정보를 저장하시겠습니까?</p>
             <ModalTable>
               <thead>
                 <tr>
@@ -486,7 +487,14 @@ const ResetButton = styled.button`
 
   &:hover {
     background-color: ${(props: { disabled?: boolean }) =>
-      props.disabled ? "#f0f0f0" : "#d5d5d5"};
+      props.disabled ? "#f0f0f0" : "#4A4A4A"};
+    color: white;
+  }
+
+  &:not(:hover) {
+    transition:
+      background-color 0.2s ease-in-out,
+      color 0.2s ease-in-out;
   }
 
   &:disabled {
@@ -511,7 +519,16 @@ const ModifyButton = styled.button`
 
   &:hover {
     background-color: ${(props: { disabled?: boolean }) =>
-      props.disabled ? "#cccccc" : "#45a049"};
+      props.disabled ? "#cccccc" : "white"};
+
+    color: #45a049;
+    border: 1.5px solid #45a049;
+  }
+
+  &:not(:hover) {
+    transition: // border는 바로 바뀌는 게 더 자연스러운 듯
+      background-color 0.15s ease-in-out,
+      color 0.15s ease-in-out;
   }
 
   &:disabled {
@@ -635,7 +652,10 @@ const AttendanceSelect = styled.select<{
   width: 4rem;
   height: 1.75rem;
   font-size: 0.85rem;
-  appearance: none; /* 기본 화살표 숨기기 */
+
+  /* 기본 화살표 숨기기 */
+  appearance: none;
+  background-image: url(${SelectArrow});
   background-repeat: no-repeat;
   background-position: right 0.5rem center;
   background-size: 0.75rem;
@@ -732,7 +752,8 @@ const ModalTable = styled.table`
 `;
 
 const RowNoteInput = styled.input`
-  width: 100%;
+  width: 14.5rem;
+  height: 1.5rem;
   font-size: 0.9rem;
   padding: 0.25rem;
   border: 1px solid #ccc;
@@ -751,11 +772,13 @@ const ModalButtons = styled.div`
 `;
 
 const ModalButton = styled.button`
+  width: 3.5rem;
+  height: 2rem;
   padding: 0.4rem 0.8rem;
   margin-left: 0.5rem;
   border: none;
-  border-radius: 0.3rem;
-  font-size: 0.9rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
   cursor: pointer;
 `;
 
