@@ -40,11 +40,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const userName = useAuthStore((state) => state.userName);
   const role = useAuthStore((state) => state.role);
   const teacherName = useAuthStore((state) => state.teacherName);
+  // 조회할 때만 필요한 변수. 필요시 주석해제
+  // const teacherGrade = useAuthStore((state) => state.teacherGrade);
+  // const teacherClassroom = useAuthStore((state) => state.teacherClassroom);
 
   const setUserId = useAuthStore((state) => state.setUserId);
   const setUserName = useAuthStore((state) => state.setUserName);
   const setRole = useAuthStore((state) => state.setRole);
   const setTeacherName = useAuthStore((state) => state.setTeacherName);
+  const setTeacherGrade = useAuthStore((state) => state.setTeacherGrade);
+  const setTeacherClassroom = useAuthStore(
+    (state) => state.setTeacherClassroom
+  );
 
   const token = useAuthStore.getState().accessToken;
 
@@ -73,6 +80,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       // 1-2) role이 'teacher'일 때만 teacherInfo.name 저장
       if (data.role === "teacher" && data.teacherInfo?.name) {
         setTeacherName(data.teacherInfo.name);
+        setTeacherGrade(data.teacherInfo.grade);
+        setTeacherClassroom(data.teacherInfo.homeroom);
       }
     } catch (error) {
       console.error("Error fetching user info:", error);

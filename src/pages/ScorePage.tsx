@@ -8,17 +8,33 @@ import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
 import { useStudentsListApi } from "../hooks/useStudentListApi";
 import { ENDPOINTS } from "../constants/api";
 import { useStudentScoreStore } from "../stores/useStudentScoreStore";
+import { useAuthStore } from "../hooks/useAuthStore";
+
+interface ScorePageProps {
+  studentId?: number;
+}
 
 const ScorePage: React.FC<ScorePageProps> = () => {
   const { selectedStudent, clearSelectedStudent } = useSelectedStudentStore();
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false); // grade/class 상태를 ScorePage에서 보관
 
-  // grade/class 상태를 ScorePage에서 보관
-  const [selectedGrade, setSelectedGrade] = useState(1);
-  const [selectedClass, setSelectedClass] = useState(5);
+  const role = useAuthStore((state) => state.role);
+  const teacherGrade = useAuthStore((state) => state.teacherGrade);
+  const teacherClassroom = useAuthStore((state) => state.teacherClassroom);
 
-  // ── 추가: 해당 학년·반의 학생 목록 가져오기 ──
+  const [selectedGrade, setSelectedGrade] = useState<number>(
+    role === "teacher" && teacherGrade > 0 ? teacherGrade : 1
+  );
+  const [selectedClass, setSelectedClass] = useState<number>(
+    role === "teacher" && teacherClassroom > 0 ? teacherClassroom : 1
+  );
+
+  // // grade/class 상태를 ScorePage에서 보관
+  // const [selectedGrade, setSelectedGrade] = useState(1);
+  // const [selectedClass, setSelectedClass] = useState(5);
+
+  // 드롭다운에서 선택된 Grade/Class가 바뀔 때마다 해당 학년,반의 학생들 목록 가져오기
   const { data: studentList, refetch: refetchStudentList } = useStudentsListApi(
     selectedGrade,
     selectedClass // GradeTable 리마운트를 위한 키
@@ -680,7 +696,3 @@ const GapBlankBody = styled.div`
   display: flex;
   justify-content: flex-end;
 `;
-
-interface ScorePageProps {
-  studentId?: number;
-}

@@ -11,6 +11,7 @@ import ScoreInputPage from "./pages/ScoreInputPage";
 import CounselPage from "./pages/CounselPage";
 import { AddinfoPage } from "./pages/AddinfoPage";
 import FeedbackPage from "./pages/FeedbackPage";
+import { AdminPage } from "./pages/AdminPage";
 
 const App: React.FC = () => {
   return (
@@ -69,6 +70,14 @@ const App: React.FC = () => {
           element={
             <MainLayout>
               <FeedbackPage />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <MainLayout>
+              <AdminPage />
             </MainLayout>
           }
         />

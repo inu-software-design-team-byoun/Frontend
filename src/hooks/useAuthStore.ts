@@ -6,14 +6,18 @@ import { persist } from "zustand/middleware";
 interface AuthState {
   // 공통 필드
   userId: number;
-  userName: string; // ★ 모든 role에 공통으로 저장할 “이름”
-  role: "teacher" | "student" | "parent" | ""; // ★ role 정보
+  userName: string; // 모든 role에 공통으로 저장할 이름
+  role: "teacher" | "student" | "parent" | "";
   accessToken: string | null;
   subjectCode: number;
 
-  // teacher 전용 필드
-  teacherName: string; // ★ teacherInfo.name 전용
+  // teacher Info 필드
+  teacherName: string; // teacherInfo.name
+  teacherGrade: number; // 담임교사의 학년
+  teacherClassroom: number; // 담임교사가 맡은 반
   setTeacherName: (name: string) => void;
+  setTeacherGrade: (grade: number) => void;
+  setTeacherClassroom: (classroom: number) => void;
 
   // 공통 setter
   setUserId: (userId: number) => void;
@@ -38,8 +42,13 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       subjectCode: 1,
 
+      // teacher 초기값
       teacherName: "",
+      teacherGrade: 0,
+      teacherClassroom: 0,
       setTeacherName: (name) => set({ teacherName: name }),
+      setTeacherGrade: (grade) => set({ teacherGrade: grade }),
+      setTeacherClassroom: (classroom) => set({ teacherClassroom: classroom }),
 
       setUserId: (userId) => set({ userId }),
       setUserName: (name) => set({ userName: name }),
@@ -63,6 +72,8 @@ export const useAuthStore = create<AuthState>()(
           role: "",
           accessToken: null,
           teacherName: "",
+          teacherGrade: 0,
+          teacherClassroom: 0,
         }),
 
       setSubjectCode: (code) => set({ subjectCode: code }),
