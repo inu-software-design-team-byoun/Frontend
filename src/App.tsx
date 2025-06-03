@@ -1,6 +1,11 @@
 // App.tsx
 import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
 import "./App.css";
 import MainLayout from "./layouts/MainLayout";
 import ScorePage from "./pages/ScorePage";
@@ -13,16 +18,32 @@ import { AddinfoPage } from "./pages/AddinfoPage";
 import FeedbackPage from "./pages/FeedbackPage";
 import { AdminPage } from "./pages/AdminPage";
 
+import { useAuthStore } from "./hooks/useAuthStore";
+
 const App: React.FC = () => {
+  const token = useAuthStore((state) => state.accessToken);
+
   return (
     <Router>
       <Routes>
-        <Route
+        {/* <Route
           path="/"
           element={
             <MainLayout>
               <ScorePage />
             </MainLayout>
+          }
+        /> */}
+        <Route
+          path="/"
+          element={
+            token ? (
+              <MainLayout>
+                <ScorePage />
+              </MainLayout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
           }
         />
         <Route

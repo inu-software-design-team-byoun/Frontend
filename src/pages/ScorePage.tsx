@@ -23,12 +23,17 @@ const ScorePage: React.FC<ScorePageProps> = () => {
   const teacherGrade = useAuthStore((state) => state.teacherGrade);
   const teacherClassroom = useAuthStore((state) => state.teacherClassroom);
 
-  const [selectedGrade, setSelectedGrade] = useState<number>(
-    role === "teacher" && teacherGrade > 0 ? teacherGrade : 1
-  );
-  const [selectedClass, setSelectedClass] = useState<number>(
-    role === "teacher" && teacherClassroom > 0 ? teacherClassroom : 1
-  );
+  // 초기화를 위해 useState로 선언
+  const [selectedGrade, setSelectedGrade] = useState<number>(1);
+  const [selectedClass, setSelectedClass] = useState<number>(1);
+
+  // role/teacherGrade/teacherClassroom이 바뀔 때마다 동기화
+  useEffect(() => {
+    if (role === "teacher" && teacherGrade > 0 && teacherClassroom > 0) {
+      setSelectedGrade(teacherGrade);
+      setSelectedClass(teacherClassroom);
+    }
+  }, [role, teacherGrade, teacherClassroom]);
 
   // // grade/class 상태를 ScorePage에서 보관
   // const [selectedGrade, setSelectedGrade] = useState(1);
