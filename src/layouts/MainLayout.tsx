@@ -154,8 +154,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   // 알림 소켓 연결 (커스텀 훅 사용)
   useNotificationSocket({
-    // userId: String(userId), // 하드코딩 삭제
-    userId: "12",
+    userId: String(userId),
     wsUrl,
     onNotification: (data: NotificationPayload) => {
       const formattedDate = new Date(data.date).toLocaleString("ko-KR", {

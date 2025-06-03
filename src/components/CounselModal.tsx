@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { CrudButton } from "./CrudButton";
-import { useCounselsApi } from "../hooks/useCounselsApi";
+import { useCounselsApi, Counsel } from "../hooks/useCounselsApi";
 import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
 
 // 아이콘
@@ -11,12 +11,6 @@ import DeleteIcon from "../assets/icon/DeleteIcon.svg";
 import OpenBookIcon from "../assets/icon/OpenBookIcon.svg";
 import saveIcon from "../assets/icon/saveIcon.svg";
 import backIcon from "../assets/icon/backIcon.svg";
-
-type Counsel = {
-  id: number;
-  date: string;
-  content: string;
-};
 
 export const CounselModal: React.FC<{ studentId: number }> = ({
   studentId,
@@ -31,70 +25,83 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
     updateCounsel,
   } = useCounselsApi();
 
-  const { selectedStudent } = useSelectedStudentStore(); // 선택된 학생 정보 가져오기
+  const { selectedStudent } = useSelectedStudentStore();
 
-  const [isAdding, setIsAdding] = useState(false); // 등록 상태 관리
-  const [editingCounselId, setEditingCounselId] = useState<number | null>(null); // 수정 상태 관리
-  const [newCounsel, setNewCounsel] = useState({ date: "", content: "" });
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingCounselId, setEditingCounselId] = useState<number | null>(null);
+  const [newCounsel, setNewCounsel] = useState({
+    date: "",
+    title: "",
+    content: "",
+  });
 
-  // 컴포넌트가 렌더링될 때 요청을 트리거
   useEffect(() => {
     fetchCounsels(studentId);
   }, [studentId]);
-  // 여기서 , fetchCounsels 혹은 student를 넣으면 계속 요청이 무한재생됨
 
   const handleAddCounselStart = () => {
     setIsAdding(true);
-    setNewCounsel({ date: "", content: "" });
+    setNewCounsel({ date: "", title: "", content: "" });
   };
 
   const handleAddCounselCancel = () => {
     setIsAdding(false);
-    setNewCounsel({ date: "", content: "" });
+    setNewCounsel({ date: "", title: "", content: "" });
   };
 
   const handleAddCounselComplete = () => {
-    if (!newCounsel.date || !newCounsel.content) {
-      alert("날짜와 상담 내용을 입력하세요.");
+    if (!newCounsel.date || !newCounsel.title || !newCounsel.content) {
+      alert("날짜, 제목, 내용을 입력하세요.");
       return;
     }
-    addCounsel(studentId, newCounsel.date, newCounsel.content);
-    setIsAdding(false); // 등록 완료 후 상태 초기화
-    setNewCounsel({ date: "", content: "" });
+    addCounsel(
+      studentId,
+      newCounsel.date,
+      newCounsel.title,
+      newCounsel.content
+    );
+    setIsAdding(false);
+    setNewCounsel({ date: "", title: "", content: "" });
   };
 
   const handleEditCounselStart = (counsel: Counsel) => {
     setEditingCounselId(counsel.id);
     setNewCounsel({
       date: counsel.date.slice(0, 10),
+      title: counsel.title,
       content: counsel.content,
     });
   };
 
   const handleEditCounselCancel = () => {
     setEditingCounselId(null);
-    setNewCounsel({ date: "", content: "" });
+    setNewCounsel({ date: "", title: "", content: "" });
   };
 
   const handleEditCounselComplete = () => {
-    if (!newCounsel.date || !newCounsel.content || editingCounselId === null) {
-      alert("날짜와 상담 내용을 입력하세요.");
+    if (
+      !newCounsel.date ||
+      !newCounsel.title ||
+      !newCounsel.content ||
+      editingCounselId === null
+    ) {
+      alert("날짜, 제목, 내용을 입력하세요.");
       return;
     }
     updateCounsel(
       editingCounselId,
       studentId,
       newCounsel.date,
+      newCounsel.title,
       newCounsel.content
     );
-    setEditingCounselId(null); // 수정 완료 후 상태 초기화
-    setNewCounsel({ date: "", content: "" });
+    setEditingCounselId(null);
+    setNewCounsel({ date: "", title: "", content: "" });
   };
 
   return (
     <Wrapper>
       <StudentInfoArea>
-        {/* 학생 정보 표시 */}
         {loading ? (
           <div>로딩 중...</div>
         ) : error ? (
@@ -104,13 +111,9 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
             <PictureInput />
             <div>
               <p>
-                {selectedStudent.grade}학년 {selectedStudent.classroom}반{" "}
-                {/* {selectedStudent.studentNum % 100}번 */}
+                {selectedStudent.grade}학년 {selectedStudent.classroom}반
               </p>
               <p>{selectedStudent.name}</p>
-              {/* <p>전화번호</p> */}
-              {/* <p>{student.phoneNum}</p> */}
-              {/* <p>{student.birthday}</p> */}
             </div>
             <button>
               학생부 바로가기 <img src={OpenBookIcon} />
@@ -120,16 +123,17 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
           <div>학생 정보가 없습니다.</div>
         )}
       </StudentInfoArea>
+
       <RecordArea>
         <TitleArea>
           <span className="title">행동특성 누가기록</span>
           <span className="student">
             {selectedStudent
               ? `- ${selectedStudent.name} 학생 / Total ${counsels.length}`
-              : // ? `- ${selectedStudent.studentNum % 100}번 ${selectedStudent.name} 학생 / Total ${counsels.length}`
-                ""}
+              : ""}
           </span>
         </TitleArea>
+
         <TableArea>
           <ButtonArea>
             {isAdding ? (
@@ -150,7 +154,9 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
               </CrudButton>
             )}
           </ButtonArea>
+
           <TopRectangle />
+
           <RecordTable>
             <colgroup>
               <col style={{ width: "10%" }} />
@@ -159,165 +165,176 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
               <col style={{ width: "15%" }} />
               <col style={{ width: "3.5rem" }} />
             </colgroup>
+
             <thead>
               <tr>
                 <th>순번</th>
                 <th>상담일자</th>
-                <th>상담내역</th>
+                <th>제목</th>
                 <th>담당교사</th>
                 <th></th>
               </tr>
             </thead>
+
             <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={5}>로딩 중...</td>
-                </tr>
-              ) : error ? (
-                <tr>
-                  <td colSpan={5}>에러 발생: 데이터를 불러올 수 없습니다.</td>
-                </tr>
-              ) : (
-                <>
-                  {counsels.map((counsel, idx) => (
-                    <tr key={counsel.id}>
-                      <td>{idx + 1}</td>
-                      <td>
-                        {editingCounselId === counsel.id ? (
-                          <input
-                            type="date"
-                            value={newCounsel.date}
-                            onChange={(e) =>
-                              setNewCounsel({
-                                ...newCounsel,
-                                date: e.target.value,
-                              })
-                            }
+              {counsels.map((counsel, idx) => (
+                <tr key={counsel.id}>
+                  <td>{idx + 1}</td>
+
+                  <td>
+                    {editingCounselId === counsel.id ? (
+                      <input
+                        type="date"
+                        value={newCounsel.date}
+                        onChange={(e) =>
+                          setNewCounsel({ ...newCounsel, date: e.target.value })
+                        }
+                      />
+                    ) : (
+                      counsel.date.slice(0, 10)
+                    )}
+                  </td>
+
+                  <td>
+                    {editingCounselId === counsel.id ? (
+                      <input
+                        type="text"
+                        value={newCounsel.title}
+                        onChange={(e) =>
+                          setNewCounsel({
+                            ...newCounsel,
+                            title: e.target.value,
+                          })
+                        }
+                        placeholder="제목"
+                      />
+                    ) : (
+                      counsel.title
+                    )}
+                  </td>
+
+                  <td>
+                    {editingCounselId === counsel.id ? (
+                      <textarea
+                        value={newCounsel.content}
+                        onChange={(e) =>
+                          setNewCounsel({
+                            ...newCounsel,
+                            content: e.target.value,
+                          })
+                        }
+                        placeholder="내용"
+                        style={{ width: "100%" }}
+                      />
+                    ) : (
+                      counsel.content
+                    )}
+                  </td>
+
+                  <td>{counsel.teacherName}</td>
+
+                  <td className="crud">
+                    {editingCounselId === counsel.id ? (
+                      <>
+                        <div
+                          onClick={handleEditCounselComplete}
+                          style={{ display: "inline-block", cursor: "pointer" }}
+                        >
+                          <img
+                            src={saveIcon}
+                            alt="저장"
+                            style={{ width: "16px" }}
                           />
-                        ) : (
-                          counsel.date?.slice(0, 10)
-                        )}
-                      </td>
-                      <td>
-                        {editingCounselId === counsel.id ? (
-                          <input
-                            type="text"
-                            value={newCounsel.content}
-                            onChange={(e) =>
-                              setNewCounsel({
-                                ...newCounsel,
-                                content: e.target.value,
-                              })
-                            }
-                            placeholder="상담 내용"
+                        </div>
+                        <div
+                          onClick={handleEditCounselCancel}
+                          style={{
+                            display: "inline-block",
+                            cursor: "pointer",
+                            marginLeft: "0.5rem",
+                          }}
+                        >
+                          <img
+                            src={backIcon}
+                            alt="취소"
+                            style={{ width: "16px" }}
                           />
-                        ) : (
-                          counsel.content
-                        )}
-                      </td>
-                      <td>{/* 담당교사 정보 없음 */}</td>
-                      <td className="crud">
-                        {editingCounselId === counsel.id ? (
-                          <>
-                            <div
-                              style={{
-                                display: "inline-block",
-                                cursor: "pointer",
-                              }}
-                              onClick={handleEditCounselComplete}
-                            >
-                              <img
-                                src={saveIcon}
-                                alt="저장"
-                                style={{ width: "16px" }}
-                              />
-                            </div>
-                            <div
-                              style={{
-                                display: "inline-block",
-                                cursor: "pointer",
-                                marginLeft: "0.5rem",
-                              }}
-                              onClick={handleEditCounselCancel}
-                            >
-                              <img
-                                src={backIcon}
-                                alt="저장"
-                                style={{ width: "16px" }}
-                              />
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div
-                              style={{
-                                display: "inline-block",
-                                cursor: "pointer",
-                              }}
-                              onClick={() => handleEditCounselStart(counsel)}
-                            >
-                              <img
-                                src={editIcon}
-                                alt="수정"
-                                style={{ width: "16px" }}
-                              />
-                            </div>
-                            <div
-                              style={{
-                                display: "inline-block",
-                                marginLeft: "0.5rem",
-                                cursor: "pointer",
-                              }}
-                              onClick={() =>
-                                window.confirm("정말 삭제하시겠습니까?") &&
-                                deleteCounsel(counsel.id)
-                              }
-                            >
-                              <img
-                                src={DeleteIcon}
-                                alt="삭제"
-                                style={{ width: "15px" }}
-                              />
-                            </div>
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                  {isAdding && (
-                    <tr>
-                      <td>New</td>
-                      <td>
-                        <input
-                          style={{ width: "136px" }}
-                          type="date"
-                          value={newCounsel.date}
-                          onChange={(e) =>
-                            setNewCounsel({
-                              ...newCounsel,
-                              date: e.target.value,
-                            })
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          onClick={() => handleEditCounselStart(counsel)}
+                          style={{ display: "inline-block", cursor: "pointer" }}
+                        >
+                          <img
+                            src={editIcon}
+                            alt="수정"
+                            style={{ width: "16px" }}
+                          />
+                        </div>
+                        <div
+                          onClick={() =>
+                            window.confirm("정말 삭제하시겠습니까?") &&
+                            deleteCounsel(counsel.id)
                           }
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          value={newCounsel.content}
-                          onChange={(e) =>
-                            setNewCounsel({
-                              ...newCounsel,
-                              content: e.target.value,
-                            })
-                          }
-                          placeholder="상담 내용"
-                        />
-                      </td>
-                      <td></td>
-                      <td></td>
-                    </tr>
-                  )}
-                </>
+                          style={{
+                            display: "inline-block",
+                            marginLeft: "0.5rem",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <img
+                            src={DeleteIcon}
+                            alt="삭제"
+                            style={{ width: "15px" }}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+
+              {isAdding && (
+                <tr>
+                  <td>New</td>
+                  <td>
+                    <input
+                      style={{ width: "136px" }}
+                      type="date"
+                      value={newCounsel.date}
+                      onChange={(e) =>
+                        setNewCounsel({ ...newCounsel, date: e.target.value })
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={newCounsel.title}
+                      onChange={(e) =>
+                        setNewCounsel({ ...newCounsel, title: e.target.value })
+                      }
+                      placeholder="제목"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newCounsel.content}
+                      onChange={(e) =>
+                        setNewCounsel({
+                          ...newCounsel,
+                          content: e.target.value,
+                        })
+                      }
+                      placeholder="내용"
+                      style={{ width: "100%" }}
+                    />
+                  </td>
+                  <td>{/* 담당교사 입력필요 시 상태 추가 */}</td>
+                  <td></td>
+                </tr>
               )}
             </tbody>
           </RecordTable>
@@ -330,27 +347,19 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
 const Wrapper = styled.div`
   width: 54.25rem;
   height: 89vh;
-
   display: flex;
-
   background-color: white;
   box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.25);
   border-radius: 1rem;
-
-  display: flex;
-  justify-content: flex-start;
 `;
 
 const StudentInfoArea = styled.div`
   width: 12.5rem;
   height: 100%;
   padding: 0 1rem;
-
   border-top-left-radius: 1rem;
   border-bottom-left-radius: 1rem;
-
   background-color: #ff8e83;
-
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
@@ -362,33 +371,24 @@ const StudentInfoArea = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* justify-content: center; */
   }
 
   button {
     width: 9rem;
     height: 2rem;
     background-color: #e96a5e;
-    /* border: 1.5px solid white; */
     border: none;
     border-radius: 0.5rem;
-
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 0;
-
     font-weight: bold;
     color: white;
-
     cursor: pointer;
 
     &:hover {
       background-color: #ff796c;
-      /* background-color: #ff8e83; */
-
       border: 1.5px solid white;
-      /* transition: background-color 0.3s ease; */
     }
 
     img {
@@ -410,10 +410,7 @@ const StudentInfoArea = styled.div`
 const PictureInput = styled.img`
   width: 7.5rem;
   height: 10rem;
-  /* border: 1px solid #b5b5b5; */
-
   background-color: white;
-
   color: black;
   font-size: 0.75rem;
 `;
@@ -421,10 +418,8 @@ const PictureInput = styled.img`
 const RecordArea = styled.div`
   width: 100%;
   height: 89vh;
-
   border-top-right-radius: 1rem;
   border-bottom-right-radius: 1rem;
-
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -434,13 +429,10 @@ const RecordArea = styled.div`
 const TitleArea = styled.div`
   width: 100%;
   height: 3rem;
-
   margin-top: 2rem;
   margin-bottom: 0.5rem;
-
   display: flex;
   align-items: center;
-
   color: black;
 
   .title {
@@ -454,7 +446,6 @@ const TitleArea = styled.div`
     display: flex;
     justify-content: center;
     align-items: end;
-
     color: gray;
     font-size: 1rem;
     font-weight: bold;
@@ -464,7 +455,6 @@ const TitleArea = styled.div`
 const ButtonArea = styled.div`
   width: 100%;
   height: 3rem;
-
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -484,14 +474,9 @@ const TopRectangle = styled.div`
 
 const RecordTable = styled.table`
   border: 1px solid #feb3ac;
-
   width: 100%;
   height: 35rem;
   border-collapse: collapse;
-
-  // 이건 collapse에서 적용 안됨.
-  /* border-bottom-left-radius: 1rem; */
-  /* border-bottom-right-radius: 1rem; */
 
   thead {
     position: sticky;
@@ -504,10 +489,6 @@ const RecordTable = styled.table`
     border-bottom-left-radius: 1rem;
   }
 
-  tr {
-    /* border-bottom: 2px solid #ccc; */
-  }
-
   th,
   td {
     text-align: center;
@@ -518,12 +499,5 @@ const RecordTable = styled.table`
 
   th {
     border: none;
-  }
-
-  td {
-  }
-
-  td.crud {
-    /* border: 1px solid black; */
   }
 `;
