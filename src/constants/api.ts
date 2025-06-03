@@ -54,4 +54,20 @@ export const ENDPOINTS = {
   },
   // 출결정보 생성 (POST)
   createAttendance: `${API_BASE_URL}/attendances`,
+  // 피드백 생성 (POST)
+  feedbacks: `${API_BASE_URL}/feedbacks`,
+  // 피드백 조회 with 필터링 (GET)
+  feedbacksByStudent: (
+    studentId: number,
+    startDate: string,
+    endDate: string
+  ) => {
+    const params = new URLSearchParams();
+    params.append("studentId", String(studentId));
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    return `${API_BASE_URL}/feedbacks?${params.toString()}`;
+  },
+  // 피드백 정보 개별 조회(GET) / 피드백 정보 수정(PATCH) / 피드백 정보 삭제(DELETE) 용
+  feedbacksById: (id: number) => `${API_BASE_URL}/feedbacks/${id}`,
 };
