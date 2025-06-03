@@ -1,4 +1,4 @@
-// useScoreApi.ts
+// src/hooks/useScoreApi.ts
 import { useEffect, useState } from "react";
 import { ENDPOINTS } from "../constants/api";
 
@@ -6,73 +6,97 @@ export type TransformedStudent = {
   id: number;
   studentNum: number;
   name: string;
-  grade: number; // 추가
-  classroom: number; // 추가
-  phoneNum: string; // 추가
-  birthday: string; // 추가
+  schoolGrade: number; // 학년
+  classroom: number; // 반
+  phoneNum: string;
+  birthday: string;
+
   totalScore: number | null;
   averageScore: number | null;
-  korean: number | null;
-  math: number | null;
-  english: number | null;
-  society: number | null;
-  science: number | null;
-  art: number | null;
-  music: number | null;
-  physical: number | null;
+
+  // 과목별 rawScore + letterGrade
+  koreanRawScore: number | null;
+  koreanLetterGrade: string | null;
+
+  mathRawScore: number | null;
+  mathLetterGrade: string | null;
+
+  englishRawScore: number | null;
+  englishLetterGrade: string | null;
+
+  societyRawScore: number | null;
+  societyLetterGrade: string | null;
+
+  scienceRawScore: number | null;
+  scienceLetterGrade: string | null;
+
+  artRawScore: number | null;
+  artLetterGrade: string | null;
+
+  musicRawScore: number | null;
+  musicLetterGrade: string | null;
+
+  physicalRawScore: number | null;
+  physicalLetterGrade: string | null;
 };
 
-export const useScoreApi = (grade: number, classroom: number) => {
+export const useScoreApi = (schoolGrade: number, classroom: number) => {
   const [data, setData] = useState<TransformedStudent[]>([]);
-  // const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchScores = async () => {
       try {
-        const res = await fetch(ENDPOINTS.scores(grade, classroom));
+        const res = await fetch(ENDPOINTS.scores(schoolGrade, classroom));
         const json = await res.json();
         console.log("score api 응답: ", json);
         const studentsData: any[] = json.students;
 
         // grade, class, semester(1) 매칭
         const filtered = studentsData.filter(
-          (s) => s.grade === grade && s.class === classroom && s.semester === 1
+          (s) =>
+            s.grade === schoolGrade && s.class === classroom && s.semester === 1
         );
 
-        // const filtered = json.students.find(
-        //   (s: any) => s.grade === grade && s.semester === 1 // semester는 필요에 따라 수정
-        // );
+        const transformed: TransformedStudent[] = filtered.map((s) => {
+          // subjects 안에 subject1 ~ subject8이 { score, grade } 형태로 들어옴
+          const sub = s.subjects || {};
 
-        // if (!filtered) {
-        //   console.error("해당 학년/학기의 성적이 없습니다.");
-        //   return;
-        // }
+          return {
+            id: s.studentId,
+            studentNum: s.studentNum,
+            name: s.studentName,
+            schoolGrade: s.grade,
+            classroom: s.class,
+            phoneNum: s.phoneNum,
+            birthday: s.birthday,
+            totalScore: s.totalScore ?? null,
+            averageScore: s.averageScore ?? null,
 
-        // const subjects = filtered.subjects || {};
+            koreanRawScore: sub.subject1?.score ?? null,
+            koreanLetterGrade: sub.subject1?.grade ?? null,
 
-        const transformed: TransformedStudent[] = filtered.map((s) => ({
-          id: s.studentId,
-          // studentNum: json.studentNum,
-          studentNum: 0,
-          // name: s.studentName,
-          name: "",
-          grade: s.grade,
-          classroom: s.class,
-          // phoneNum: student.phoneNum,
-          // birthday: student.birthday,
-          phoneNum: "", // 다른 API에서 채움
-          birthday: "",
-          korean: s.subjects.subject1 ?? null,
-          math: s.subjects.subject2 ?? null,
-          english: s.subjects.subject3 ?? null,
-          society: s.subjects.subject4 ?? null,
-          science: s.subjects.subject5 ?? null,
-          art: s.subjects.subject6 ?? null,
-          music: s.subjects.subject7 ?? null,
-          physical: s.subjects.subject8 ?? null,
-          totalScore: s.totalScore ?? null,
-          averageScore: s.averageScore ?? null,
-        }));
+            mathRawScore: sub.subject2?.score ?? null,
+            mathLetterGrade: sub.subject2?.grade ?? null,
+
+            englishRawScore: sub.subject3?.score ?? null,
+            englishLetterGrade: sub.subject3?.grade ?? null,
+
+            societyRawScore: sub.subject4?.score ?? null,
+            societyLetterGrade: sub.subject4?.grade ?? null,
+
+            scienceRawScore: sub.subject5?.score ?? null,
+            scienceLetterGrade: sub.subject5?.grade ?? null,
+
+            artRawScore: sub.subject6?.score ?? null,
+            artLetterGrade: sub.subject6?.grade ?? null,
+
+            musicRawScore: sub.subject7?.score ?? null,
+            musicLetterGrade: sub.subject7?.grade ?? null,
+
+            physicalRawScore: sub.subject8?.score ?? null,
+            physicalLetterGrade: sub.subject8?.grade ?? null,
+          };
+        });
 
         setData(transformed);
       } catch (err) {
@@ -82,7 +106,7 @@ export const useScoreApi = (grade: number, classroom: number) => {
     };
 
     fetchScores();
-  }, [grade, classroom]);
+  }, [schoolGrade, classroom]);
 
   return { data };
 };
