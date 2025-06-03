@@ -25,6 +25,7 @@ dist-ssr
 
 # environment files
 .env
+.vercel
 
 # Playwright
 /test-results/
