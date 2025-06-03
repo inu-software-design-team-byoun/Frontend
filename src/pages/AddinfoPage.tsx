@@ -162,7 +162,7 @@ export const AddinfoPage: React.FC = () => {
   const [grade, setGrade] = useState("none");
   const [classNum, setClassNum] = useState("none");
   const [name, setName] = useState("");
-  const [studentId, setStudentId] = useState("");
+  const [studentNum, setstudentNum] = useState("");
   const [phoneNum, setPhoneNum] = useState("");
   const [birthday, setBirthday] = useState("");
 
@@ -185,7 +185,7 @@ export const AddinfoPage: React.FC = () => {
     phoneNum.trim() !== "" &&
     birthday.trim() !== "" &&
     (role !== "student" ||
-      (grade !== "none" && classNum !== "none" && studentId.trim() !== ""));
+      (grade !== "none" && classNum !== "none" && studentNum.trim() !== ""));
 
   const handleSubmit = async () => {
     // const token = localStorage.getItem("accessToken"); // 이건 구글에서 주는 토큰인거같고
@@ -203,22 +203,22 @@ export const AddinfoPage: React.FC = () => {
     const bodyData =
       role === "teacher"
         ? {
-            name,
-            birthday,
-            phoneNum,
-          }
+          name,
+          birthday,
+          phoneNum,
+        }
         : {
-            role,
-            name,
-            phoneNum,
-            birthday,
-            ...(role === "student" && {
-              grade,
-              classNum,
-              studentId,
-            }),
-            ...(role === "parent" && { studentId }),
-          };
+          role,
+          name,
+          phoneNum,
+          birthday,
+          ...(role === "student" && {
+            grade,
+            classroom: classNum,
+            studentNum,
+          }),
+          ...(role === "parent" && { studentNum }),
+        };
 
     // const token = localStorage.getItem("token");
 
@@ -313,8 +313,8 @@ export const AddinfoPage: React.FC = () => {
             <InputArea>
               <input
                 placeholder="학번"
-                value={studentId}
-                onChange={(e) => setStudentId(e.target.value)}
+                value={studentNum}
+                onChange={(e) => setstudentNum(e.target.value)}
               />
               <img src={studentIcon} alt="student icon" />
             </InputArea>
@@ -334,8 +334,8 @@ export const AddinfoPage: React.FC = () => {
           <InputArea>
             <input
               placeholder="자녀 학번"
-              value={studentId}
-              onChange={(e) => setStudentId(e.target.value)}
+              value={studentNum}
+              onChange={(e) => setstudentNum(e.target.value)}
             />
             <img src={studentIcon} alt="student icon" />
           </InputArea>
