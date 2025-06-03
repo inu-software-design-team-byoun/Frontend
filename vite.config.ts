@@ -22,7 +22,7 @@ export default defineConfig({
     }),
   ],
   server: {
-    port: 5173, // 원하는 포트 번호로 변경
+    port: 3012, // 원하는 포트 번호로 변경
     allowedHosts: ["hiedu.site"],
   },
 });

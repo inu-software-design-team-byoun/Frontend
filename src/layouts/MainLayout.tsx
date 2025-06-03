@@ -38,15 +38,21 @@ interface Notification {
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   // id 관련
   const userId = useAuthStore((state) => state.userId);
+  const teacherName = useAuthStore((state) => state.teacherName);
   const setUserId = useAuthStore((state) => state.setUserId);
+  const setTeacherName = useAuthStore((state) => state.setTeacherName);
+
+  const token = useAuthStore.getState().accessToken;
+
   const fetchUserId = async () => {
     try {
-      const token = useAuthStore.getState().accessToken; // Retrieve token from zustand store
+      if (!token) return; // 토큰이 없으면 요청 중단
+
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/auth/userId`,
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Add token to Authorization header
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -54,11 +60,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         throw new Error("Failed to fetch user ID");
       }
       const data = await response.json();
+      console.log("/auth/userId 로 온 응답 : ", data);
       const id = data.userId;
       // console.log("Fetched user ID:", id);
       // // zustand에 userId 저장
       setUserId(id);
-      console.log("zustand userId:", userId);
+      // console.log("zustand userId:", userId);
+
+      if (data.teacherInfo && data.teacherInfo.name) {
+        setTeacherName(data.teacherInfo.name);
+      }
 
       return;
     } catch (error) {
@@ -183,10 +194,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         <SideBar>
           <UserNameBox>
             <UserLastName>
-              <span>구</span>
+              <span>{teacherName ? teacherName.charAt(0) : ""}</span>
             </UserLastName>
             <UserRole>
-              <span className="name">구루루</span>
+              <span className="name">{teacherName}</span>
               <span> 선생님</span>
             </UserRole>
             <NotificationWrapper ref={wrapperRef}>
