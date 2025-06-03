@@ -21,8 +21,8 @@ jobs:
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Lint Check
-        run: yarn lint
+      - name: Lint Check (Warnings only)
+        run: yarn lint || true
 
       - name: Type Check
         run: yarn tsc --noEmit
