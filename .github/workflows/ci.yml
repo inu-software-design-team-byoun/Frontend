@@ -3,7 +3,7 @@ name: Prod CI
 on:
   push:
     branches:
-      - main
+      - develop
 
 jobs:
   build:
@@ -39,7 +39,8 @@ jobs:
         run: curl --fail http://localhost:5173 || exit 1
 
       - name: Show Build Number
-        run: echo "Build Number: ${{ github.run_number }}"
+        run: |
+          echo "Build Number: ${{ github.run_number }}"
 
       - name: Get PR Number for Main Branch Merge
         id: get_pr_number
