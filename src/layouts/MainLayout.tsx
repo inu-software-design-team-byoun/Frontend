@@ -36,18 +36,21 @@ interface Notification {
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
-  // id 관련
   const userId = useAuthStore((state) => state.userId);
+  const userName = useAuthStore((state) => state.userName);
+  const role = useAuthStore((state) => state.role);
   const teacherName = useAuthStore((state) => state.teacherName);
+
   const setUserId = useAuthStore((state) => state.setUserId);
+  const setUserName = useAuthStore((state) => state.setUserName);
+  const setRole = useAuthStore((state) => state.setRole);
   const setTeacherName = useAuthStore((state) => state.setTeacherName);
 
   const token = useAuthStore.getState().accessToken;
 
   const fetchUserId = async () => {
     try {
-      if (!token) return; // 토큰이 없으면 요청 중단
-
+      if (!token) return;
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/auth/userId`,
         {
@@ -57,23 +60,22 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         }
       );
       if (!response.ok) {
-        throw new Error("Failed to fetch user ID");
+        throw new Error("Failed to fetch user info");
       }
       const data = await response.json();
-      console.log("/auth/userId 로 온 응답 : ", data);
-      const id = data.userId;
-      // console.log("Fetched user ID:", id);
-      // // zustand에 userId 저장
-      setUserId(id);
-      // console.log("zustand userId:", userId);
+      console.log("/auth/userId 응답:", data);
 
-      if (data.teacherInfo && data.teacherInfo.name) {
+      // 1-1) userId, userName, role 저장
+      setUserId(data.userId);
+      setUserName(data.name);
+      setRole(data.role);
+
+      // 1-2) role이 'teacher'일 때만 teacherInfo.name 저장
+      if (data.role === "teacher" && data.teacherInfo?.name) {
         setTeacherName(data.teacherInfo.name);
       }
-
-      return;
     } catch (error) {
-      console.error("Error fetching user ID:", error);
+      console.error("Error fetching user info:", error);
       return null;
     }
   };
@@ -193,13 +195,35 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       <SideBarArea>
         <SideBar>
           <UserNameBox>
-            <UserLastName>
-              <span>{teacherName ? teacherName.charAt(0) : ""}</span>
-            </UserLastName>
-            <UserRole>
-              <span className="name">{teacherName}</span>
-              <span> 선생님</span>
-            </UserRole>
+            {role === "teacher" ? (
+              <>
+                <UserLastName>
+                  <span>{teacherName ? teacherName.charAt(0) : ""}</span>
+                </UserLastName>
+                <UserRole>
+                  {teacherName && (
+                    <>
+                      <span className="name">{teacherName}</span>
+                      <span> 선생님</span>
+                    </>
+                  )}
+                </UserRole>
+              </>
+            ) : (
+              // student나 parent 등 일반 사용자라면 userName만 보여주기
+              <>
+                <UserLastName>
+                  <span>{userName ? userName.charAt(0) : ""}</span>
+                </UserLastName>
+                <UserRole>
+                  {userName && <span className="name">{userName}</span>}
+                  {/* 
+                    필요하다면 role이 student면 “학생” 찍고, parent면 “학부모” 찍어도 됩니다.
+                    예: <span> 학생</span> 또는 <span> 학부모</span> 
+                  */}
+                </UserRole>
+              </>
+            )}
             <NotificationWrapper ref={wrapperRef}>
               <NotificationButton onClick={toggleNoti}>
                 <BellImg />
