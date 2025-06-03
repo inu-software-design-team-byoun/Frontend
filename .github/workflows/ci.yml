@@ -16,16 +16,30 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: yarn
 
       - name: Install Dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
+
+      - name: Lint Check (Warnings only)
+        run: yarn lint || true
+
+      - name: Type Check
+        run: yarn tsc --noEmit
 
       - name: Build React App
-        run: npm run build
+        run: yarn build
+
+      - name: Start Dev Server in Background
+        run: |
+          yarn dev --host &
+          sleep 5 # 서버 시작 대기 (필요 시 조정)
+
+      - name: Test HTTP Access to Dev Server
+        run: curl --fail http://localhost:5173 || exit 1
 
       - name: Show Build Number
-        run: |
-          echo "Build Number: ${{ github.run_number }}"
+        run: echo "Build Number: ${{ github.run_number }}"
 
       - name: Get PR Number for Main Branch Merge
         id: get_pr_number
@@ -62,4 +76,4 @@ jobs:
           docker buildx build \
             --platform linux/amd64 \
             --push \
-            -t ${{ secrets.DOCKER_HUB_USERNAME }}/hiedu-react:$DOCKER_IMAGE_TAG .
+            -t ${{ secrets.DOCKER_HUB_USERNAME }}/hiedu-front:$DOCKER_IMAGE_TAG .
