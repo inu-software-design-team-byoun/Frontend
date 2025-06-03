@@ -9,12 +9,18 @@ import { usePatchScoreApi } from "../hooks/usePatchScoreApi";
 import { useAuthStore } from "../hooks/useAuthStore";
 
 export const ScoreInputTable: React.FC = () => {
-  // 1) 학년/반/과목 선택 상태
-  const [schoolGrade, setSchoolGrade] = useState(1);
-  const [classroom, setClassroom] = useState(5);
-  const [enabledSubject, setEnabledSubject] = useState("국어");
+  const role = useAuthStore((state) => state.role);
+  const teacherGrade = useAuthStore((state) => state.teacherGrade);
+  const teacherClassroom = useAuthStore((state) => state.teacherClassroom);
 
-  // 2) 수정 모드 & 편집 중 입력값 (rawScore만 편집)
+  const [schoolGrade, setSchoolGrade] = useState<number>(
+    role === "teacher" && teacherGrade > 0 ? teacherGrade : 1
+  );
+  const [classroom, setClassroom] = useState<number>(
+    role === "teacher" && teacherClassroom > 0 ? teacherClassroom : 1
+  );
+
+  // 수정 모드 & 편집 중 입력값 (rawScore만 편집)
   const [isEditing, setIsEditing] = useState(false);
   const [editRawScores, setEditRawScores] = useState<Record<number, string>>(
     {}
@@ -127,6 +133,10 @@ export const ScoreInputTable: React.FC = () => {
 
   // 현재 교사가 수정 가능한 과목명
   const teacherSubjectName = codeToSubjectName[subjectCode] || "";
+
+  // 학년/반/과목 선택 상태
+  const [enabledSubject, setEnabledSubject] = useState(teacherSubjectName);
+  // const [enabledSubject, setEnabledSubject] = useState("수학");
   // 수정 버튼 활성화 여부
   const canEditThisSubject = enabledSubject === teacherSubjectName;
 
