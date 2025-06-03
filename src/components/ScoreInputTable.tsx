@@ -1,4 +1,4 @@
-// ScoreInputTable.tsx
+// src/components/ScoreInputTable.tsx
 import React, { useState, useMemo } from "react";
 import styled from "styled-components";
 import SelectArrow from "../assets/icon/SelectArrow.png";
@@ -6,42 +6,54 @@ import { useStudentsListApi, StudentBrief } from "../hooks/useStudentListApi";
 import { useScoreApi, TransformedStudent } from "../hooks/useScoreApi";
 import { CrudButton } from "./CrudButton";
 import { usePatchScoreApi } from "../hooks/usePatchScoreApi";
-
-// → 추가: 방금 수정한 useAuthStore에서 subjectCode를 가져옴
 import { useAuthStore } from "../hooks/useAuthStore";
 
 export const ScoreInputTable: React.FC = () => {
   // 1) 학년/반/과목 선택 상태
-  const [grade, setGrade] = useState(1);
-  const [classNum, setClassNum] = useState(5);
+  const [schoolGrade, setSchoolGrade] = useState(1);
+  const [classroom, setClassroom] = useState(5);
   const [enabledSubject, setEnabledSubject] = useState("국어");
 
-  // 2) 수정 모드 & 편집 중 입력값
+  // 2) 수정 모드 & 편집 중 입력값 (rawScore만 편집)
   const [isEditing, setIsEditing] = useState(false);
-  const [editScores, setEditScores] = useState<Record<number, string>>({});
+  const [editRawScores, setEditRawScores] = useState<Record<number, string>>(
+    {}
+  );
   const { patchScore } = usePatchScoreApi();
 
   // 3) 학생 목록, 성적 데이터 조회
-  const { data: studentList, refetch } = useStudentsListApi(grade, classNum);
-  const { data: scoreData } = useScoreApi(grade, classNum);
+  const { data: studentList, refetch } = useStudentsListApi(
+    schoolGrade,
+    classroom
+  );
+  const { data: scoreData } = useScoreApi(schoolGrade, classroom);
 
-  // →  추가된 부분: 현재 로그인 교사의 subjectCode (기본값 1 = 국어)
+  // → 현재 로그인 교사의 subjectCode (기본값 1 = 국어)
   const subjectCode = useAuthStore((state) => state.subjectCode);
 
-  // 4) 과목명 → 객체 속성 키 매핑
-  const subjectKeyMap: Record<string, keyof TransformedStudent> = {
-    국어: "korean",
-    수학: "math",
-    영어: "english",
-    사회: "society",
-    과학: "science",
-    미술: "art",
-    음악: "music",
-    체육: "physical",
+  // 4) 과목명 → rawScore용 키 / letterGrade용 키 매핑
+  const subjectRawKeyMap: Record<string, keyof TransformedStudent> = {
+    국어: "koreanRawScore",
+    수학: "mathRawScore",
+    영어: "englishRawScore",
+    사회: "societyRawScore",
+    과학: "scienceRawScore",
+    미술: "artRawScore",
+    음악: "musicRawScore",
+    체육: "physicalRawScore",
+  };
+  const subjectLetterKeyMap: Record<string, keyof TransformedStudent> = {
+    국어: "koreanLetterGrade",
+    수학: "mathLetterGrade",
+    영어: "englishLetterGrade",
+    사회: "societyLetterGrade",
+    과학: "scienceLetterGrade",
+    미술: "artLetterGrade",
+    음악: "musicLetterGrade",
+    체육: "physicalLetterGrade",
   };
 
-  // → 추가된 부분: 과목코드 → 과목명 매핑
-  //    subjectCode가 1일 때 교사 과목명은 "국어"가 됨
+  // → 과목코드 → 과목명 매핑
   const codeToSubjectName: Record<number, string> = {
     1: "국어",
     2: "수학",
@@ -53,69 +65,69 @@ export const ScoreInputTable: React.FC = () => {
     8: "체육",
   };
 
-  // 5) scoreData → Map으로 변환 (Map<학생 id, TransformedStudent>)
+  // 5) scoreData → Map<학생 id, TransformedStudent>
   const scoreMap = useMemo(() => {
     const map = new Map<number, TransformedStudent>();
-    (scoreData || []).forEach((s: TransformedStudent) => {
-      map.set(s.id, s);
-    });
+    (scoreData || []).forEach((s) => map.set(s.id, s));
     return map;
   }, [scoreData]);
 
-  // 6) 수정 시작 → editScores 초기값 세팅
+  // 6) 수정 시작 → editRawScores 초기값 세팅
   const handleEditStart = () => {
     const initial: Record<number, string> = {};
-    const subjectKey = subjectKeyMap[enabledSubject];
+    const rawKey = subjectRawKeyMap[enabledSubject];
+
     studentList.forEach((stu: StudentBrief) => {
-      const score = scoreMap.get(stu.id);
-      const raw = score ? score[subjectKey] : null;
-      initial[stu.id] = raw !== null && raw !== undefined ? String(raw) : "";
+      const stuScore = scoreMap.get(stu.id);
+      const rawVal = stuScore ? stuScore[rawKey] : null;
+      initial[stu.id] =
+        rawVal !== null && rawVal !== undefined ? String(rawVal) : "";
     });
-    setEditScores(initial);
+
+    setEditRawScores(initial);
     setIsEditing(true);
   };
 
-  // 7) 수정 취소 → editScores 초기화
+  // 7) 수정 취소
   const handleEditCancel = () => {
     setIsEditing(false);
-    setEditScores({});
+    setEditRawScores({});
   };
 
-  // 8) 수정 완료 → 변경된 항목만 PATCH
+  // 8) 수정 완료 → 변경된 rawScore만 PATCH
   const handleEditDone = async () => {
-    const subjectKey = subjectKeyMap[enabledSubject];
+    const rawKey = subjectRawKeyMap[enabledSubject];
 
     const promises = studentList.map(async (stu: StudentBrief) => {
-      const inputVal = editScores[stu.id];
+      const inputVal = editRawScores[stu.id];
       if (inputVal === undefined) return;
 
-      // 빈 문자열이면 null 처리, 아니면 숫자
+      // 빈 문자열이면 null, 아니면 숫자
       const numVal = inputVal === "" ? null : Number(inputVal);
-      const score = scoreMap.get(stu.id);
-      const prevRaw = score ? (score[subjectKey] ?? null) : null;
+      const stuScore = scoreMap.get(stu.id);
+      const prevRaw = stuScore ? (stuScore[rawKey] ?? null) : null;
 
-      // 변경 사항이 있을 때만 패치
+      // 변경된 값이 있을 때에만 PATCH 호출
       if (prevRaw !== numVal) {
         await patchScore({
           studentId: stu.id,
-          grade,
+          grade: schoolGrade,
           subjectName: enabledSubject,
           value: numVal === null ? 0 : numVal,
-          // ※ null 처리하고 싶으면 usePatchScoreApi 내부 수정 필요
+          // (null 그대로 보내려면 usePatchScoreApi 내부 수정 필요)
         });
       }
     });
 
     await Promise.all(promises);
     setIsEditing(false);
-    setEditScores({});
-    refetch(); // 최신 데이터 다시 가져오기
+    setEditRawScores({});
+    refetch();
   };
 
   // 현재 교사가 수정 가능한 과목명
   const teacherSubjectName = codeToSubjectName[subjectCode] || "";
-
-  // 수정 버튼 활성화 여부 (선택된 과목이 교사 과목과 같아야 true)
+  // 수정 버튼 활성화 여부
   const canEditThisSubject = enabledSubject === teacherSubjectName;
 
   return (
@@ -131,8 +143,8 @@ export const ScoreInputTable: React.FC = () => {
           {/* 학년 */}
           <ClassSelect
             $syllable={3}
-            value={grade}
-            onChange={(e) => setGrade(Number(e.target.value))}
+            value={schoolGrade}
+            onChange={(e) => setSchoolGrade(Number(e.target.value))}
           >
             <option value="1">1학년</option>
             <option value="2">2학년</option>
@@ -142,8 +154,8 @@ export const ScoreInputTable: React.FC = () => {
           {/* 반 */}
           <ClassSelect
             $syllable={2}
-            value={classNum}
-            onChange={(e) => setClassNum(Number(e.target.value))}
+            value={classroom}
+            onChange={(e) => setClassroom(Number(e.target.value))}
           >
             <option value="1">1반</option>
             <option value="2">2반</option>
@@ -178,11 +190,6 @@ export const ScoreInputTable: React.FC = () => {
           </ClassSelect>
 
           <div>
-            {/* 
-              → 수정 버튼을 누를 수 있는 경우: 
-              1) 현재 isEditing이 false이고 
-              2) 현재 선택한 enabledSubject가 교사 과목(teacherSubjectName)과 같을 때만 활성화 
-            */}
             {!isEditing ? (
               <CrudButton
                 $bgColor="#86ACFF"
@@ -228,30 +235,33 @@ export const ScoreInputTable: React.FC = () => {
             </thead>
             <tbody>
               {(studentList || []).map((stu) => {
-                const score = scoreMap.get(stu.id);
-                const subjectKey = subjectKeyMap[enabledSubject];
+                const stuScore = scoreMap.get(stu.id);
+                const rawKey = subjectRawKeyMap[enabledSubject];
+                const letterKey = subjectLetterKeyMap[enabledSubject];
 
                 return (
                   <tr key={stu.id}>
                     <td>{String(stu.studentNum % 100)}</td>
                     <td>{stu.name}</td>
+
+                    {/* 원점수 */}
                     <td>
                       {isEditing ? (
                         <input
                           type="number"
-                          value={editScores[stu.id] ?? ""}
+                          value={editRawScores[stu.id] ?? ""}
                           onChange={(e) => {
                             const v = e.target.value;
-                            setEditScores((prev) => ({
+                            setEditRawScores((prev) => ({
                               ...prev,
                               [stu.id]: v,
                             }));
                           }}
                           style={{ width: "4rem" }}
                         />
-                      ) : score ? (
-                        score[subjectKey] != null ? (
-                          score[subjectKey]
+                      ) : stuScore ? (
+                        stuScore[rawKey] != null ? (
+                          stuScore[rawKey]
                         ) : (
                           "-"
                         )
@@ -259,10 +269,22 @@ export const ScoreInputTable: React.FC = () => {
                         "-"
                       )}
                     </td>
-                    <td>{score?.averageScore ?? "-"}</td>
-                    <td>{score?.rank ?? "-"}</td>
-                    <td>{score?.total ?? "-"}</td>
-                    <td>{score?.gradeText ?? "-"}</td>
+
+                    {/* 과목평균(숫자), 석차등급(숫자), 응시자수(숫자) */}
+                    {/* <td>{stuScore?.averageScore ?? "-"}</td> */}
+                    {/* 총 평균이 나와야할 듯 */}
+                    <td>88</td>
+                    <td>{stuScore?.rank ?? "-"}</td>
+                    <td>{stuScore?.total ?? "-"}</td>
+
+                    {/* 과목별 문자 등급(letterGrade) */}
+                    <td>
+                      {stuScore
+                        ? stuScore[letterKey] != null
+                          ? stuScore[letterKey]
+                          : "-"
+                        : "-"}
+                    </td>
                   </tr>
                 );
               })}
@@ -274,8 +296,6 @@ export const ScoreInputTable: React.FC = () => {
     </Wrapper>
   );
 };
-
-// (이하 styled-components 부분은 이전과 동일)
 
 const Wrapper = styled.div`
   margin-left: 0.5rem;
