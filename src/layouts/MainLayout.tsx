@@ -19,6 +19,7 @@ import {
 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../hooks/useAuthStore";
+import { StudentRecordModal } from "../components/StudentRecordModal";
 
 type MainLayoutProps = {
   children: React.ReactNode;
@@ -168,6 +169,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     setNotifications([]);
   };
 
+  // 모달 관련
+  const [showStudentModal, setShowStudentModal] = useState(false);
+
   return (
     <MainWrapper>
       <SideBarArea>
@@ -241,6 +245,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </div>
               <span className="menuname">성적 입력</span>
             </MenuTab>
+            <MenuTab $enabled={false} onClick={() => setShowStudentModal(true)}>
+              학생 정보 보기
+            </MenuTab>
             {/* 웹소켓 */}
             {/* <div>
               {messages?.map((message, index) => (
@@ -266,6 +273,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </SideBar>
       </SideBarArea>
       <MainArea>{children}</MainArea>
+      {showStudentModal && (
+        <StudentRecordModal onClose={() => setShowStudentModal(false)} />
+      )}
     </MainWrapper>
   );
 };
