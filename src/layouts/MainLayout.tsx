@@ -7,7 +7,7 @@ import scoreIcon from "../assets/scoreIcon.svg";
 import userIcon from "../assets/userIcon.svg";
 import settingIcon from "../assets/settingIcon.svg";
 import pencilIcon from "../assets/icon/pencilIcon.svg";
-
+import dashboardIcon from "../assets/icon/dashboardIcon.svg";
 import BellIcon from "../assets/icon/BellIcon.svg?react";
 import DeleteIcon from "../assets/icon/DeleteIcon.svg";
 
@@ -101,6 +101,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     navigate("/scoreinput");
   };
 
+  const goToFeedback = () => {
+    navigate("/feedback");
+  };
+
   // 알림 관련
   // 문서 전체 클릭을 감지한 뒤, 그 클릭이 Wrapper 바깥이면 showNoti = false로 변경
   useEffect(() => {
@@ -122,7 +126,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   // 알림 소켓 연결 (커스텀 훅 사용)
   useNotificationSocket({
-    userId: String(userId), // 임시 하드코딩
+    // userId: String(userId), // 하드코딩 삭제
+    userId: "12",
     wsUrl,
     onNotification: (data: NotificationPayload) => {
       const formattedDate = new Date(data.date).toLocaleString("ko-KR", {
@@ -214,9 +219,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             <span className="menurole">메인메뉴</span>
             <MenuTab $enabled={currentPath === "/"} onClick={goToMain}>
               <div>
-                <img src={scoreIcon} />
+                <img src={dashboardIcon} />
               </div>
-              <span className="menuname">성적</span>
+              <span className="menuname">대시보드</span>
             </MenuTab>
             <MenuTab
               $enabled={currentPath === "/attendance"}
@@ -241,9 +246,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               onClick={goToScoreInput}
             >
               <div>
+                <img src={scoreIcon} />
+              </div>
+              <span className="menuname">성적</span>
+            </MenuTab>
+            <MenuTab
+              $enabled={currentPath === "/feedback"}
+              onClick={goToFeedback}
+            >
+              <div>
                 <img src={pencilIcon} />
               </div>
-              <span className="menuname">성적 입력</span>
+              <span className="menuname">피드백</span>
             </MenuTab>
             <MenuTab $enabled={false} onClick={() => setShowStudentModal(true)}>
               학생 정보 보기
@@ -274,7 +288,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       </SideBarArea>
       <MainArea>{children}</MainArea>
       {showStudentModal && (
-        <StudentRecordModal onClose={() => setShowStudentModal(false)} />
+        <StudentRecordModal
+          onClose={() => setShowStudentModal(false)}
+          studentId={36}
+        />
       )}
     </MainWrapper>
   );
@@ -538,8 +555,12 @@ export const MenuTab = styled.div<{ $enabled: boolean }>`
   cursor: pointer;
 
   &:hover {
-    transition: 0.2s;
+    /* transition: 0.2s; */
     background-color: #dedede;
+  }
+
+  &:not(:hover) {
+    transition: 0.2s;
   }
 `;
 
