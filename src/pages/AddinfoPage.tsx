@@ -156,6 +156,7 @@ const SignButton = styled.button<{ $bgColor: string }>`
 `;
 
 export const AddinfoPage: React.FC = () => {
+  const userId = useAuthStore((state) => state.userId);
   const navigate = useNavigate();
 
   const [role, setRole] = useState<"student" | "teacher" | "parent">("student");
@@ -203,22 +204,24 @@ export const AddinfoPage: React.FC = () => {
     const bodyData =
       role === "teacher"
         ? {
-          name,
-          birthday,
-          phoneNum,
-        }
+            userId,
+            name,
+            birthday,
+            phoneNum,
+          }
         : {
-          role,
-          name,
-          phoneNum,
-          birthday,
-          ...(role === "student" && {
-            grade,
-            classroom: classNum,
-            studentNum,
-          }),
-          ...(role === "parent" && { studentNum }),
-        };
+            userId,
+            role,
+            name,
+            phoneNum,
+            birthday,
+            ...(role === "student" && {
+              grade,
+              classroom: classNum,
+              studentNum,
+            }),
+            ...(role === "parent" && { studentNum }),
+          };
 
     // const token = localStorage.getItem("token");
 

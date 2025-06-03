@@ -9,7 +9,7 @@ export type Counsel = {
   date: string;
   title: string;
   content: string;
-  teacherName: string;
+  teacherName: string; // API의 teacher.name을 여기에 넣을 예정
 };
 
 export const useCounselsApi = () => {
@@ -17,10 +17,8 @@ export const useCounselsApi = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
-  // Access token from auth store
+  // 액세스 토큰
   const accessToken = useAuthStore((state) => state.accessToken);
-
-  // Helper to build headers
   const authHeader = accessToken
     ? { Authorization: `Bearer ${accessToken}` }
     : {};
@@ -38,7 +36,16 @@ export const useCounselsApi = () => {
       .then((res) => {
         console.log("Counsels API 응답:", res.data);
         if (Array.isArray(res.data)) {
-          setCounsels(res.data);
+          // 원시 배열을 순회하면서 teacherName만 꺼내서 새로운 배열 생성
+          const parsed: Counsel[] = res.data.map((item: any) => ({
+            id: item.id,
+            date: item.date,
+            title: item.title,
+            content: item.content,
+            // teacher 객체가 있을 때만 name 필드 사용
+            teacherName: item.teacher ? item.teacher.name : "",
+          }));
+          setCounsels(parsed);
         } else {
           setCounsels([]);
         }
@@ -62,7 +69,6 @@ export const useCounselsApi = () => {
         },
       })
       .then(() => {
-        console.log(`Counsel ID ${counselId} 삭제 성공`);
         setCounsels((prev) =>
           prev.filter((counsel) => counsel.id !== counselId)
         );
@@ -94,7 +100,6 @@ export const useCounselsApi = () => {
         }
       )
       .then((res) => {
-        console.log("Counsel 등록 성공:", res.data);
         fetchCounsels(studentId);
       })
       .catch((err) => {
@@ -125,7 +130,6 @@ export const useCounselsApi = () => {
         }
       )
       .then((res) => {
-        console.log("Counsel 수정 성공:", res.data);
         fetchCounsels(studentId);
       })
       .catch((err) => {

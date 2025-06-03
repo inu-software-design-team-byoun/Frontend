@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { CrudButton } from "./CrudButton";
 import { useCounselsApi, Counsel } from "../hooks/useCounselsApi";
 import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
+import { useAuthStore } from "../hooks/useAuthStore"; // 추가
 
 // 아이콘
 import editIcon from "../assets/icon/editIcon.svg";
@@ -27,13 +28,35 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
 
   const { selectedStudent } = useSelectedStudentStore();
 
+  // **로그인한 교사 정보**
+  const role = useAuthStore((state) => state.role);
+  const teacherGrade = useAuthStore((state) => state.teacherGrade);
+  const teacherClassroom = useAuthStore((state) => state.teacherClassroom);
+
+  // 이 학생의 담임교사인지 확인 (role이 teacher이고, 학년·반이 일치할 때만 true)
+  const isHomeroomTeacher =
+    role === "teacher" &&
+    selectedStudent !== null &&
+    teacherGrade === selectedStudent.grade &&
+    teacherClassroom === selectedStudent.classroom;
+
   const [isAdding, setIsAdding] = useState(false);
-  const [editingCounselId, setEditingCounselId] = useState<number | null>(null);
   const [newCounsel, setNewCounsel] = useState({
     date: "",
     title: "",
     content: "",
   });
+
+  // Modal 관련 state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalCounsel, setModalCounsel] = useState<{
+    index: number;
+    id: number;
+    date: string;
+    title: string;
+    content: string;
+    teacherName: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchCounsels(studentId);
@@ -64,39 +87,52 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
     setNewCounsel({ date: "", title: "", content: "" });
   };
 
-  const handleEditCounselStart = (counsel: Counsel) => {
-    setEditingCounselId(counsel.id);
-    setNewCounsel({
+  // ‘제목’ 클릭 시 모달 열기
+  const handleModalOpen = (counsel: Counsel, idx: number) => {
+    setModalCounsel({
+      index: idx + 1,
+      id: counsel.id,
       date: counsel.date.slice(0, 10),
       title: counsel.title,
       content: counsel.content,
+      teacherName: counsel.teacherName,
     });
+    setModalOpen(true);
   };
 
-  const handleEditCounselCancel = () => {
-    setEditingCounselId(null);
-    setNewCounsel({ date: "", title: "", content: "" });
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setModalCounsel(null);
   };
 
-  const handleEditCounselComplete = () => {
+  // 모달 안 필드 변경
+  const handleModalChange = (
+    field: "date" | "title" | "content",
+    value: string
+  ) => {
+    if (!modalCounsel) return;
+    setModalCounsel({ ...modalCounsel, [field]: value });
+  };
+
+  // 모달 저장
+  const handleModalSave = () => {
     if (
-      !newCounsel.date ||
-      !newCounsel.title ||
-      !newCounsel.content ||
-      editingCounselId === null
+      !modalCounsel ||
+      !modalCounsel.date ||
+      !modalCounsel.title ||
+      !modalCounsel.content
     ) {
-      alert("날짜, 제목, 내용을 입력하세요.");
+      alert("날짜, 제목, 내용을 모두 입력하세요.");
       return;
     }
     updateCounsel(
-      editingCounselId,
+      modalCounsel.id,
       studentId,
-      newCounsel.date,
-      newCounsel.title,
-      newCounsel.content
+      modalCounsel.date,
+      modalCounsel.title,
+      modalCounsel.content
     );
-    setEditingCounselId(null);
-    setNewCounsel({ date: "", title: "", content: "" });
+    handleModalClose();
   };
 
   return (
@@ -181,117 +217,44 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
                 <tr key={counsel.id}>
                   <td>{idx + 1}</td>
 
-                  <td>
-                    {editingCounselId === counsel.id ? (
-                      <input
-                        type="date"
-                        value={newCounsel.date}
-                        onChange={(e) =>
-                          setNewCounsel({ ...newCounsel, date: e.target.value })
-                        }
-                      />
-                    ) : (
-                      counsel.date.slice(0, 10)
-                    )}
-                  </td>
+                  <td>{counsel.date.slice(0, 10)}</td>
 
                   <td>
-                    {editingCounselId === counsel.id ? (
-                      <input
-                        type="text"
-                        value={newCounsel.title}
-                        onChange={(e) =>
-                          setNewCounsel({
-                            ...newCounsel,
-                            title: e.target.value,
-                          })
-                        }
-                        placeholder="제목"
-                      />
-                    ) : (
-                      counsel.title
-                    )}
-                  </td>
-
-                  <td>
-                    {editingCounselId === counsel.id ? (
-                      <textarea
-                        value={newCounsel.content}
-                        onChange={(e) =>
-                          setNewCounsel({
-                            ...newCounsel,
-                            content: e.target.value,
-                          })
-                        }
-                        placeholder="내용"
-                        style={{ width: "100%" }}
-                      />
-                    ) : (
-                      counsel.content
-                    )}
+                    <TitleCell onClick={() => handleModalOpen(counsel, idx)}>
+                      {counsel.title}
+                    </TitleCell>
                   </td>
 
                   <td>{counsel.teacherName}</td>
 
                   <td className="crud">
-                    {editingCounselId === counsel.id ? (
-                      <>
-                        <div
-                          onClick={handleEditCounselComplete}
-                          style={{ display: "inline-block", cursor: "pointer" }}
-                        >
-                          <img
-                            src={saveIcon}
-                            alt="저장"
-                            style={{ width: "16px" }}
-                          />
-                        </div>
-                        <div
-                          onClick={handleEditCounselCancel}
-                          style={{
-                            display: "inline-block",
-                            cursor: "pointer",
-                            marginLeft: "0.5rem",
-                          }}
-                        >
-                          <img
-                            src={backIcon}
-                            alt="취소"
-                            style={{ width: "16px" }}
-                          />
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div
-                          onClick={() => handleEditCounselStart(counsel)}
-                          style={{ display: "inline-block", cursor: "pointer" }}
-                        >
-                          <img
-                            src={editIcon}
-                            alt="수정"
-                            style={{ width: "16px" }}
-                          />
-                        </div>
-                        <div
-                          onClick={() =>
-                            window.confirm("정말 삭제하시겠습니까?") &&
-                            deleteCounsel(counsel.id)
-                          }
-                          style={{
-                            display: "inline-block",
-                            marginLeft: "0.5rem",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <img
-                            src={DeleteIcon}
-                            alt="삭제"
-                            style={{ width: "15px" }}
-                          />
-                        </div>
-                      </>
-                    )}
+                    <div
+                      onClick={() => handleModalOpen(counsel, idx)}
+                      style={{
+                        display: "inline-block",
+                        cursor: "pointer",
+                        marginRight: "0.5rem",
+                      }}
+                    >
+                      <img
+                        src={editIcon}
+                        alt="수정"
+                        style={{ width: "16px" }}
+                      />
+                    </div>
+                    <div
+                      onClick={() =>
+                        window.confirm("정말 삭제하시겠습니까?") &&
+                        deleteCounsel(counsel.id)
+                      }
+                      style={{ display: "inline-block", cursor: "pointer" }}
+                    >
+                      <img
+                        src={DeleteIcon}
+                        alt="삭제"
+                        style={{ width: "15px" }}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -332,7 +295,6 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
                       style={{ width: "100%" }}
                     />
                   </td>
-                  <td>{/* 담당교사 입력필요 시 상태 추가 */}</td>
                   <td></td>
                 </tr>
               )}
@@ -340,9 +302,74 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
           </RecordTable>
         </TableArea>
       </RecordArea>
+
+      {modalOpen && modalCounsel && (
+        <ModalOverlay onClick={handleModalClose}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <h3>상담 상세보기</h3>
+              <CloseButton onClick={handleModalClose}>×</CloseButton>
+            </ModalHeader>
+            <ModalBody>
+              <ModalRow>
+                <Label>순번</Label>
+                <Value>{modalCounsel.index}</Value>
+              </ModalRow>
+              <ModalRow>
+                <Label>상담일자</Label>
+                <input
+                  type="date"
+                  value={modalCounsel.date}
+                  onChange={(e) => handleModalChange("date", e.target.value)}
+                  disabled={!isHomeroomTeacher}
+                />
+              </ModalRow>
+              <ModalRow>
+                <Label>제목</Label>
+                <input
+                  type="text"
+                  value={modalCounsel.title}
+                  onChange={(e) => handleModalChange("title", e.target.value)}
+                  disabled={!isHomeroomTeacher}
+                />
+              </ModalRow>
+              <ModalRow>
+                <Label>담당교사</Label>
+                <Value>{modalCounsel.teacherName}</Value>
+              </ModalRow>
+              <ModalRowFull>
+                <Label>내용</Label>
+                <textarea
+                  value={modalCounsel.content}
+                  onChange={(e) => handleModalChange("content", e.target.value)}
+                  rows={5}
+                  disabled={!isHomeroomTeacher}
+                />
+              </ModalRowFull>
+            </ModalBody>
+            <ModalFooter>
+              <SaveButton
+                onClick={handleModalSave}
+                disabled={!isHomeroomTeacher}
+              >
+                저장
+              </SaveButton>
+              <CancelButton onClick={handleModalClose}>취소</CancelButton>
+            </ModalFooter>
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </Wrapper>
   );
 };
+
+const TitleCell = styled.span`
+  cursor: pointer;
+  color: #0066cc;
+  &:hover {
+    text-decoration: underline;
+  }
+`;
 
 const Wrapper = styled.div`
   width: 54.25rem;
@@ -500,4 +527,114 @@ const RecordTable = styled.table`
   th {
     border: none;
   }
+`;
+
+// 모달 스타일
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const ModalContent = styled.div`
+  width: 28rem;
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+`;
+
+const CloseButton = styled.button`
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+`;
+
+const ModalBody = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const ModalRow = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+
+  input {
+    margin-left: 0.5rem;
+    flex: 1;
+    padding: 0.25rem;
+  }
+`;
+
+const ModalRowFull = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.75rem;
+
+  textarea {
+    margin-top: 0.5rem;
+    resize: vertical;
+    padding: 0.25rem;
+  }
+`;
+
+const Label = styled.span`
+  width: 4rem;
+  font-weight: 500;
+`;
+
+const Value = styled.span`
+  margin-left: 0.5rem;
+`;
+
+const ModalFooter = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+`;
+
+const SaveButton = styled.button`
+  background: #70c776;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-right: 0.5rem;
+  &:disabled {
+    background: #ccc;
+    cursor: default;
+  }
+`;
+
+const CancelButton = styled.button`
+  background: #ff6969;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
 `;
