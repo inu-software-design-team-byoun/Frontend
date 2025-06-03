@@ -10,8 +10,6 @@ import { useAuthStore } from "../hooks/useAuthStore"; // 추가
 import editIcon from "../assets/icon/editIcon.svg";
 import DeleteIcon from "../assets/icon/DeleteIcon.svg";
 import OpenBookIcon from "../assets/icon/OpenBookIcon.svg";
-import saveIcon from "../assets/icon/saveIcon.svg";
-import backIcon from "../assets/icon/backIcon.svg";
 
 export const CounselModal: React.FC<{ studentId: number }> = ({
   studentId,
@@ -28,7 +26,7 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
 
   const { selectedStudent } = useSelectedStudentStore();
 
-  // **로그인한 교사 정보**
+  // 로그인한 교사 정보
   const role = useAuthStore((state) => state.role);
   const teacherGrade = useAuthStore((state) => state.teacherGrade);
   const teacherClassroom = useAuthStore((state) => state.teacherClassroom);
@@ -40,7 +38,15 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
     teacherGrade === selectedStudent.grade &&
     teacherClassroom === selectedStudent.classroom;
 
-  const [isAdding, setIsAdding] = useState(false);
+  // const [isAdding, setIsAdding] = useState(false);
+  // const [newCounsel, setNewCounsel] = useState({
+  //   date: "",
+  //   title: "",
+  //   content: "",
+  // });
+
+  // 신규 등록용 모달 상태
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const [newCounsel, setNewCounsel] = useState({
     date: "",
     title: "",
@@ -62,17 +68,44 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
     fetchCounsels(studentId);
   }, [studentId]);
 
-  const handleAddCounselStart = () => {
-    setIsAdding(true);
+  // const handleAddCounselStart = () => {
+  //   setIsAdding(true);
+  //   setNewCounsel({ date: "", title: "", content: "" });
+  // };
+
+  // const handleAddCounselCancel = () => {
+  //   setIsAdding(false);
+  //   setNewCounsel({ date: "", title: "", content: "" });
+  // };
+
+  // const handleAddCounselComplete = () => {
+  //   if (!newCounsel.date || !newCounsel.title || !newCounsel.content) {
+  //     alert("날짜, 제목, 내용을 입력하세요.");
+  //     return;
+  //   }
+  //   addCounsel(
+  //     studentId,
+  //     newCounsel.date,
+  //     newCounsel.title,
+  //     newCounsel.content
+  //   );
+  //   setIsAdding(false);
+  //   setNewCounsel({ date: "", title: "", content: "" });
+  // };
+  // 1- “신규 등록 모달 열기”
+  const handleAddModalOpen = () => {
+    setAddModalOpen(true);
     setNewCounsel({ date: "", title: "", content: "" });
   };
 
-  const handleAddCounselCancel = () => {
-    setIsAdding(false);
+  // 2- “신규 등록 모달 닫기”
+  const handleAddModalClose = () => {
+    setAddModalOpen(false);
     setNewCounsel({ date: "", title: "", content: "" });
   };
 
-  const handleAddCounselComplete = () => {
+  // 3- “신규 등록 모달 저장(등록)”
+  const handleAddModalSave = () => {
     if (!newCounsel.date || !newCounsel.title || !newCounsel.content) {
       alert("날짜, 제목, 내용을 입력하세요.");
       return;
@@ -83,8 +116,7 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
       newCounsel.title,
       newCounsel.content
     );
-    setIsAdding(false);
-    setNewCounsel({ date: "", title: "", content: "" });
+    handleAddModalClose();
   };
 
   // ‘제목’ 클릭 시 모달 열기
@@ -172,23 +204,9 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
 
         <TableArea>
           <ButtonArea>
-            {isAdding ? (
-              <>
-                <CrudButton
-                  $bgColor="#70C776"
-                  onClick={handleAddCounselComplete}
-                >
-                  완료
-                </CrudButton>
-                <CrudButton $bgColor="#FF6969" onClick={handleAddCounselCancel}>
-                  취소
-                </CrudButton>
-              </>
-            ) : (
-              <CrudButton $bgColor="#70C776" onClick={handleAddCounselStart}>
-                등록
-              </CrudButton>
-            )}
+            <CrudButton $bgColor="#70C776" onClick={handleAddModalOpen}>
+              등록
+            </CrudButton>
           </ButtonArea>
 
           <TopRectangle />
@@ -258,46 +276,6 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
                   </td>
                 </tr>
               ))}
-
-              {isAdding && (
-                <tr>
-                  <td>New</td>
-                  <td>
-                    <input
-                      style={{ width: "136px" }}
-                      type="date"
-                      value={newCounsel.date}
-                      onChange={(e) =>
-                        setNewCounsel({ ...newCounsel, date: e.target.value })
-                      }
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      value={newCounsel.title}
-                      onChange={(e) =>
-                        setNewCounsel({ ...newCounsel, title: e.target.value })
-                      }
-                      placeholder="제목"
-                    />
-                  </td>
-                  <td>
-                    <textarea
-                      value={newCounsel.content}
-                      onChange={(e) =>
-                        setNewCounsel({
-                          ...newCounsel,
-                          content: e.target.value,
-                        })
-                      }
-                      placeholder="내용"
-                      style={{ width: "100%" }}
-                    />
-                  </td>
-                  <td></td>
-                </tr>
-              )}
             </tbody>
           </RecordTable>
         </TableArea>
@@ -355,6 +333,58 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
                 저장
               </SaveButton>
               <CancelButton onClick={handleModalClose}>취소</CancelButton>
+            </ModalFooter>
+          </ModalContent>
+        </ModalOverlay>
+      )}
+      {addModalOpen && (
+        <ModalOverlay onClick={handleAddModalClose}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <h3>신규 상담 등록</h3>
+              <CloseButton onClick={handleAddModalClose}>×</CloseButton>
+            </ModalHeader>
+
+            <ModalBody>
+              <ModalRow>
+                <Label>상담일자</Label>
+                <input
+                  type="date"
+                  value={newCounsel.date}
+                  onChange={(e) =>
+                    setNewCounsel({ ...newCounsel, date: e.target.value })
+                  }
+                />
+              </ModalRow>
+
+              <ModalRow>
+                <Label>제목</Label>
+                <input
+                  type="text"
+                  value={newCounsel.title}
+                  onChange={(e) =>
+                    setNewCounsel({ ...newCounsel, title: e.target.value })
+                  }
+                  placeholder="제목"
+                />
+              </ModalRow>
+
+              <ModalRowFull>
+                <Label>내용</Label>
+                <textarea
+                  rows={5}
+                  value={newCounsel.content}
+                  onChange={(e) =>
+                    setNewCounsel({ ...newCounsel, content: e.target.value })
+                  }
+                  placeholder="내용"
+                />
+              </ModalRowFull>
+            </ModalBody>
+
+            <ModalFooter>
+              <SaveButton onClick={handleAddModalSave}>저장</SaveButton>
+              <CancelButton onClick={handleAddModalClose}>취소</CancelButton>
             </ModalFooter>
           </ModalContent>
         </ModalOverlay>

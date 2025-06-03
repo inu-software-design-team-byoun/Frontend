@@ -16,6 +16,7 @@ export const ENDPOINTS = {
   studentInfo: (id: number) => `${API_BASE_URL}/students/${id}`,
   auth: `${API_BASE_URL}/auth/google`, // LoginPage
   teachers: `${API_BASE_URL}/teachers`,
+  parents: `${API_BASE_URL}/parents`,
   check: `${API_BASE_URL}/auth/check-user`, // Loginpage
   counsels: `${API_BASE_URL}/counsels`,
   counselList: (

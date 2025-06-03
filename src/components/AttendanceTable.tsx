@@ -3,7 +3,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import styled from "styled-components";
 import { useStudentsListApi, StudentBrief } from "../hooks/useStudentListApi";
 import { ENDPOINTS } from "../constants/api";
-
+import { useAuthStore } from "../hooks/useAuthStore"; // ← 추가
 import SelectArrow from "../assets/icon/SelectArrow.png";
 
 const dayKor = ["일", "월", "화", "수", "목", "금", "토"];
@@ -37,41 +37,55 @@ interface ChangedItem {
 }
 
 interface AttendanceTableProps {
-  grade: number;
-  classNum: number;
   onGradeChange: (g: number) => void;
   onClassChange: (c: number) => void;
 }
 
 export const AttendanceTable: React.FC<AttendanceTableProps> = ({
-  grade,
-  classNum,
   onGradeChange,
   onClassChange,
 }) => {
-  // 1) 학년·반별 학생 목록 가져오기
-  const { data: studentList } = useStudentsListApi(grade, classNum);
+  // 1) 로그인한 교사의 학년/반 가져오기
+  const teacherGrade = useAuthStore((state) => state.teacherGrade);
+  const teacherClassroom = useAuthStore((state) => state.teacherClassroom);
 
-  // 2) 검색어 상태
+  // 2) 로컬 상태로 학년/반 초기화
+  const [grade, setGrade] = useState<number>(teacherGrade || 1);
+  const [classNum, setClassNum] = useState<number>(teacherClassroom || 1);
+
+  // 3) 해당 학년·반의 학생 목록 불러오기
+  const { data: studentList = [] } = useStudentsListApi(grade, classNum);
+
+  // 4) 검색어 상태
   const [query, setQuery] = useState<string>("");
 
-  // 3) 출결 데이터 저장용 state
+  // 5) 출결 데이터 관리
   const [attendanceData, setAttendanceData] = useState<AttendanceMap>({});
   const [originalData, setOriginalData] = useState<AttendanceMap>({});
 
-  // 4) 변경사항 감지용 플래그
+  // 6) 변경 감지 플래그
   const [hasChanges, setHasChanges] = useState<boolean>(false);
 
-  // 5) 모달 표시 여부
+  // 7) 모달 표시 여부
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
 
-  // 6) 변경된 항목들 목록 (모달에 표로 보여줄 데이터)
+  // 8) 변경된 항목들 목록
   const [changedItems, setChangedItems] = useState<ChangedItem[]>([]);
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 1. studentList 또는 grade/classNum 바뀔 때마다 “출석 초기화 + 서버 조회”
+  // Step A. grade/classNum이 바뀔 때마다 부모 콜백 호출
   useEffect(() => {
-    // 모든 셀을 “출석”으로 초기 세팅
+    onGradeChange(grade);
+  }, [grade, onGradeChange]);
+
+  useEffect(() => {
+    onClassChange(classNum);
+  }, [classNum, onClassChange]);
+
+  // ─────────────────────────────────────────────────────────────
+  // Step B. 학생 목록이나 grade/classNum이 바뀌면, 출결 초기화 & 서버에서 데이터 불러오기
+  useEffect(() => {
+    // (1) 빈도 초기화 맵 생성
     const initialMap: AttendanceMap = {};
     studentList.forEach((stu: StudentBrief) => {
       initialMap[stu.id] = {};
@@ -80,10 +94,9 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
       });
     });
 
-    // 학년·반별 출석정보를 한 번에 가져오기
+    // (2) 서버에서 클래스 전체 출결정보 조회
     const fetchClassAttendance = async () => {
       const mergedMap: AttendanceMap = JSON.parse(JSON.stringify(initialMap));
-
       const startDate = weekdays[0];
       const endDate = weekdays[weekdays.length - 1];
       const url = ENDPOINTS.attendancesByClass(
@@ -99,7 +112,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
         const arr: Array<{
           id: number;
           student: { id: number };
-          date: string; // ex: "2025-03-15" 또는 "2025-03-15T00:00:00.000Z"
+          date: string;
           status: Attendance;
           note: string;
         }> = await res.json();
@@ -123,7 +136,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   }, [studentList, grade, classNum]);
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 2. attendanceData 혹은 originalData가 바뀔 때 “변경사항 여부” 검사
+  // Step C. attendanceData나 originalData가 바뀔 때 변경 감지
   useEffect(() => {
     if (studentList.length === 0) {
       setHasChanges(false);
@@ -144,7 +157,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   }, [attendanceData, originalData, studentList]);
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 3. 드롭다운 선택 시 해당 셀만 attendanceData 업데이트
+  // Step D. 셀 변경 핸들러
   const handleChange = (studentId: number, date: string, value: Attendance) => {
     setAttendanceData((prev) => ({
       ...prev,
@@ -156,15 +169,13 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   };
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 4. “초기화” 버튼 클릭 → attendanceData를 originalData로 되돌림
+  // Step E. 초기화 버튼
   const handleReset = () => {
-    // 원래 상태 그대로 복사
     setAttendanceData(JSON.parse(JSON.stringify(originalData)));
-    // hasChanges는 useEffect에서 자동으로 false가 됩니다.
   };
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 5. “수정하기” 버튼 클릭 → 변경된 항목 추려서 changedItems에 저장 → 모달 표시
+  // Step F. 수정하기 버튼 → 변경된 항목 뽑아서 모달 열기
   const handleModifyClick = () => {
     const diffs: ChangedItem[] = [];
 
@@ -180,7 +191,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
             date: dateStr,
             origStatus: orig,
             newStatus: curr,
-            note: "", // ← 빈 문자열로 초기화
+            note: "", // 빈 문자열로 초기화
           });
         }
       }
@@ -196,7 +207,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   };
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 6. 모달에서 “확인” 클릭 시 POST /attendances 요청
+  // Step G. 모달 “확인” 클릭 → 서버에 POST
   const handleConfirm = useCallback(async () => {
     try {
       await Promise.all(
@@ -231,18 +242,21 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
   }, [attendanceData, changedItems]);
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 7. 화면에 보여줄 “검색 결과” 학생 목록
-  const filteredStudents = studentList.filter((s) => s.name.includes(query));
+  // Step H. 이름 검색 필터링
+  const filteredStudents = studentList.filter((s) =>
+    s.name.includes(query.trim())
+  );
 
   return (
     <Wrapper>
-      {/* ─── 상단: 학년·반 드롭다운 + 초기화 & 수정 버튼 ─── */}
       <TopRectangle />
+
+      {/* ─── 학년/반 드롭다운 + 초기화 · 수정 버튼 ─── */}
       <ClassArea>
         <ClassSelect
           $syllable={3}
           value={grade}
-          onChange={(e) => onGradeChange(Number(e.target.value))}
+          onChange={(e) => setGrade(Number(e.target.value))}
         >
           <option value="1">1학년</option>
           <option value="2">2학년</option>
@@ -252,7 +266,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
         <ClassSelect
           $syllable={2}
           value={classNum}
-          onChange={(e) => onClassChange(Number(e.target.value))}
+          onChange={(e) => setClassNum(Number(e.target.value))}
         >
           <option value="1">1반</option>
           <option value="2">2반</option>
@@ -262,18 +276,15 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
           <option value="6">6반</option>
         </ClassSelect>
 
-        {/* 초기화 버튼: 수정하기 전에 방금 바꾼 셀들을 모두 원래대로 되돌림 */}
         <ResetButton disabled={!hasChanges} onClick={handleReset}>
           초기화
         </ResetButton>
-
-        {/* 수정하기 버튼: 변경사항이 있을 때만 활성화 */}
         <ModifyButton disabled={!hasChanges} onClick={handleModifyClick}>
           수정하기
         </ModifyButton>
       </ClassArea>
 
-      {/* ─── 검색 입력창 ─── */}
+      {/* ─── 검색창 ─── */}
       <SearchArea>
         <input
           placeholder="이름으로 검색 + Enter"
@@ -319,7 +330,6 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                   const currStatus: Attendance =
                     attendanceData[student.id]?.[dateStr] ?? "출석";
 
-                  // ★ 변경된 셀인지 여부 판정
                   const isChanged = origStatus !== currStatus;
 
                   return (
@@ -351,7 +361,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
 
       <BottomRectangle />
 
-      {/* ─── 변경사항 확인용 모달 (표 형태로 변경사항 나열, 개별 note 입력 칸 포함) ─── */}
+      {/* ─── 변경사항 확인 모달 ─── */}
       {showConfirmModal && (
         <ModalOverlay>
           <ModalBox>

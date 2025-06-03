@@ -1,4 +1,3 @@
-// src/pages/AddinfoPage.tsx
 import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
@@ -163,7 +162,7 @@ export const AddinfoPage: React.FC = () => {
   const [grade, setGrade] = useState("none");
   const [classNum, setClassNum] = useState("none");
   const [name, setName] = useState("");
-  const [studentNum, setstudentNum] = useState("");
+  const [studentNum, setStudentNum] = useState("");
   const [phoneNum, setPhoneNum] = useState("");
   const [birthday, setBirthday] = useState("");
 
@@ -181,56 +180,61 @@ export const AddinfoPage: React.FC = () => {
     return `${nums.slice(0, 4)}-${nums.slice(4, 6)}-${nums.slice(6, 8)}`;
   };
 
+  // role이 student일 때: grade, classNum, studentNum 필요
+  // role이 parent일 때: studentNum(자녀 학번) 필요
   const isFormValid =
     name.trim() !== "" &&
     phoneNum.trim() !== "" &&
     birthday.trim() !== "" &&
-    (role !== "student" ||
-      (grade !== "none" && classNum !== "none" && studentNum.trim() !== ""));
+    ((role === "student" &&
+      grade !== "none" &&
+      classNum !== "none" &&
+      studentNum.trim() !== "") ||
+      (role === "parent" && studentNum.trim() !== "") ||
+      role === "teacher");
 
   const handleSubmit = async () => {
-    // const token = localStorage.getItem("accessToken"); // 이건 구글에서 주는 토큰인거같고
-    const token = useAuthStore.getState().accessToken; // 이건 백엔드가 주는 토큰(애초에 개발자도구에 안보임. zustand)
-
-    console.log("stored:", token);
+    const token = useAuthStore.getState().accessToken;
+    console.log("stored token:", token);
 
     if (!token) {
-      alert("로그인 정보가 없음");
+      alert("로그인 정보가 없습니다.");
       return;
     }
 
-    const url = role === "teacher" ? ENDPOINTS.teachers : ENDPOINTS.students;
-    // const url = ENDPOINTS.teachers;
-    const bodyData =
+    // role별 엔드포인트
+    const url =
       role === "teacher"
-        ? {
-            userId,
-            name,
-            birthday,
-            phoneNum,
-          }
-        : {
-            userId,
-            role,
-            name,
-            phoneNum,
-            birthday,
-            ...(role === "student" && {
-              grade,
-              classroom: classNum,
-              studentNum,
-            }),
-            ...(role === "parent" && { studentNum }),
-          };
+        ? ENDPOINTS.teachers
+        : role === "student"
+          ? ENDPOINTS.students
+          : ENDPOINTS.parents;
 
-    // const token = localStorage.getItem("token");
+    // bodyData 구성
+    const bodyData: Record<string, any> = {
+      userId,
+      name,
+      phoneNum,
+      birthday,
+    };
+
+    if (role === "student") {
+      bodyData.role = "student";
+      bodyData.grade = grade;
+      bodyData.classroom = classNum;
+      bodyData.studentNum = studentNum;
+    } else if (role === "parent") {
+      bodyData.role = "parent";
+      bodyData.studentNum = studentNum; // 자녀 학번
+    }
+    // teacher는 userId, name, phoneNum, birthday만 전송
 
     try {
       const res = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(bodyData),
       });
@@ -317,11 +321,22 @@ export const AddinfoPage: React.FC = () => {
               <input
                 placeholder="학번"
                 value={studentNum}
-                onChange={(e) => setstudentNum(e.target.value)}
+                onChange={(e) => setStudentNum(e.target.value)}
               />
               <img src={studentIcon} alt="student icon" />
             </InputArea>
           </>
+        )}
+
+        {role === "parent" && (
+          <InputArea>
+            <input
+              placeholder="자녀 학번"
+              value={studentNum}
+              onChange={(e) => setStudentNum(e.target.value)}
+            />
+            <img src={studentIcon} alt="student icon" />
+          </InputArea>
         )}
 
         <InputArea>
@@ -332,17 +347,6 @@ export const AddinfoPage: React.FC = () => {
           />
           <img src={nameIcon} alt="name icon" />
         </InputArea>
-
-        {role === "parent" && (
-          <InputArea>
-            <input
-              placeholder="자녀 학번"
-              value={studentNum}
-              onChange={(e) => setstudentNum(e.target.value)}
-            />
-            <img src={studentIcon} alt="student icon" />
-          </InputArea>
-        )}
 
         <InputArea>
           <input
