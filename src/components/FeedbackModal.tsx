@@ -2,15 +2,15 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
-import { useFeedbackApi, Feedback } from "../hooks/useFeedbackApi";
+import { useFeedbackApi, ParsedFeedback } from "../hooks/useFeedbackApi";
+import { useAuthStore } from "../hooks/useAuthStore";
 
-// icons
-import saveIcon from "../assets/icon/saveIcon.svg";
-import backIcon from "../assets/icon/backIcon.svg";
 import editIcon from "../assets/icon/editIcon.svg";
 import deleteIcon from "../assets/icon/DeleteIcon.svg";
+import saveIcon from "../assets/icon/saveIcon.svg";
+import backIcon from "../assets/icon/backIcon.svg";
 
-// 과목 코드 ↔ 과목명 매핑
+// 두 글자 문자열 “01”이 숫자 1에 해당하므로 매핑 테이블은 숫자 기준으로 둡니다.
 const SUBJECT_OPTIONS: { code: number; label: string }[] = [
   { code: 1, label: "국어" },
   { code: 2, label: "수학" },
@@ -22,14 +22,11 @@ const SUBJECT_OPTIONS: { code: number; label: string }[] = [
   { code: 8, label: "체육" },
 ];
 
-// Props에는 studentId만 받고, 학생 이름은 store에서 꺼냅니다
 export const FeedbackModal: React.FC<{ studentId: number }> = ({
   studentId,
 }) => {
-  // 전역 상태에서 학생 정보 가져오기 (이름, 학년·반 등)
+  const teacherSubject = useAuthStore((state) => state.subjectCode);
   const { selectedStudent } = useSelectedStudentStore();
-
-  // useFeedbacksApi 훅으로 모든 CRUD 함수와 상태(loading, error, feedbacks) 가져오기
   const {
     feedbacks,
     loading,
@@ -39,54 +36,48 @@ export const FeedbackModal: React.FC<{ studentId: number }> = ({
     deleteFeedback,
   } = useFeedbackApi(studentId);
 
-  // 로컬 상태: 새로운 피드백 작성용
+  // 4) 로컬 상태: 새로운 피드백
   const [newDate, setNewDate] = useState("");
-  const [newSubject, setNewSubject] = useState(1);
+  const [newSubject, setNewSubject] = useState<number>(teacherSubject); //교사 과목 고정
   const [newContent, setNewContent] = useState("");
   const [newRelease, setNewRelease] = useState(true);
 
-  // 수정 모드 관리
+  // 5) 수정 모드 관리
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editDate, setEditDate] = useState("");
-  const [editSubject, setEditSubject] = useState(1);
+  const [editSubject, setEditSubject] = useState<number>(teacherSubject);
   const [editContent, setEditContent] = useState("");
   const [editRelease, setEditRelease] = useState(true);
 
-  // 새로운 피드백 등록
-  const handleCreate = async () => {
-    if (!newDate || !newContent.trim()) {
-      alert("날짜와 내용을 모두 입력해주세요.");
-      return;
-    }
-    await createFeedback(newDate, newSubject, newContent, newRelease);
-    // 등록 후 초기화
-    setNewDate("");
-    setNewSubject(1);
-    setNewContent("");
-    setNewRelease(true);
-  };
-
-  // 특정 feedback을 수정하기 위해 입력 폼에 기존 데이터를 세팅
-  const handleStartEdit = (fb: Feedback) => {
+  // 편집 모드 진입 (권한 검사)
+  const handleStartEdit = (fb: ParsedFeedback) => {
+    // fb.subject가 null 이거나, 교사 과목과 다르면 권한 없음
+    if (fb.subject === null || fb.subject !== teacherSubject) return;
+    // 편집용 상태 세팅 (editDate, editSubject, editContent, editRelease)
     setEditingId(fb.id);
-    setEditDate(fb.date.slice(0, 10));
+    setEditDate(fb.date);
     setEditSubject(fb.subject);
     setEditContent(fb.content);
     setEditRelease(fb.release);
   };
 
-  // 편집 모드 취소
+  // 편집 취소
   const handleCancelEdit = () => {
     setEditingId(null);
     setEditDate("");
-    setEditSubject(1);
+    setEditSubject(teacherSubject);
     setEditContent("");
     setEditRelease(true);
   };
 
-  // 편집 완료 → API 호출
+  // 수정 완료
   const handleCompleteEdit = async () => {
-    if (editingId === null || !editDate || !editContent.trim()) {
+    if (
+      editingId === null ||
+      !editDate ||
+      !editContent.trim() ||
+      editSubject !== teacherSubject
+    ) {
       alert("날짜와 내용을 모두 입력해주세요.");
       return;
     }
@@ -100,15 +91,28 @@ export const FeedbackModal: React.FC<{ studentId: number }> = ({
     handleCancelEdit();
   };
 
+  // 새 피드백 생성 (교사 과목으로 고정)
+  const handleCreate = async () => {
+    if (!newDate || !newContent.trim()) {
+      alert("날짜와 내용을 모두 입력해주세요.");
+      return;
+    }
+    await createFeedback(newDate, teacherSubject, newContent, newRelease);
+    setNewDate("");
+    setNewSubject(teacherSubject);
+    setNewContent("");
+    setNewRelease(true);
+  };
+
   return (
     <ModalContainer>
       <HeaderBar />
       <ContentWrapper>
-        {/* 상단: 학생 이름 / 학년·반 표시 */}
         <Title>
           <span>{selectedStudent?.name || "학생"}</span> 학생의 피드백
         </Title>
 
+        {/* ─────────────────────────────────────────────────────── */}
         {/* 1) 기존 피드백 목록 */}
         <SectionTitle>피드백 목록</SectionTitle>
         <FeedbackTable>
@@ -141,7 +145,6 @@ export const FeedbackModal: React.FC<{ studentId: number }> = ({
                 </td>
               </tr>
             ) : (
-              // feedbacks.map((fb, idx) => (
               feedbacks.map((fb) => (
                 <tr key={fb.id}>
                   <td>
@@ -153,25 +156,15 @@ export const FeedbackModal: React.FC<{ studentId: number }> = ({
                         style={{ width: 120 }}
                       />
                     ) : (
-                      fb.date.slice(0, 10)
+                      fb.date
                     )}
                   </td>
                   <td>
-                    {editingId === fb.id ? (
-                      <select
-                        value={editSubject}
-                        onChange={(e) => setEditSubject(Number(e.target.value))}
-                      >
-                        {SUBJECT_OPTIONS.map((opt) => (
-                          <option key={opt.code} value={opt.code}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      SUBJECT_OPTIONS.find((s) => s.code === fb.subject)
-                        ?.label || "-"
-                    )}
+                    {/* subject가 null 이면 "-", 아니면 매핑 테이블에서 label 찾기 */}
+                    {fb.subject === null
+                      ? "-"
+                      : SUBJECT_OPTIONS.find((s) => s.code === fb.subject)
+                          ?.label || "-"}
                   </td>
                   <td>
                     {editingId === fb.id ? (
@@ -186,6 +179,7 @@ export const FeedbackModal: React.FC<{ studentId: number }> = ({
                       fb.content
                     )}
                   </td>
+
                   <td>
                     {editingId === fb.id ? (
                       <input
@@ -199,6 +193,7 @@ export const FeedbackModal: React.FC<{ studentId: number }> = ({
                       "비공개"
                     )}
                   </td>
+                  {/* 교사의 과목이 맞아야 수정·삭제 버튼 노출 */}
                   <td>
                     {editingId === fb.id ? (
                       <>
@@ -243,12 +238,64 @@ export const FeedbackModal: React.FC<{ studentId: number }> = ({
                       </>
                     )}
                   </td>
+                  {/* <td>
+                    
+                    {fb.subject !== null && fb.subject === teacherSubject ? (
+                      editingId === fb.id ? (
+                        <>
+                          <img
+                            src={saveIcon}
+                            alt="저장"
+                            style={{ cursor: "pointer", width: 16 }}
+                            onClick={handleCompleteEdit}
+                          />
+                          <img
+                            src={backIcon}
+                            alt="취소"
+                            style={{
+                              cursor: "pointer",
+                              width: 16,
+                              marginLeft: 8,
+                            }}
+                            onClick={handleCancelEdit}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <img
+                            src={editIcon}
+                            alt="수정"
+                            style={{ cursor: "pointer", width: 16 }}
+                            onClick={() => handleStartEdit(fb)}
+                          />
+                          <img
+                            src={deleteIcon}
+                            alt="삭제"
+                            style={{
+                              cursor: "pointer",
+                              width: 16,
+                              marginLeft: 8,
+                            }}
+                            onClick={() =>
+                              window.confirm("정말 삭제하시겠습니까?") &&
+                              deleteFeedback(fb.id)
+                            }
+                          />
+                        </>
+                      )
+                    ) : (
+                      <span style={{ color: "#aaa", fontSize: 12 }}>
+                        권한 없음
+                      </span>
+                    )}
+                  </td> */}
                 </tr>
               ))
             )}
           </tbody>
         </FeedbackTable>
 
+        {/* ─────────────────────────────────────────────────────── */}
         {/* 2) 새로운 피드백 등록 폼 */}
         <SectionTitle>새 피드백 등록</SectionTitle>
         <FormContainer>
@@ -260,19 +307,18 @@ export const FeedbackModal: React.FC<{ studentId: number }> = ({
               onChange={(e) => setNewDate(e.target.value)}
             />
           </FormRow>
+
           <FormRow>
             <FormLabel>과목</FormLabel>
-            <FormSelect
-              value={newSubject}
-              onChange={(e) => setNewSubject(Number(e.target.value))}
-            >
-              {SUBJECT_OPTIONS.map((opt) => (
-                <option key={opt.code} value={opt.code}>
-                  {opt.label}
-                </option>
-              ))}
+            {/* 교사 과목으로 고정이므로 disabled */}
+            <FormSelect value={teacherSubject} disabled>
+              <option value={teacherSubject}>
+                {SUBJECT_OPTIONS.find((s) => s.code === teacherSubject)
+                  ?.label || "-"}
+              </option>
             </FormSelect>
           </FormRow>
+
           <FormRow>
             <FormLabel>내용</FormLabel>
             <FormTextarea
@@ -282,6 +328,7 @@ export const FeedbackModal: React.FC<{ studentId: number }> = ({
               onChange={(e) => setNewContent(e.target.value)}
             />
           </FormRow>
+
           <FormRow>
             <FormLabel>공개 여부</FormLabel>
             <CheckboxContainer>
@@ -296,6 +343,7 @@ export const FeedbackModal: React.FC<{ studentId: number }> = ({
               </label>
             </CheckboxContainer>
           </FormRow>
+
           <div className="submit">
             <SubmitButton onClick={handleCreate} disabled={loading}>
               {loading ? "등록 중…" : "피드백 등록"}
@@ -306,6 +354,8 @@ export const FeedbackModal: React.FC<{ studentId: number }> = ({
     </ModalContainer>
   );
 };
+
+// … 스타일 정의 부분 생략 …
 
 /** 스타일 정의 (CounselModal과 거의 동일) **/
 const ModalContainer = styled.div`

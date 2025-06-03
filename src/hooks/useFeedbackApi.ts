@@ -3,19 +3,52 @@ import { useState, useEffect } from "react";
 import { ENDPOINTS } from "../constants/api";
 import { useAuthStore } from "../hooks/useAuthStore";
 
-export interface Feedback {
+// 원시(raw)로 내려오는 인터페이스
+export interface RawFeedback {
+  id: number;
+  student: { id: number /* … */ };
+  teacher: { id: number; subject: number | null /* … */ } | null;
+  date: string; // "YYYY-MM-DD"
+  subject: string; // "" 또는 "01", "02", … "10", "11" 등
+  content: string;
+  release: string; // "" 또는 "1"
+}
+
+// 컴포넌트 내에서 실제로 사용할 파싱된(feedback) 타입
+export interface ParsedFeedback {
   id: number;
   studentId: number;
-  date: string; // YYYY-MM-DD
-  subject: number;
+  date: string; // "YYYY-MM-DD"
+  subject: number | null; // 숫자(1~99) 또는 null (빈 문자열)
   content: string;
-  release: boolean;
+  release: boolean; // true ("1") / false ("" 또는 "0")
 }
 
 export const useFeedbackApi = (studentId: number) => {
-  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [feedbacks, setFeedbacks] = useState<ParsedFeedback[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<unknown>(null);
+
+  // “RawFeedback[] → ParsedFeedback[]”로 변환하는 헬퍼
+  const parseFeedbackArray = (rawArr: RawFeedback[]): ParsedFeedback[] => {
+    return rawArr.map((raw) => {
+      // subject: ""이면 null, 두 글자 문자열이면 parseInt로 숫자 변환
+      const subjNum: number | null =
+        raw.subject === "" ? null : parseInt(raw.subject, 10);
+
+      // release: "1"이면 true, 그 외는 false
+      const releaseBool = raw.release === "1";
+
+      return {
+        id: raw.id,
+        studentId: raw.student.id,
+        date: raw.date,
+        subject: subjNum,
+        content: raw.content,
+        release: releaseBool,
+      };
+    });
+  };
 
   // 1) 피드백 목록 조회
   const fetchFeedbacks = async () => {
@@ -25,11 +58,7 @@ export const useFeedbackApi = (studentId: number) => {
 
     try {
       const token = useAuthStore.getState().accessToken;
-      const url = ENDPOINTS.feedbacksByStudent(
-        studentId,
-        "", // 전체 조회
-        ""
-      );
+      const url = ENDPOINTS.feedbacksByStudent(studentId, "", "");
       const res = await fetch(url, {
         method: "GET",
         headers: {
@@ -42,10 +71,9 @@ export const useFeedbackApi = (studentId: number) => {
         throw new Error(`피드백 조회 실패: ${res.status}`);
       }
 
-      const data: Feedback[] = await res.json();
-
-      setFeedbacks(data);
-      console.log(data);
+      const rawData: RawFeedback[] = await res.json();
+      const parsedData: ParsedFeedback[] = parseFeedbackArray(rawData);
+      setFeedbacks(parsedData);
     } catch (err) {
       console.error("Feedback 조회 에러:", err);
       setFeedbacks([]);
@@ -55,7 +83,7 @@ export const useFeedbackApi = (studentId: number) => {
     }
   };
 
-  // 2) 피드백 추가
+  // 2) 피드백 생성
   const createFeedback = async (
     date: string,
     subject: number,
@@ -65,16 +93,16 @@ export const useFeedbackApi = (studentId: number) => {
     if (!studentId || !date || !content.trim()) return;
     setLoading(true);
     setError(null);
-
     try {
       const token = useAuthStore.getState().accessToken;
       const url = ENDPOINTS.feedbacks;
       const body = {
         studentId,
         date,
-        subject,
+        // 두 글자 문자열로 보내야 한다면 padStart 사용 가능 (“01”, “02”, …)
+        subject: subject.toString().padStart(2, "0"),
         content: content.trim(),
-        release,
+        release: release ? "1" : "0",
       };
       const res = await fetch(url, {
         method: "POST",
@@ -88,7 +116,6 @@ export const useFeedbackApi = (studentId: number) => {
         const errText = await res.text();
         throw new Error(`피드백 생성 실패: ${res.status} ${errText}`);
       }
-      // 생성 성공 시 목록 갱신
       await fetchFeedbacks();
     } catch (err) {
       console.error("Feedback 생성 에러:", err);
@@ -109,16 +136,15 @@ export const useFeedbackApi = (studentId: number) => {
     if (!feedbackId || !studentId || !date || !content.trim()) return;
     setLoading(true);
     setError(null);
-
     try {
       const token = useAuthStore.getState().accessToken;
       const url = ENDPOINTS.feedbacksById(feedbackId);
       const body = {
         studentId,
         date,
-        subject,
+        subject: subject.toString().padStart(2, "0"),
         content: content.trim(),
-        release,
+        release: release ? "1" : "0",
       };
       const res = await fetch(url, {
         method: "PATCH",
@@ -132,7 +158,6 @@ export const useFeedbackApi = (studentId: number) => {
         const errText = await res.text();
         throw new Error(`피드백 수정 실패: ${res.status} ${errText}`);
       }
-      // 수정 성공 시 목록 갱신
       await fetchFeedbacks();
     } catch (err) {
       console.error("Feedback 수정 에러:", err);
@@ -147,7 +172,6 @@ export const useFeedbackApi = (studentId: number) => {
     if (!feedbackId) return;
     setLoading(true);
     setError(null);
-
     try {
       const token = useAuthStore.getState().accessToken;
       const url = ENDPOINTS.feedbacksById(feedbackId);
@@ -161,7 +185,6 @@ export const useFeedbackApi = (studentId: number) => {
       if (!res.ok) {
         throw new Error(`피드백 삭제 실패: ${res.status}`);
       }
-      // 삭제 성공 시 목록 갱신
       await fetchFeedbacks();
     } catch (err) {
       console.error("Feedback 삭제 에러:", err);
@@ -171,7 +194,7 @@ export const useFeedbackApi = (studentId: number) => {
     }
   };
 
-  // studentId가 바뀔 때마다 목록을 다시 불러오기
+  // studentId가 바뀔 때마다 목록 다시 불러오기
   useEffect(() => {
     fetchFeedbacks();
     // eslint-disable-next-line react-hooks/exhaustive-deps

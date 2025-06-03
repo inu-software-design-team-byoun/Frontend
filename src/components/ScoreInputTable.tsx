@@ -307,14 +307,14 @@ export const ScoreInputTable: React.FC = () => {
                     {/* 과목평균 */}
                     <td>
                       {stuScore && stuScore[avgKey] != null
-                        ? stuScore[avgKey]
+                        ? Math.floor(stuScore[avgKey] * 10) / 10
                         : "-"}
                     </td>
 
                     {/* 석차 */}
                     <td>
                       {stuScore && stuScore[rankKey] != null
-                        ? Number(stuScore[avgKey].toFixed(1))
+                        ? stuScore[rankKey]
                         : "-"}
                     </td>
 
