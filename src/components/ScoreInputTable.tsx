@@ -228,7 +228,7 @@ export const ScoreInputTable: React.FC = () => {
                 <th>이름</th>
                 <th className="rawscore">{enabledSubject} 원점수</th>
                 <th>과목평균</th>
-                <th>석차등급</th>
+                <th>석차</th>
                 <th>응시자수</th>
                 <th>등급</th>
               </tr>
@@ -270,7 +270,7 @@ export const ScoreInputTable: React.FC = () => {
                       )}
                     </td>
 
-                    {/* 과목평균(숫자), 석차등급(숫자), 응시자수(숫자) */}
+                    {/* 과목평균(숫자), 석차(숫자), 응시자수(숫자) */}
                     {/* <td>{stuScore?.averageScore ?? "-"}</td> */}
                     {/* 총 평균이 나와야할 듯 */}
                     <td>88</td>

@@ -485,7 +485,7 @@ const ResetButton = styled.button`
   color: ${(props: { disabled?: boolean }) =>
     props.disabled ? "#aaa" : "#333"};
 
-  &:hover {
+  &:hover:enabled {
     background-color: ${(props: { disabled?: boolean }) =>
       props.disabled ? "#f0f0f0" : "#4A4A4A"};
     color: white;
@@ -517,7 +517,7 @@ const ModifyButton = styled.button`
     props.disabled ? "#cccccc" : "#54b25c"};
   color: white;
 
-  &:hover {
+  &:hover:enabled {
     background-color: ${(props: { disabled?: boolean }) =>
       props.disabled ? "#cccccc" : "white"};
 
