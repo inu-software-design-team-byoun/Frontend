@@ -14,18 +14,9 @@ import { useAuthStore } from "../hooks/useAuthStore";
 const Wrapper = styled.div`
   width: 100vw;
   height: 100vh;
-  /* padding-top: 6.25rem; */
-  /* background-color: white; */
 
   background-image: url(${BackgroundImage});
   background-size: cover;
-
-  /* 이미지를 컨테이너에 맞게 조절 */
-  /* background-size: contain; */
-  /* 이미지가 중앙에 오도록 조정 */
-  /* background-position: center; */
-  /* 반복 방지 */
-  /* background-repeat: no-repeat; */
 
   display: flex;
   justify-content: center;
@@ -110,22 +101,17 @@ export const LoginPage: React.FC = () => {
       const token = params.get("token");
       if (!token) return;
 
-      // localStorage.setItem("accessToken", token);
-
       try {
         const res = await fetch(ENDPOINTS.check + `?token=${token}`);
         const result = await res.json();
 
-        // userId를 세션스토리지에 저장하는 예시. 나중에 userId를 받아오는 response body에 맞춰 진행 예정
-        const id = result.id;
-        useAuthStore.getState().setAuth(id, token); // zustand에 저장 -> sessionStorage에 저장
+        useAuthStore
+          .getState()
+          .setAuth(result.id, result.name, result.role, token);
 
         if (result.exists) {
-          // window.location.href = "/"; // 유저 있음 → 메인으로
-          // 비동기와 비동기가 아닌 함수간의 차이로 인해 redirect가 setAuth()보다 먼저 되는 경우를 방지
-          navigate("/");
+          navigate("/"); // 유저가 있으면 메인페이지로
         } else {
-          // window.location.href = "/addinfo"; // 유저 없음 → 추가정보 페이지
           navigate("/addinfo");
         }
       } catch (e) {
