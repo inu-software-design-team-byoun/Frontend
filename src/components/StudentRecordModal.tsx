@@ -51,10 +51,10 @@ export const StudentRecordModal: React.FC<ModalProps> = ({
     // 필요하다면 코드 순서대로 더 추가...
   ];
 
-  // --- 2) accessToken 가져오기 helper ---
-  const getAccessToken = () => {
-    return localStorage.getItem("accessToken") || "";
-  };
+  // // --- 2) accessToken 가져오기 helper ---
+  // const getAccessToken = () => {
+  //   return localStorage.getItem("accessToken") || "";
+  // };
 
   // --- 3) 기존 피드백을 불러오는 함수 ---
   const fetchFeedbacks = async () => {
@@ -82,8 +82,8 @@ export const StudentRecordModal: React.FC<ModalProps> = ({
       }
       const data: Feedback[] = await res.json();
       setFeedbacks(data);
-    } catch (err: any) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
       setErrorMsg("피드백을 불러오는 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
@@ -132,8 +132,8 @@ export const StudentRecordModal: React.FC<ModalProps> = ({
       setNewContent("");
       setNewRelease(true);
       await fetchFeedbacks();
-    } catch (err: any) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
       setErrorMsg("피드백을 생성하는 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);

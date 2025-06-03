@@ -98,7 +98,7 @@ const Wrapper = styled.div`
 const TopRectangle = styled.div`
   width: 100%;
   height: 1.5rem;
-  background: #c2b7ff;
+  background: #9e8dff;
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
 `;
@@ -107,7 +107,7 @@ const BottomRectangle = styled.div`
   margin-top: auto;
   width: 100%;
   height: 1.5rem;
-  background: #c2b7ff;
+  background: #9e8dff;
   border-bottom-left-radius: 16px;
   border-bottom-right-radius: 16px;
 `;
@@ -200,7 +200,7 @@ const StyledTable = styled.table`
     top: 0;
     background-color: white;
     z-index: 1;
-    border-bottom: 1.5px solid #feb3ac;
+    border-bottom: 1.5px solid #c2b7ff;
   }
   th,
   td {

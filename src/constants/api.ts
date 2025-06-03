@@ -64,10 +64,10 @@ export const ENDPOINTS = {
   ) => {
     const params = new URLSearchParams();
     params.append("studentId", String(studentId));
-    params.append("startDate", startDate);
-    params.append("endDate", endDate);
-    return `${API_BASE_URL}/feedbacks?${params.toString}`;
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    return `${API_BASE_URL}/feedbacks?${params.toString()}`;
   },
   // 피드백 정보 개별 조회(GET) / 피드백 정보 수정(PATCH) / 피드백 정보 삭제(DELETE) 용
-  feedBakcsById: (id: number) => `${API_BASE_URL}/feedbacks/${id}`,
+  feedbacksById: (id: number) => `${API_BASE_URL}/feedbacks/${id}`,
 };
