@@ -26,7 +26,7 @@ const CounselPage: React.FC = () => {
           <StudentInfoArea></StudentInfoArea>
           <RecordArea>
             <TitleArea>
-              <span className="title">행동특성 누가기록</span>
+              <span className="title">상담일지</span>
             </TitleArea>
             <TableArea>표에서 학생을 선택하세요!</TableArea>
           </RecordArea>

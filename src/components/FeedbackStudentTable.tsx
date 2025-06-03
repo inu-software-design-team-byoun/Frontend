@@ -1,4 +1,4 @@
-// components/CounselStudentsTable
+// components/FeedbackStudentTable.tsx
 import React, { useState } from "react";
 import styled from "styled-components";
 import SimpleStudentRow from "./SimpleStudentRow";
@@ -7,14 +7,14 @@ import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
 import SearchIcon from "../assets/icon/SearchIcon.svg";
 import SelectArrow from "../assets/icon/SelectArrow.png";
 
-interface CounselStudentsTableProps {
+interface FeedbackStudentTableProps {
   grade: number;
   classroom: number;
   onGradeChange: (g: number) => void;
   onClassChange: (c: number) => void;
 }
 
-export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
+export const FeedbackStudentTable: React.FC<FeedbackStudentTableProps> = ({
   grade,
   classroom,
   onGradeChange,
@@ -71,7 +71,7 @@ export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
                 student={stu}
                 onClick={() => setSelectedStudent(stu)}
                 $isSelected={selectedStudent?.id === stu.id}
-                $bgColor="#FF8E83"
+                $bgColor="#9E8DFF"
               />
             ))}
           </tbody>
@@ -98,7 +98,7 @@ const Wrapper = styled.div`
 const TopRectangle = styled.div`
   width: 100%;
   height: 1.5rem;
-  background: #feb3ac;
+  background: #c2b7ff;
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
 `;
@@ -107,7 +107,7 @@ const BottomRectangle = styled.div`
   margin-top: auto;
   width: 100%;
   height: 1.5rem;
-  background: #feb3ac;
+  background: #c2b7ff;
   border-bottom-left-radius: 16px;
   border-bottom-right-radius: 16px;
 `;
@@ -115,7 +115,7 @@ const BottomRectangle = styled.div`
 const ClassArea = styled.div`
   width: 100%;
   height: 64px;
-  border-bottom: 2px solid #feb3ac;
+  border-bottom: 2px solid #c2b7ff;
   display: flex;
   align-items: center;
 
@@ -133,7 +133,7 @@ const Select = styled.select<{ $syllable: number }>`
     props.$syllable === 3 ? "92px" : props.$syllable === 2 ? "80px" : "124px"};
   height: 2.5rem;
   padding: 0 1rem;
-  border: 2px solid #feb3ac;
+  border: 2px solid #c2b7ff;
   border-radius: 0.65rem;
   color: black;
   font-family: NanumSquare;
@@ -155,7 +155,7 @@ const Select = styled.select<{ $syllable: number }>`
 const SearchArea = styled.div`
   width: 100%;
   height: 3rem;
-  border-bottom: 2px solid #feb3ac;
+  border-bottom: 2px solid #c2b7ff;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -163,13 +163,13 @@ const SearchArea = styled.div`
   input {
     width: 132px;
     height: 2.25rem;
-    border: 1.5px solid #feb3ac;
+    border: 1.5px solid #c2b7ff;
     border-radius: 0.5rem;
-    background-color: #fff6f4;
-    background-image: url("${SearchIcon}");
-    background-position: right 0.625rem center;
-    background-repeat: no-repeat;
-    background-size: 1rem;
+    background-color: #efecff;
+    /* background-image: url("${SearchIcon}"); */
+    /* background-position: right 0.625rem center; */
+    /* background-repeat: no-repeat; */
+    /* background-size: 1rem; */
     color: gray;
     font-size: 1rem;
     padding: 0 2.5rem 0 1rem;
@@ -177,7 +177,7 @@ const SearchArea = styled.div`
       outline: none;
     }
     &::placeholder {
-      color: #db9a94;
+      color: #9990c7;
     }
   }
 `;

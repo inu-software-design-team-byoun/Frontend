@@ -67,9 +67,9 @@ const App: React.FC = () => {
         <Route
           path="/feedback"
           element={
-            <AuthLayout>
+            <MainLayout>
               <FeedbackPage />
-            </AuthLayout>
+            </MainLayout>
           }
         />
       </Routes>
