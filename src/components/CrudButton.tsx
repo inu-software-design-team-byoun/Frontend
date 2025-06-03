@@ -28,7 +28,7 @@ export const CrudButton = styled.button<{
 
   // 마우스를 올릴 때는 바로 바뀌고 뗄 때는 천천히 바뀌게 구현
   // 1. 마우스 올릴 때
-  &:hover {
+  &:hover:enabled {
     color: ${(props) => props.$bgColor};
     background-color: white;
     border: 1.5px solid ${(props) => props.$bgColor};
@@ -42,7 +42,8 @@ export const CrudButton = styled.button<{
   }
 
   &:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
-    opacity: 0.6;
+    /* hover:enabled 가 아닌 상태에서는 hover 규칙이 절대 적용되지 않음 */
   }
 `;
