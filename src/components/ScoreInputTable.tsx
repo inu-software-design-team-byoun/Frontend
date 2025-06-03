@@ -9,29 +9,36 @@ import { usePatchScoreApi } from "../hooks/usePatchScoreApi";
 import { useAuthStore } from "../hooks/useAuthStore";
 
 export const ScoreInputTable: React.FC = () => {
-  // 1) 학년/반/과목 선택 상태
-  const [schoolGrade, setSchoolGrade] = useState(1);
-  const [classroom, setClassroom] = useState(5);
-  const [enabledSubject, setEnabledSubject] = useState("국어");
+  const role = useAuthStore((state) => state.role);
+  const teacherGrade = useAuthStore((state) => state.teacherGrade);
+  const teacherClassroom = useAuthStore((state) => state.teacherClassroom);
 
-  // 2) 수정 모드 & 편집 중 입력값 (rawScore만 편집)
+  const [schoolGrade, setSchoolGrade] = useState<number>(
+    role === "teacher" && teacherGrade > 0 ? teacherGrade : 1
+  );
+  const [classroom, setClassroom] = useState<number>(
+    role === "teacher" && teacherClassroom > 0 ? teacherClassroom : 1
+  );
+
+  // 수정 모드 & 편집 중 입력값 (rawScore만 편집)
   const [isEditing, setIsEditing] = useState(false);
   const [editRawScores, setEditRawScores] = useState<Record<number, string>>(
     {}
   );
   const { patchScore } = usePatchScoreApi();
 
-  // 3) 학생 목록, 성적 데이터 조회
+  // 학생 목록, 성적 데이터 조회
   const { data: studentList, refetch } = useStudentsListApi(
     schoolGrade,
     classroom
   );
   const { data: scoreData } = useScoreApi(schoolGrade, classroom);
 
-  // → 현재 로그인 교사의 subjectCode (기본값 1 = 국어)
+  // 현재 로그인 교사의 subjectCode (1=국어, 2=수학, …)
   const subjectCode = useAuthStore((state) => state.subjectCode);
 
-  // 4) 과목명 → rawScore용 키 / letterGrade용 키 매핑
+  // 과목명 ↔ TransformedStudent 속성 키 매핑
+  // 기존 RawScore, LetterGrade 외에 Rank, TotalCount, Average까지 추가
   const subjectRawKeyMap: Record<string, keyof TransformedStudent> = {
     국어: "koreanRawScore",
     수학: "mathRawScore",
@@ -52,8 +59,39 @@ export const ScoreInputTable: React.FC = () => {
     음악: "musicLetterGrade",
     체육: "physicalLetterGrade",
   };
+  // 새로 추가된 필드: Rank, TotalCount, Average
+  const subjectRankKeyMap: Record<string, keyof TransformedStudent> = {
+    국어: "koreanRank",
+    수학: "mathRank",
+    영어: "englishRank",
+    사회: "societyRank",
+    과학: "scienceRank",
+    미술: "artRank",
+    음악: "musicRank",
+    체육: "physicalRank",
+  };
+  const subjectTotalCountKeyMap: Record<string, keyof TransformedStudent> = {
+    국어: "koreanTotalCount",
+    수학: "mathTotalCount",
+    영어: "englishTotalCount",
+    사회: "societyTotalCount",
+    과학: "scienceTotalCount",
+    미술: "artTotalCount",
+    음악: "musicTotalCount",
+    체육: "physicalTotalCount",
+  };
+  const subjectAverageKeyMap: Record<string, keyof TransformedStudent> = {
+    국어: "koreanAverage",
+    수학: "mathAverage",
+    영어: "englishAverage",
+    사회: "societyAverage",
+    과학: "scienceAverage",
+    미술: "artAverage",
+    음악: "musicAverage",
+    체육: "physicalAverage",
+  };
 
-  // → 과목코드 → 과목명 매핑
+  // 과목코드 → 과목명 매핑
   const codeToSubjectName: Record<number, string> = {
     1: "국어",
     2: "수학",
@@ -65,14 +103,14 @@ export const ScoreInputTable: React.FC = () => {
     8: "체육",
   };
 
-  // 5) scoreData → Map<학생 id, TransformedStudent>
+  // scoreData → Map<학생 id, TransformedStudent>
   const scoreMap = useMemo(() => {
     const map = new Map<number, TransformedStudent>();
     (scoreData || []).forEach((s) => map.set(s.id, s));
     return map;
   }, [scoreData]);
 
-  // 6) 수정 시작 → editRawScores 초기값 세팅
+  // 수정 시작 시, editRawScores 초기값 세팅 (현재 과목의 rawScore 기반)
   const handleEditStart = () => {
     const initial: Record<number, string> = {};
     const rawKey = subjectRawKeyMap[enabledSubject];
@@ -88,13 +126,11 @@ export const ScoreInputTable: React.FC = () => {
     setIsEditing(true);
   };
 
-  // 7) 수정 취소
   const handleEditCancel = () => {
     setIsEditing(false);
     setEditRawScores({});
   };
 
-  // 8) 수정 완료 → 변경된 rawScore만 PATCH
   const handleEditDone = async () => {
     const rawKey = subjectRawKeyMap[enabledSubject];
 
@@ -102,19 +138,16 @@ export const ScoreInputTable: React.FC = () => {
       const inputVal = editRawScores[stu.id];
       if (inputVal === undefined) return;
 
-      // 빈 문자열이면 null, 아니면 숫자
       const numVal = inputVal === "" ? null : Number(inputVal);
       const stuScore = scoreMap.get(stu.id);
       const prevRaw = stuScore ? (stuScore[rawKey] ?? null) : null;
 
-      // 변경된 값이 있을 때에만 PATCH 호출
       if (prevRaw !== numVal) {
         await patchScore({
           studentId: stu.id,
           grade: schoolGrade,
           subjectName: enabledSubject,
           value: numVal === null ? 0 : numVal,
-          // (null 그대로 보내려면 usePatchScoreApi 내부 수정 필요)
         });
       }
     });
@@ -127,7 +160,9 @@ export const ScoreInputTable: React.FC = () => {
 
   // 현재 교사가 수정 가능한 과목명
   const teacherSubjectName = codeToSubjectName[subjectCode] || "";
-  // 수정 버튼 활성화 여부
+
+  // 학년/반/과목 선택 상태
+  const [enabledSubject, setEnabledSubject] = useState(teacherSubjectName);
   const canEditThisSubject = enabledSubject === teacherSubjectName;
 
   return (
@@ -238,6 +273,9 @@ export const ScoreInputTable: React.FC = () => {
                 const stuScore = scoreMap.get(stu.id);
                 const rawKey = subjectRawKeyMap[enabledSubject];
                 const letterKey = subjectLetterKeyMap[enabledSubject];
+                const rankKey = subjectRankKeyMap[enabledSubject];
+                const totalCountKey = subjectTotalCountKeyMap[enabledSubject];
+                const avgKey = subjectAverageKeyMap[enabledSubject];
 
                 return (
                   <tr key={stu.id}>
@@ -259,30 +297,38 @@ export const ScoreInputTable: React.FC = () => {
                           }}
                           style={{ width: "4rem" }}
                         />
-                      ) : stuScore ? (
-                        stuScore[rawKey] != null ? (
-                          stuScore[rawKey]
-                        ) : (
-                          "-"
-                        )
+                      ) : stuScore && stuScore[rawKey] != null ? (
+                        stuScore[rawKey]
                       ) : (
                         "-"
                       )}
                     </td>
 
-                    {/* 과목평균(숫자), 석차(숫자), 응시자수(숫자) */}
-                    {/* <td>{stuScore?.averageScore ?? "-"}</td> */}
-                    {/* 총 평균이 나와야할 듯 */}
-                    <td>88</td>
-                    <td>{stuScore?.rank ?? "-"}</td>
-                    <td>{stuScore?.total ?? "-"}</td>
-
-                    {/* 과목별 문자 등급(letterGrade) */}
+                    {/* 과목평균 */}
                     <td>
-                      {stuScore
-                        ? stuScore[letterKey] != null
-                          ? stuScore[letterKey]
-                          : "-"
+                      {stuScore && stuScore[avgKey] != null
+                        ? stuScore[avgKey]
+                        : "-"}
+                    </td>
+
+                    {/* 석차 */}
+                    <td>
+                      {stuScore && stuScore[rankKey] != null
+                        ? Number(stuScore[avgKey].toFixed(1))
+                        : "-"}
+                    </td>
+
+                    {/* 응시자수 */}
+                    <td>
+                      {stuScore && stuScore[totalCountKey] != null
+                        ? stuScore[totalCountKey]
+                        : "-"}
+                    </td>
+
+                    {/* 등급 */}
+                    <td>
+                      {stuScore && stuScore[letterKey] != null
+                        ? stuScore[letterKey]
                         : "-"}
                     </td>
                   </tr>

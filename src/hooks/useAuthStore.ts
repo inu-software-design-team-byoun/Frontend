@@ -9,9 +9,9 @@ interface AuthState {
   userName: string; // 모든 role에 공통으로 저장할 이름
   role: "teacher" | "student" | "parent" | "";
   accessToken: string | null;
-  subjectCode: number;
 
   // teacher Info 필드
+  subjectCode: number;
   teacherName: string; // teacherInfo.name
   teacherGrade: number; // 담임교사의 학년
   teacherClassroom: number; // 담임교사가 맡은 반

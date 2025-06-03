@@ -53,6 +53,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     (state) => state.setTeacherClassroom
   );
 
+  const clearAuth = useAuthStore((state) => state.clearAuth);
   const token = useAuthStore.getState().accessToken;
 
   const fetchUserId = async () => {
@@ -107,6 +108,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const currentPath = location.pathname;
 
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    clearAuth();
+    navigate("/login", { replace: true });
+  };
 
   const goToMain = () => {
     navigate("/");
@@ -315,6 +321,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </MainMenuBox>
           <AccountMenuBox>
             <span className="menurole">설정</span>
+            <MenuTab $enabled={false} onClick={handleLogout}>
+              <div>
+                <img src={dashboardIcon} style={{ opacity: 0 }} />
+              </div>
+              <span className="menuname">로그아웃</span>
+            </MenuTab>
             <MenuTab $enabled={false}>
               <div>
                 <img src={userIcon} />
