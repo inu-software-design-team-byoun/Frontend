@@ -25,21 +25,12 @@ const ScorePage: React.FC<ScorePageProps> = () => {
   const teacherGrade = useAuthStore((state) => state.teacherGrade);
   const teacherClassroom = useAuthStore((state) => state.teacherClassroom);
 
-  // 초기화를 위해 useState로 선언
-  const [selectedGrade, setSelectedGrade] = useState<number>(1);
-  const [selectedClass, setSelectedClass] = useState<number>(1);
-
-  // role/teacherGrade/teacherClassroom이 바뀔 때마다 동기화
-  useEffect(() => {
-    if (role === "teacher" && teacherGrade > 0 && teacherClassroom > 0) {
-      setSelectedGrade(teacherGrade);
-      setSelectedClass(teacherClassroom);
-    }
-  }, [role, teacherGrade, teacherClassroom]);
-
-  // // grade/class 상태를 ScorePage에서 보관
-  // const [selectedGrade, setSelectedGrade] = useState(1);
-  // const [selectedClass, setSelectedClass] = useState(5);
+  const [selectedGrade, setSelectedGrade] = useState<number>(() =>
+    role === "teacher" && teacherGrade > 0 ? teacherGrade : 1
+  );
+  const [selectedClass, setSelectedClass] = useState<number>(() =>
+    role === "teacher" && teacherClassroom > 0 ? teacherClassroom : 1
+  );
 
   // 드롭다운에서 선택된 Grade/Class가 바뀔 때마다 해당 학년,반의 학생들 목록 가져오기
   const { data: studentList, refetch: refetchStudentList } = useStudentsListApi(
@@ -236,10 +227,10 @@ const ScorePage: React.FC<ScorePageProps> = () => {
     if (!file || !selectedStudent) return;
 
     try {
-      // 1) 클라우드에 이미지 업로드
+      // 클라우드에 이미지 업로드
       const imageUrl = await handleUploadImage(file);
 
-      // 2) 기존 필드(name, phoneNum, birthday) + 새로운 picture를 모두 보내는 형태로 PATCH
+      // 기존 필드(name, phoneNum, birthday) + 새로운 picture를 모두 보내는 형태로 PATCH
       const payload = {
         name: selectedStudent.name,
         phoneNum: selectedStudent.phoneNum,
@@ -260,12 +251,6 @@ const ScorePage: React.FC<ScorePageProps> = () => {
         throw new Error(`학생 사진 PATCH 실패: ${patchRes.status} ${errorMsg}`);
       }
 
-      // 3) 백엔드에서 merge되지 않고 빈 필드로 덮어쓰는 일이 없기에,
-      //    서버가 잘 업데이트했으면 다시 GET 하지 않아도 store를 업데이트 할 수 있습니다.
-      //    다만, 혹시 추가 필드나 연관 정보가 바뀔 가능성이 크다면
-      //    GET 해서 받아오는 방법도 가능합니다.
-
-      // 여기서는 간단히 payload를 store에 반영
       useSelectedStudentStore.getState().setSelectedStudent({
         ...selectedStudent,
         picture: imageUrl,
