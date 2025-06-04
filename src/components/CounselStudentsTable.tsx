@@ -1,8 +1,8 @@
-// components/CounselStudentsTable
+// components/CounselStudentsTable.tsx
 import React, { useState } from "react";
 import styled from "styled-components";
 import SimpleStudentRow from "./SimpleStudentRow";
-import { useStudentsListApi } from "../hooks/useStudentListApi";
+import { useStudentsListApi, StudentBrief } from "../hooks/useStudentListApi";
 import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
 import SearchIcon from "../assets/icon/SearchIcon.svg";
 import SelectArrow from "../assets/icon/SelectArrow.png";
@@ -21,13 +21,17 @@ export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
   onClassChange,
 }) => {
   const { selectedStudent, setSelectedStudent } = useSelectedStudentStore();
-  const { data: studentList } = useStudentsListApi(grade, classroom);
+
+  // 부모에서 내려준 grade, classroom 값만 사용합니다.
+  const { data: studentList = [] } = useStudentsListApi(grade, classroom);
+
   const [query, setQuery] = useState("");
-  const filtered = studentList.filter((s) => s.name.includes(query));
+  const filtered = studentList.filter((s) => s.name.includes(query.trim()));
 
   return (
     <Wrapper>
       <TopRectangle />
+
       <ClassArea>
         <Select
           $syllable={3}
@@ -38,6 +42,7 @@ export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
           <option value="2">2학년</option>
           <option value="3">3학년</option>
         </Select>
+
         <Select
           $syllable={2}
           value={classroom}
@@ -51,6 +56,7 @@ export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
           <option value="6">6반</option>
         </Select>
       </ClassArea>
+
       <SearchArea>
         <input
           placeholder="검색어 입력"
@@ -58,6 +64,7 @@ export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
           onChange={(e) => setQuery(e.target.value)}
         />
       </SearchArea>
+
       <TableWrapper>
         <StyledTable>
           <colgroup>
@@ -65,7 +72,7 @@ export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
             <col />
           </colgroup>
           <tbody>
-            {filtered.map((stu) => (
+            {filtered.map((stu: StudentBrief) => (
               <SimpleStudentRow
                 key={stu.id}
                 student={stu}
@@ -77,6 +84,7 @@ export const CounselStudentsTable: React.FC<CounselStudentsTableProps> = ({
           </tbody>
         </StyledTable>
       </TableWrapper>
+
       <BottomRectangle />
     </Wrapper>
   );

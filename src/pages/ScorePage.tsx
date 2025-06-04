@@ -223,10 +223,6 @@ const ScorePage: React.FC<ScorePageProps> = () => {
       "https://api.cloudinary.com/v1_1/djkwtwi2i/image/upload",
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: formData,
       }
     );
@@ -240,17 +236,36 @@ const ScorePage: React.FC<ScorePageProps> = () => {
     if (!file || !selectedStudent) return;
 
     try {
+      // 1) 클라우드에 이미지 업로드
       const imageUrl = await handleUploadImage(file);
 
-      await fetch(ENDPOINTS.studentInfo(selectedStudent.id), {
+      // 2) 기존 필드(name, phoneNum, birthday) + 새로운 picture를 모두 보내는 형태로 PATCH
+      const payload = {
+        name: selectedStudent.name,
+        phoneNum: selectedStudent.phoneNum,
+        birthday: selectedStudent.birthday,
+        picture: imageUrl,
+      };
+
+      const patchRes = await fetch(ENDPOINTS.studentInfo(selectedStudent.id), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ picture: imageUrl }),
+        body: JSON.stringify(payload),
       });
+      if (!patchRes.ok) {
+        const errorMsg = await patchRes.text();
+        throw new Error(`학생 사진 PATCH 실패: ${patchRes.status} ${errorMsg}`);
+      }
 
+      // 3) 백엔드에서 merge되지 않고 빈 필드로 덮어쓰는 일이 없기에,
+      //    서버가 잘 업데이트했으면 다시 GET 하지 않아도 store를 업데이트 할 수 있습니다.
+      //    다만, 혹시 추가 필드나 연관 정보가 바뀔 가능성이 크다면
+      //    GET 해서 받아오는 방법도 가능합니다.
+
+      // 여기서는 간단히 payload를 store에 반영
       useSelectedStudentStore.getState().setSelectedStudent({
         ...selectedStudent,
         picture: imageUrl,
@@ -258,7 +273,7 @@ const ScorePage: React.FC<ScorePageProps> = () => {
 
       alert("사진 등록 완료");
     } catch (err) {
-      console.error("이미지 업로드 실패", err);
+      console.error("이미지 업로드 또는 정보 갱신 실패", err);
       alert("이미지 업로드에 실패했습니다.");
     }
   };

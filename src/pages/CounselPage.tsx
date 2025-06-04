@@ -1,15 +1,32 @@
-// CounselPage.tsx
-import React, { useState } from "react";
-// import { CounselTable } from "../components/CounselTable";
+// pages/CounselPage.tsx
+import React, { useState, useEffect } from "react";
 import { CounselStudentsTable } from "../components/CounselStudentsTable";
 import { styled } from "styled-components";
 import { CounselModal } from "../components/CounselModal";
 import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
+import { useAuthStore } from "../hooks/useAuthStore"; // 추가
 
 const CounselPage: React.FC = () => {
-  const [selectedGrade, setSelectedGrade] = useState(1);
-  const [selectedClass, setSelectedClass] = useState(5);
-  const { selectedStudent } = useSelectedStudentStore(); // Zustand store에서 선택된 학생 가져오기
+  // 로그인한 교사의 학년/반을 한 번만 읽어서
+  // 부모 state의 초기값으로 사용합니다.
+  const teacherGrade = useAuthStore((state) => state.teacherGrade);
+  const teacherClassroom = useAuthStore((state) => state.teacherClassroom);
+
+  // 부모가 고유하게 관리하는 state
+  const [selectedGrade, setSelectedGrade] = useState<number>(teacherGrade || 1);
+  const [selectedClass, setSelectedClass] = useState<number>(
+    teacherClassroom || 1
+  );
+
+  const { selectedStudent } = useSelectedStudentStore();
+
+  // (선택사항) 혹시 teacherGrade/teacherClassroom이 나중에 바뀔 가능성이 있다면
+  // 다음 useEffect를 추가해서 부모 state를 업데이트해 줍니다.
+  // 단, 로그인 단계 이후에 바뀔 일이 거의 없다면 없어도 무방합니다.
+  useEffect(() => {
+    setSelectedGrade(teacherGrade || 1);
+    setSelectedClass(teacherClassroom || 1);
+  }, [teacherGrade, teacherClassroom]);
 
   return (
     <Wrapper>
@@ -19,6 +36,7 @@ const CounselPage: React.FC = () => {
         onGradeChange={setSelectedGrade}
         onClassChange={setSelectedClass}
       />
+
       {selectedStudent ? (
         <CounselModal studentId={selectedStudent.id} />
       ) : (
