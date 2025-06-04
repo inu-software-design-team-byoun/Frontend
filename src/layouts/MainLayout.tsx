@@ -326,7 +326,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </div>
               <span className="menuname">로그아웃</span>
             </MenuTab>
-            <MenuTab $enabled={false}>
+            {/* <MenuTab $enabled={false}>
               <div>
                 <img src={userIcon} />
               </div>
@@ -337,7 +337,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 <img src={settingIcon} />
               </div>
               <span className="menuname">설정</span>
-            </MenuTab>
+            </MenuTab> */}
           </AccountMenuBox>
         </SideBar>
       </SideBarArea>

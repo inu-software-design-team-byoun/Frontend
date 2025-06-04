@@ -15,6 +15,8 @@ interface ScorePageProps {
 }
 
 const ScorePage: React.FC<ScorePageProps> = () => {
+  const token = useAuthStore.getState().accessToken;
+
   const { selectedStudent, clearSelectedStudent } = useSelectedStudentStore();
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false); // grade/class 상태를 ScorePage에서 보관
@@ -202,11 +204,11 @@ const ScorePage: React.FC<ScorePageProps> = () => {
 
   const studentScores = selectedStudentScore
     ? [
-        selectedStudentScore.korean ?? 0,
-        selectedStudentScore.math ?? 0,
-        selectedStudentScore.english ?? 0,
-        selectedStudentScore.society ?? 0,
-        selectedStudentScore.science ?? 0,
+        selectedStudentScore.koreanRawScore ?? 0,
+        selectedStudentScore.mathRawScore ?? 0,
+        selectedStudentScore.englishRawScore ?? 0,
+        selectedStudentScore.societyRawScore ?? 0,
+        selectedStudentScore.scienceRawScore ?? 0,
       ]
     : [0, 0, 0, 0, 0];
 
@@ -221,6 +223,10 @@ const ScorePage: React.FC<ScorePageProps> = () => {
       "https://api.cloudinary.com/v1_1/djkwtwi2i/image/upload",
       {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
       }
     );
@@ -238,7 +244,10 @@ const ScorePage: React.FC<ScorePageProps> = () => {
 
       await fetch(ENDPOINTS.studentInfo(selectedStudent.id), {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ picture: imageUrl }),
       });
 
