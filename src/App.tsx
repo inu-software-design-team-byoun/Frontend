@@ -1,4 +1,4 @@
-// App.tsx
+// App.tsx 코드
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -22,6 +22,7 @@ import { useAuthStore } from "./hooks/useAuthStore";
 import StudentRecordPage from "./pages/StudentRecordPage";
 
 const App: React.FC = () => {
+  // 토큰 <- authstore
   const token = useAuthStore((state) => state.accessToken);
 
   return (
