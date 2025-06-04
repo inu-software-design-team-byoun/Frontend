@@ -10,7 +10,7 @@ const Container = styled.div`
   padding: 32px;
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
 `;
 
 const Title = styled.h1`
