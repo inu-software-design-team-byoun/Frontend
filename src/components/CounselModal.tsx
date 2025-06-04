@@ -4,7 +4,8 @@ import styled from "styled-components";
 import { CrudButton } from "./CrudButton";
 import { useCounselsApi, Counsel } from "../hooks/useCounselsApi";
 import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
-import { useAuthStore } from "../hooks/useAuthStore"; // 추가
+import { useAuthStore } from "../hooks/useAuthStore";
+import { useStudentRecordStore } from "../stores/useStudentRecordStore";
 
 // 아이콘
 import editIcon from "../assets/icon/editIcon.svg";
@@ -38,12 +39,7 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
     teacherGrade === selectedStudent.grade &&
     teacherClassroom === selectedStudent.classroom;
 
-  // const [isAdding, setIsAdding] = useState(false);
-  // const [newCounsel, setNewCounsel] = useState({
-  //   date: "",
-  //   title: "",
-  //   content: "",
-  // });
+  const openStudentModal = useStudentRecordStore((s) => s.openModal);
 
   // 신규 등록용 모달 상태
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -183,7 +179,12 @@ export const CounselModal: React.FC<{ studentId: number }> = ({
               </p>
               <p>{selectedStudent.name}</p>
             </div>
-            <button>
+            <button
+              onClick={() => {
+                // CounselModal 내에서 버튼 클릭 시 모달 열기
+                openStudentModal(selectedStudent.id);
+              }}
+            >
               학생부 바로가기 <img src={OpenBookIcon} />
             </button>
           </div>

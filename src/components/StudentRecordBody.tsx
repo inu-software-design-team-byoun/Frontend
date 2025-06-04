@@ -1,4 +1,4 @@
-// src/components/StudentRecordModal.tsx
+// src/components/StudentRecordBody.tsx
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { ENDPOINTS } from "../constants/api";
@@ -32,15 +32,11 @@ interface Attendance {
   note: string;
 }
 
-interface ModalProps {
-  onClose: () => void;
+interface BodyProps {
   studentId: number;
 }
 
-export const StudentRecordModal: React.FC<ModalProps> = ({
-  onClose,
-  studentId,
-}) => {
+export const StudentRecordBody: React.FC<BodyProps> = ({ studentId }) => {
   const selectedStudent = useSelectedStudentStore((s) => s.selectedStudent);
 
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
@@ -119,7 +115,7 @@ export const StudentRecordModal: React.FC<ModalProps> = ({
     fetchAttendances();
   }, [studentId]);
 
-  // 오늘(로컬) 기준 평일(월~금) 출결요약 계산
+  // 오늘(로컬) 기준 평일(월~금) 출결 요약 계산
   const attendanceSummary = React.useMemo(() => {
     const summary = {
       출석: 0,
@@ -127,15 +123,12 @@ export const StudentRecordModal: React.FC<ModalProps> = ({
       지각: 0,
       조퇴: 0,
     };
-
     const today = new Date();
     attendances.forEach((rec) => {
       const attDate = new Date(rec.date);
       if (attDate > today) return;
-
       const day = attDate.getDay();
       if (day === 0 || day === 6) return;
-
       switch (rec.status) {
         case "정상":
           summary.출석 += 1;
@@ -153,169 +146,133 @@ export const StudentRecordModal: React.FC<ModalProps> = ({
           break;
       }
     });
-
     return summary;
   }, [attendances]);
 
   return (
-    <ModalBackground onClick={onClose}>
-      <ModalContainer onClick={(e) => e.stopPropagation()}>
-        <HeaderBar />
-        <CloseButton onClick={onClose}>&times;</CloseButton>
+    <Wrapper>
+      <ContentWrapper>
+        {selectedStudent && (
+          <>
+            <Title>
+              <span>{selectedStudent.name}</span> 학생부
+            </Title>
 
-        <ContentWrapper>
-          {selectedStudent && (
-            <>
-              <Title>
-                <span>{selectedStudent.name}</span> 학생부
-              </Title>
-
-              <SectionTitle>인적사항</SectionTitle>
-              <StudentInfoSection>
-                <p>
-                  <strong>학년:</strong> {selectedStudent.grade}학년
-                </p>
-                <p>
-                  <strong>반:</strong> {selectedStudent.classroom}반
-                </p>
-                <p>
-                  <strong>전화번호:</strong> {selectedStudent.phoneNum}
-                </p>
-                <p>
-                  <strong>생년월일:</strong> {selectedStudent.birthday}
-                </p>
-              </StudentInfoSection>
-            </>
-          )}
-
-          <SectionTitle>출결 요약</SectionTitle>
-          {loadingAttendance ? (
-            <LoadingText>출결정보 로딩 중…</LoadingText>
-          ) : errorMsgAttendance ? (
-            <ErrorText>{errorMsgAttendance}</ErrorText>
-          ) : (
-            <SummarySection>
-              <SummaryItem color="#4caf50">
-                <Label>출석:</Label>
-                <Value>{attendanceSummary.출석}</Value>
-              </SummaryItem>
-              <SummaryItem color="#f44336">
-                <Label>결석:</Label>
-                <Value>{attendanceSummary.결석}</Value>
-              </SummaryItem>
-              <SummaryItem color="#ff9800">
-                <Label>지각:</Label>
-                <Value>{attendanceSummary.지각}</Value>
-              </SummaryItem>
-              <SummaryItem color="#2196f3">
-                <Label>조퇴:</Label>
-                <Value>{attendanceSummary.조퇴}</Value>
-              </SummaryItem>
-            </SummarySection>
-          )}
-
-          <SectionTitle>행동 특성 및 종합의견</SectionTitle>
-          {loadingFeedback ? (
-            <LoadingText>피드백 로딩 중…</LoadingText>
-          ) : errorMsgFeedback ? (
-            <ErrorText>{errorMsgFeedback}</ErrorText>
-          ) : (
-            <FeedbackTable>
-              <thead>
-                <tr>
-                  <th>날짜</th>
-                  <th>과목</th>
-                  <th>내용</th>
-                  <th>공개 여부</th>
-                </tr>
-              </thead>
+            <SectionTitle>인적사항</SectionTitle>
+            <StudentInfoTable>
               <tbody>
-                {feedbacks.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} style={{ textAlign: "center" }}>
-                      등록된 피드백이 없습니다.
-                    </td>
-                  </tr>
-                ) : (
-                  feedbacks.map((fb) => (
-                    <tr key={fb.id}>
-                      <td>{fb.date.slice(0, 10)}</td>
-                      <td>
-                        {SUBJECT_OPTIONS.find((s) => s.code === fb.subject)
-                          ?.label || "-"}
-                      </td>
-                      <td>{fb.content}</td>
-                      <td>{fb.release ? "공개" : "비공개"}</td>
-                    </tr>
-                  ))
-                )}
+                <tr>
+                  <InfoLabel>학년</InfoLabel>
+                  <InfoValue>{selectedStudent.grade}학년</InfoValue>
+                </tr>
+                <tr>
+                  <InfoLabel>반</InfoLabel>
+                  <InfoValue>{selectedStudent.classroom}반</InfoValue>
+                </tr>
+                <tr>
+                  <InfoLabel>전화번호</InfoLabel>
+                  <InfoValue>{selectedStudent.phoneNum}</InfoValue>
+                </tr>
+                <tr>
+                  <InfoLabel>생년월일</InfoLabel>
+                  <InfoValue>{selectedStudent.birthday}</InfoValue>
+                </tr>
               </tbody>
-            </FeedbackTable>
-          )}
-        </ContentWrapper>
-      </ModalContainer>
-    </ModalBackground>
+            </StudentInfoTable>
+          </>
+        )}
+
+        <SectionTitle>출결 요약</SectionTitle>
+        {loadingAttendance ? (
+          <LoadingText>출결정보 로딩 중…</LoadingText>
+        ) : errorMsgAttendance ? (
+          <ErrorText>{errorMsgAttendance}</ErrorText>
+        ) : (
+          <SummarySection>
+            <SummaryItem color="#4caf50">
+              <Label>출석</Label>
+              <Value>{attendanceSummary.출석}</Value>
+            </SummaryItem>
+            <SummaryItem color="#f44336">
+              <Label>결석</Label>
+              <Value>{attendanceSummary.결석}</Value>
+            </SummaryItem>
+            <SummaryItem color="#ff9800">
+              <Label>지각</Label>
+              <Value>{attendanceSummary.지각}</Value>
+            </SummaryItem>
+            <SummaryItem color="#2196f3">
+              <Label>조퇴</Label>
+              <Value>{attendanceSummary.조퇴}</Value>
+            </SummaryItem>
+          </SummarySection>
+        )}
+
+        <SectionTitle>행동 특성 및 종합의견</SectionTitle>
+        {loadingFeedback ? (
+          <LoadingText>피드백 로딩 중…</LoadingText>
+        ) : errorMsgFeedback ? (
+          <ErrorText>{errorMsgFeedback}</ErrorText>
+        ) : (
+          <FeedbackTable>
+            <thead>
+              <tr>
+                <th>날짜</th>
+                <th>과목</th>
+                <th>내용</th>
+                <th>공개 여부</th>
+              </tr>
+            </thead>
+            <tbody>
+              {feedbacks.length === 0 ? (
+                <tr>
+                  <td colSpan={4} style={{ textAlign: "center" }}>
+                    등록된 피드백이 없습니다.
+                  </td>
+                </tr>
+              ) : (
+                feedbacks.map((fb) => (
+                  <tr key={fb.id}>
+                    <td>{fb.date.slice(0, 10)}</td>
+                    <td>
+                      {
+                        SUBJECT_OPTIONS.find((s) => s.code === fb.subject)
+                          ?.label
+                      }
+                    </td>
+                    <td>{fb.content}</td>
+                    <td>{fb.release ? "공개" : "비공개"}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </FeedbackTable>
+        )}
+      </ContentWrapper>
+    </Wrapper>
   );
 };
 
-/** 모달 배경 */
-const ModalBackground = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-`;
+// ─── styled-components ──────────────────────────────────────────
 
-/** 모달 전체 컨테이너 */
-const ModalContainer = styled.div`
-  background: #fff;
-  border-radius: 16px;
-  width: 800px; /* 필요에 따라 조절 */
-  height: 650px; /* 출결과 피드백까지 충분히 들어갈 높이로 늘림 */
-  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.08);
-  position: relative;
-  overflow: hidden;
+const Wrapper = styled.div`
+  margin-left: 0.5rem;
+  margin-right: 3rem;
+  width: 71.5rem;
+  height: 89vh;
+  background-color: white;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.25);
+  border-radius: 1rem;
   display: flex;
   flex-direction: column;
 `;
 
-/** 헤더 바 */
-const HeaderBar = styled.div`
-  background: #ffd986;
-  height: 24px;
-  border-radius: 16px 16px 0 0;
-  width: 100%;
-  flex-shrink: 0;
-`;
-
-/** 닫기 버튼 */
-const CloseButton = styled.button`
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
-  font-size: 1.5rem;
-  cursor: pointer;
-  z-index: 10;
-`;
-
-/** 스크롤 영역 */
 const ContentWrapper = styled.div`
   padding: 16px 32px;
   overflow-y: auto;
   flex: 1;
 `;
 
-/** 섹션 제목 (인적사항, 출결 요약, 행동특성) */
 const SectionTitle = styled.h3`
   font-size: 20px;
   font-weight: 700;
@@ -323,7 +280,6 @@ const SectionTitle = styled.h3`
   color: #000;
 `;
 
-/** 학생 이름/제목 */
 const Title = styled.h2`
   font-size: 24px;
   font-weight: 500;
@@ -335,18 +291,33 @@ const Title = styled.h2`
   }
 `;
 
-/** 학생 인적정보 영역 */
-const StudentInfoSection = styled.div`
+const StudentInfoTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
   margin-bottom: 16px;
-  font-size: 16px;
-  color: #333;
 
-  p {
-    margin: 8px 0;
+  td,
+  th {
+    padding: 8px 12px;
+    font-size: 16px;
+    color: #333;
+    border: 1px solid #ddd;
+  }
+
+  th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+    text-align: left;
+    width: 25%;
   }
 `;
 
-/** 출결 요약 전체 박스 */
+const InfoLabel = styled.th`
+  background-color: #fafafa;
+`;
+
+const InfoValue = styled.td``;
+
 const SummarySection = styled.div`
   display: flex;
   gap: 24px;
@@ -354,7 +325,6 @@ const SummarySection = styled.div`
   margin-bottom: 16px;
 `;
 
-/** 출결 요약 아이템 (색상 별 원형 마커 포함) */
 const SummaryItem = styled.div<{ color: string }>`
   display: flex;
   align-items: center;
@@ -371,18 +341,15 @@ const SummaryItem = styled.div<{ color: string }>`
   }
 `;
 
-/** 라벨 텍스트 */
 const Label = styled.span`
   font-weight: 700;
   margin-right: 4px;
 `;
 
-/** 값 텍스트 */
 const Value = styled.span`
   font-size: 16px;
 `;
 
-/** 피드백 목록 테이블 */
 const FeedbackTable = styled.table`
   width: 100%;
   border-collapse: collapse;
@@ -410,14 +377,12 @@ const FeedbackTable = styled.table`
   }
 `;
 
-/** 에러 텍스트 */
 const ErrorText = styled.div`
   color: red;
   font-size: 14px;
   margin-top: 12px;
 `;
 
-/** 로딩 텍스트 */
 const LoadingText = styled.div`
   font-size: 14px;
   color: #666;

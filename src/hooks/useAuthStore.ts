@@ -1,5 +1,4 @@
 // src/hooks/useAuthStore.ts
-
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -15,9 +14,10 @@ interface AuthState {
   teacherName: string; // teacherInfo.name
   teacherGrade: number; // 담임교사의 학년
   teacherClassroom: number; // 담임교사가 맡은 반
-  setTeacherName: (name: string) => void;
-  setTeacherGrade: (grade: number) => void;
-  setTeacherClassroom: (classroom: number) => void;
+
+  // student Info 필드
+  studentId: number; // 로그인된 학생이라면 studentInfo.id
+  setStudentId: (id: number) => void;
 
   // 공통 setter
   setUserId: (userId: number) => void;
@@ -46,9 +46,16 @@ export const useAuthStore = create<AuthState>()(
       teacherName: "",
       teacherGrade: 0,
       teacherClassroom: 0,
+
+      // student 초기값
+      studentId: 0,
+
+      // setters
       setTeacherName: (name) => set({ teacherName: name }),
       setTeacherGrade: (grade) => set({ teacherGrade: grade }),
       setTeacherClassroom: (classroom) => set({ teacherClassroom: classroom }),
+
+      setStudentId: (id) => set({ studentId: id }),
 
       setUserId: (userId) => set({ userId }),
       setUserName: (name) => set({ userName: name }),
@@ -61,10 +68,10 @@ export const useAuthStore = create<AuthState>()(
           userName,
           role,
           accessToken,
-          // teacherName은 따로 fetch 후에 세팅할 수 있음
+          // teacherName, studentId 등은 fetchUserId에서 따로 세팅
         }),
 
-      // 로그아웃 시 userName, role, teacherName을 초기화
+      // 로그아웃 시 모든 필드 초기화
       clearAuth: () =>
         set({
           userId: 0,
@@ -74,6 +81,7 @@ export const useAuthStore = create<AuthState>()(
           teacherName: "",
           teacherGrade: 0,
           teacherClassroom: 0,
+          studentId: 0,
         }),
 
       setSubjectCode: (code) => set({ subjectCode: code }),

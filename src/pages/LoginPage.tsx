@@ -103,6 +103,7 @@ export const LoginPage: React.FC = () => {
 
       try {
         const res = await fetch(ENDPOINTS.check + `?token=${token}`);
+
         const result = await res.json();
 
         useAuthStore

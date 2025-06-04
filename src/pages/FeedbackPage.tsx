@@ -1,23 +1,16 @@
 // FeedbackPage.tsx
-import React, { useState } from "react";
+import React from "react";
 import { FeedbackModal } from "../components/FeedbackModal";
 import { FeedbackStudentTable } from "../components/FeedbackStudentTable";
 import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
 import styled from "styled-components";
 
 const FeedbackPage: React.FC = () => {
-  const [selectedGrade, setSelectedGrade] = useState(1);
-  const [selectedClass, setSelectedClass] = useState(5);
   const { selectedStudent } = useSelectedStudentStore();
 
   return (
     <Wrapper>
-      <FeedbackStudentTable
-        grade={selectedGrade}
-        classroom={selectedClass}
-        onGradeChange={setSelectedGrade}
-        onClassChange={setSelectedClass}
-      />
+      <FeedbackStudentTable />
       {selectedStudent ? (
         <FeedbackModal studentId={selectedStudent.id} />
       ) : (

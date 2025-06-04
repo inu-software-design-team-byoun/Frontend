@@ -9,6 +9,7 @@ import { useStudentsListApi } from "../hooks/useStudentListApi";
 import { ENDPOINTS } from "../constants/api";
 import { useStudentScoreStore } from "../stores/useStudentScoreStore";
 import { useAuthStore } from "../hooks/useAuthStore";
+import { useStudentRecordStore } from "../stores/useStudentRecordStore";
 
 interface ScorePageProps {
   studentId?: number;
@@ -31,6 +32,8 @@ const ScorePage: React.FC<ScorePageProps> = () => {
   const [selectedClass, setSelectedClass] = useState<number>(() =>
     role === "teacher" && teacherClassroom > 0 ? teacherClassroom : 1
   );
+
+  const openStudentModal = useStudentRecordStore((s) => s.openModal);
 
   // 드롭다운에서 선택된 Grade/Class가 바뀔 때마다 해당 학년,반의 학생들 목록 가져오기
   const { data: studentList, refetch: refetchStudentList } = useStudentsListApi(
@@ -363,7 +366,13 @@ const ScorePage: React.FC<ScorePageProps> = () => {
             <span>평균 등급</span>
             <NormalInput value={selectedStudent?.averageScore || ""} readOnly />
           </div>
-          <div className="item"></div>
+          <div className="item">
+            {selectedStudent && (
+              <SmallButton onClick={() => openStudentModal(selectedStudent.id)}>
+                학생부 보기
+              </SmallButton>
+            )}
+          </div>
           <div className="item"></div>
           <div className="item">
             {isAdding ? (
@@ -540,6 +549,10 @@ const GridArea = styled.div`
     }
 
     button {
+      &:hover {
+        background-color: #86acff;
+        color: white;
+      }
       width: 5rem;
       height: 1.75rem;
 
@@ -574,6 +587,13 @@ const GridArea = styled.div`
   .item:nth-child(6) {
     grid-row: 2/2;
     grid-column: 3/3;
+    span {
+      margin-bottom: 0.25rem;
+    }
+  }
+  .item:nth-child(7) {
+    grid-row: 3/3;
+    grid-column: 1/1;
     span {
       margin-bottom: 0.25rem;
     }
@@ -709,4 +729,33 @@ const GapBlankBody = styled.div`
 
   display: flex;
   justify-content: flex-end;
+`;
+
+// ▶ GridArea 내부의 작은 버튼 스타일
+const SmallButton = styled.button`
+  /* margin-top: 0.5rem;
+  background-color: #70c776;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  cursor: pointer; */
+
+  &:hover {
+    background-color: #86acff;
+    color: white;
+  }
+
+  width: 5rem;
+  height: 1.75rem;
+
+  border: 1px solid #c9c9c9;
+  border-radius: 0.25rem;
+
+  background-color: white;
+
+  color: black;
+  font-weight: bold;
+  font-size: 0.75rem;
 `;

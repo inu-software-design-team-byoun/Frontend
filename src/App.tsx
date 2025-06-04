@@ -19,6 +19,7 @@ import FeedbackPage from "./pages/FeedbackPage";
 import { AdminPage } from "./pages/AdminPage";
 
 import { useAuthStore } from "./hooks/useAuthStore";
+import StudentRecordPage from "./pages/StudentRecordPage";
 
 const App: React.FC = () => {
   const token = useAuthStore((state) => state.accessToken);
@@ -91,6 +92,14 @@ const App: React.FC = () => {
           element={
             <MainLayout>
               <FeedbackPage />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/student-record"
+          element={
+            <MainLayout>
+              <StudentRecordPage />
             </MainLayout>
           }
         />

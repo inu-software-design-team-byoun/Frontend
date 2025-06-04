@@ -1,56 +1,75 @@
 // components/FeedbackStudentTable.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import SimpleStudentRow from "./SimpleStudentRow";
 import { useStudentsListApi } from "../hooks/useStudentListApi";
 import { useSelectedStudentStore } from "../stores/useSelectedStudentStore";
-import SearchIcon from "../assets/icon/SearchIcon.svg";
+// import SearchIcon from "../assets/icon/SearchIcon.svg";
 import SelectArrow from "../assets/icon/SelectArrow.png";
+import { useAuthStore } from "../hooks/useAuthStore";
 
-interface FeedbackStudentTableProps {
-  grade: number;
-  classroom: number;
-  onGradeChange: (g: number) => void;
-  onClassChange: (c: number) => void;
-}
-
-export const FeedbackStudentTable: React.FC<FeedbackStudentTableProps> = ({
-  grade,
-  classroom,
-  onGradeChange,
-  onClassChange,
-}) => {
+export const FeedbackStudentTable: React.FC = () => {
   const { selectedStudent, setSelectedStudent } = useSelectedStudentStore();
+  const teacherGrade = useAuthStore((state) => state.teacherGrade);
+  const teacherClassroom = useAuthStore((state) => state.teacherClassroom);
+
+  // 1) 초기 학년·반은 authStore에서 가져오되, 사용자 선택으로 변경 가능
+  const [grade, setGrade] = useState<number>(() =>
+    teacherGrade > 0 ? teacherGrade : 1
+  );
+  const [classroom, setClassroom] = useState<number>(() =>
+    teacherClassroom > 0 ? teacherClassroom : 1
+  );
+
+  // 2) 해당 학년·반의 학생 목록을 가져옵니다
   const { data: studentList } = useStudentsListApi(grade, classroom);
   const [query, setQuery] = useState("");
   const filtered = studentList.filter((s) => s.name.includes(query));
 
+  // 3) authStore의 학년·반이 바뀔 경우(로그인 후에 초기값이 바뀌었다면) 함께 업데이트
+  useEffect(() => {
+    if (teacherGrade > 0) {
+      setGrade(teacherGrade);
+    }
+  }, [teacherGrade]);
+
+  useEffect(() => {
+    if (teacherClassroom > 0) {
+      setClassroom(teacherClassroom);
+    }
+  }, [teacherClassroom]);
+
   return (
     <Wrapper>
       <TopRectangle />
+
+      {/* 4) 학년/반 선택 드롭다운 */}
       <ClassArea>
         <Select
           $syllable={3}
           value={grade}
-          onChange={(e) => onGradeChange(Number(e.target.value))}
+          onChange={(e) => setGrade(Number(e.target.value))}
         >
-          <option value="1">1학년</option>
-          <option value="2">2학년</option>
-          <option value="3">3학년</option>
+          <option value={1}>1학년</option>
+          <option value={2}>2학년</option>
+          <option value={3}>3학년</option>
+          {/* 필요하면 더 추가 */}
         </Select>
         <Select
           $syllable={2}
           value={classroom}
-          onChange={(e) => onClassChange(Number(e.target.value))}
+          onChange={(e) => setClassroom(Number(e.target.value))}
         >
-          <option value="1">1반</option>
-          <option value="2">2반</option>
-          <option value="3">3반</option>
-          <option value="4">4반</option>
-          <option value="5">5반</option>
-          <option value="6">6반</option>
+          <option value={1}>1반</option>
+          <option value={2}>2반</option>
+          <option value={3}>3반</option>
+          <option value={4}>4반</option>
+          <option value={5}>5반</option>
+          <option value={6}>6반</option>
         </Select>
       </ClassArea>
+
+      {/* 5) 검색창 */}
       <SearchArea>
         <input
           placeholder="검색어 입력"
@@ -58,12 +77,10 @@ export const FeedbackStudentTable: React.FC<FeedbackStudentTableProps> = ({
           onChange={(e) => setQuery(e.target.value)}
         />
       </SearchArea>
+
+      {/* 6) 학생 리스트 */}
       <TableWrapper>
         <StyledTable>
-          <colgroup>
-            <col />
-            <col />
-          </colgroup>
           <tbody>
             {filtered.map((stu) => (
               <SimpleStudentRow
@@ -77,6 +94,7 @@ export const FeedbackStudentTable: React.FC<FeedbackStudentTableProps> = ({
           </tbody>
         </StyledTable>
       </TableWrapper>
+
       <BottomRectangle />
     </Wrapper>
   );
@@ -92,7 +110,6 @@ const Wrapper = styled.div`
   border-radius: 1rem;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
 `;
 
 const TopRectangle = styled.div`
@@ -118,15 +135,9 @@ const ClassArea = styled.div`
   border-bottom: 2px solid #c2b7ff;
   display: flex;
   align-items: center;
-
-  button {
-    margin-left: 2rem;
-    width: 4rem;
-    height: 2rem;
-    color: black;
-  }
 `;
 
+/** 학년/반 드롭다운 */
 const Select = styled.select<{ $syllable: number }>`
   margin-left: ${(props) => (props.$syllable === 3 ? "1.25rem" : "1rem")};
   width: ${(props) =>
@@ -140,16 +151,16 @@ const Select = styled.select<{ $syllable: number }>`
   font-size: 1rem;
   font-weight: bold;
   background-color: white;
-  &:focus {
-    outline: none;
-  }
   appearance: none;
   -webkit-appearance: none;
-  background-color: white;
   background-image: url(${SelectArrow});
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 0.75rem;
+
+  &:focus {
+    outline: none;
+  }
 `;
 
 const SearchArea = styled.div`
@@ -166,13 +177,10 @@ const SearchArea = styled.div`
     border: 1.5px solid #c2b7ff;
     border-radius: 0.5rem;
     background-color: #efecff;
-    /* background-image: url("${SearchIcon}"); */
-    /* background-position: right 0.625rem center; */
-    /* background-repeat: no-repeat; */
-    /* background-size: 1rem; */
     color: gray;
     font-size: 1rem;
     padding: 0 2.5rem 0 1rem;
+
     &:focus {
       outline: none;
     }
@@ -192,26 +200,11 @@ const StyledTable = styled.table`
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  col {
-    width: 8%;
-  }
-  thead {
-    position: sticky;
-    top: 0;
-    background-color: white;
-    z-index: 1;
-    border-bottom: 1.5px solid #c2b7ff;
-  }
-  th,
+
   td {
+    border-bottom: 1px solid #ccc;
     text-align: center;
     font-size: 1rem;
     height: 2.5rem;
-  }
-  th {
-    border: none;
-  }
-  td {
-    border-bottom: 1px solid #ccc;
   }
 `;

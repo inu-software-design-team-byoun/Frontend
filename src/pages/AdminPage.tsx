@@ -131,17 +131,6 @@ const subjectMap: Record<number, string> = {
   8: "체육",
 };
 
-const reverseSubjectMap: Record<string, number> = {
-  "국어": 1,
-  "수학": 2,
-  "영어": 3,
-  "사회": 4,
-  "과학": 5,
-  "미술": 6,
-  "음악": 7,
-  "체육": 8,
-};
-
 const SUBJECTS = [
   { code: 1, name: "국어" },
   { code: 2, name: "수학" },
@@ -153,6 +142,30 @@ const SUBJECTS = [
   { code: 8, name: "체육" },
 ];
 
+interface Student {
+  id: number;
+  studentNum: number;
+  name: string;
+  grade: number;
+  classroom: number;
+  phoneNum: string;
+  birthday: string;
+}
+
+interface Parent {
+  id: number;
+  name: string;
+  phoneNum: string;
+  birthday: string;
+  studentId: number;
+}
+
+interface ParentFormInput {
+  name: string;
+  phoneNum: string;
+  birthday: string;
+  studentId: number;
+}
 
 interface TeacherFormProps {
   initial?: Partial<Teacher>;
@@ -240,33 +253,54 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
 };
 
 export const AdminPage: React.FC = () => {
+  const [selectedTab, setSelectedTab] = useState<
+    "teachers" | "students" | "parents"
+  >("teachers");
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [parents, setParents] = useState<Parent[]>([]);
   const [modal, setModal] = useState<null | {
     mode: "add" | "edit";
     teacher?: Teacher;
+    student?: Student;
+    parent?: Parent;
   }>(null);
 
   useEffect(() => {
-    axios.get("/admin/teachers")
-      .then((res) => {
-        console.log("📦 raw res:", res);
-        console.log("📄 res.data:", res.data);
+    if (selectedTab === "teachers") {
+      axios
+        .get("/admin/teachers")
+        .then((res) => {
+          const data = Array.isArray(res.data)
+            ? res.data
+            : Array.isArray(res.data.teachers)
+              ? res.data.teachers
+              : [];
+          setTeachers(data);
+        })
+        .catch((err) => {
+          console.error("❌ 불러오기 실패:", err);
+        });
+    }
+  }, [selectedTab]);
 
-        const data = Array.isArray(res.data)
-          ? res.data
-          : Array.isArray(res.data.teachers)
-            ? res.data.teachers
-            : [];
+  useEffect(() => {
+    if (selectedTab === "students") {
+      axios
+        .get("/students")
+        .then((res) => setStudents(res.data))
+        .catch((err) => console.error("학생 불러오기 실패:", err));
+    }
+  }, [selectedTab]);
 
-        console.log("✅ 최종 teachers 배열:", data);
-
-        setTeachers(data);
-      })
-      .catch((err) => {
-        console.error("❌ 불러오기 실패:", err);
-      });
-  }, []);
-
+  useEffect(() => {
+    if (selectedTab === "parents") {
+      axios
+        .get("/parents")
+        .then((res) => setParents(res.data))
+        .catch((err) => console.error("학부모 불러오기 실패:", err));
+    }
+  }, [selectedTab]);
 
   const handleAdd = async (data: Omit<Teacher, "id">) => {
     try {
@@ -306,64 +340,407 @@ export const AdminPage: React.FC = () => {
     }
   };
 
+  interface StudentFormProps {
+    initial?: Partial<Student>;
+    onSubmit: (data: Omit<Student, "id">) => void;
+    onCancel: () => void;
+  }
+
+  interface ParentFormProps {
+    initial?: Partial<Parent>;
+    onSubmit: (data: Omit<Parent, "id">) => void;
+    onCancel: () => void;
+  }
+
+  const StudentForm: React.FC<StudentFormProps> = ({
+    initial = {},
+    onSubmit,
+    onCancel,
+  }) => {
+    const [studentNum, setStudentNum] = useState(
+      initial.studentNum?.toString() || ""
+    );
+    const [name, setName] = useState(initial.name || "");
+    const [grade, setGrade] = useState(initial.grade?.toString() || "");
+    const [classroom, setClassroom] = useState(
+      initial.classroom?.toString() || ""
+    );
+    const [phoneNum, setPhoneNum] = useState(initial.phoneNum || "");
+    const [birthday, setBirthday] = useState(initial.birthday || "");
+
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      onSubmit({
+        studentNum: parseInt(studentNum, 10),
+        name,
+        grade: parseInt(grade, 10),
+        classroom: parseInt(classroom, 10),
+        phoneNum,
+        birthday,
+      });
+    };
+
+    return (
+      <form onSubmit={handleSubmit}>
+        <Input
+          placeholder="학번"
+          value={studentNum}
+          onChange={(e) => setStudentNum(e.target.value)}
+          required
+        />
+        <Input
+          placeholder="이름"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <Input
+          placeholder="학년"
+          value={grade}
+          onChange={(e) => setGrade(e.target.value)}
+          required
+        />
+        <Input
+          placeholder="반"
+          value={classroom}
+          onChange={(e) => setClassroom(e.target.value)}
+          required
+        />
+        <Input
+          placeholder="전화번호"
+          value={phoneNum}
+          onChange={(e) => setPhoneNum(e.target.value)}
+          required
+        />
+        <Input
+          placeholder="생년월일"
+          value={birthday}
+          onChange={(e) => setBirthday(e.target.value)}
+          required
+        />
+        <div style={{ textAlign: "right" }}>
+          <Button type="submit">저장</Button>
+          <Button type="button" className="delete" onClick={onCancel}>
+            취소
+          </Button>
+        </div>
+      </form>
+    );
+  };
+
+  const ParentForm: React.FC<ParentFormProps> = ({
+    initial = {},
+    onSubmit,
+    onCancel,
+  }) => {
+    const [name, setName] = useState(initial.name || "");
+    const [studentId, setStudentNum] = useState(
+      initial.studentId?.toString() || ""
+    );
+    const [phoneNum, setPhoneNum] = useState(initial.phoneNum || "");
+    const [birthday, setBirthday] = useState(initial.birthday || "");
+
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      onSubmit({
+        name,
+        studentId: parseInt(studentId, 10),
+        phoneNum,
+        birthday,
+      });
+    };
+
+    return (
+      <form onSubmit={handleSubmit}>
+        <Input
+          placeholder="이름"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <Input
+          placeholder="자녀"
+          value={studentId}
+          onChange={(e) => setStudentNum(e.target.value)}
+          required
+        />
+        <Input
+          placeholder="전화번호"
+          value={phoneNum}
+          onChange={(e) => setPhoneNum(e.target.value)}
+          required
+        />
+        <Input
+          placeholder="생년월일"
+          value={birthday}
+          onChange={(e) => setBirthday(e.target.value)}
+          required
+        />
+        <div style={{ textAlign: "right" }}>
+          <Button type="submit">저장</Button>
+          <Button type="button" className="delete" onClick={onCancel}>
+            취소
+          </Button>
+        </div>
+      </form>
+    );
+  };
+
+  const handleStudentEdit = async (id: number, data: Omit<Student, "id">) => {
+    try {
+      await axios.patch(`/students/${id}`, data);
+      setStudents(students.map((s) => (s.id === id ? { ...s, ...data } : s)));
+    } catch (e) {
+      console.error("학생 수정 실패", e);
+    }
+    setModal(null);
+  };
+
+  const handleStudentDelete = async (id: number) => {
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+    try {
+      await axios.delete(`/students/${id}`);
+      setStudents((prev) => prev.filter((s) => s.id !== id));
+    } catch (e) {
+      console.error("학생 삭제 실패", e);
+    }
+  };
+
+  const handleParentEdit = async (id: number, data: ParentFormInput) => {
+    try {
+      await axios.patch(`/parents/${id}`, data);
+      setParents(parents.map((s) => (s.id === id ? { ...s, ...data } : s)));
+    } catch (e) {
+      console.error("학부모 수정 실패", e);
+    }
+    setModal(null);
+  };
+
+  const handleParentDelete = async (id: number) => {
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+    try {
+      await axios.delete(`/parents/${id}`);
+      setParents((prev) => prev.filter((s) => s.id !== id));
+    } catch (e) {
+      console.error("학부모 삭제 실패", e);
+    }
+  };
+
   return (
     <Container>
-      <Title>교사 관리</Title>
-      <AddButton onClick={() => setModal({ mode: "add" })}>
-        + 교사 추가
-      </AddButton>
-      <Table>
-        <thead>
-          <tr>
-            <Th>이름</Th>
-            <Th>담당 과목</Th>
-            <Th>학년</Th>
-            <Th>반</Th>
-            <Th>전화번호</Th>
-            <Th>생년월일</Th>
-            <Th>관리</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {teachers.map((teacher) => (
-            <tr key={teacher.id}>
-              <Td>{teacher.name}</Td>
-              <Td>{subjectMap[teacher.subject]}</Td>
-              <Td>{teacher.grade}</Td>
-              <Td>{teacher.classNumber}</Td>
-              <Td>{teacher.phoneNum}</Td>
-              <Td>{teacher.birthday}</Td>
-              <Td>
-                <Button
-                  className="edit"
-                  onClick={() => setModal({ mode: "edit", teacher })}
-                >
-                  수정
-                </Button>
-                <Button
-                  className="delete"
-                  onClick={() => handleDelete(teacher.id)}
-                >
-                  삭제
-                </Button>
-              </Td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-      {modal && (
-        <ModalBackground>
-          <Modal>
-            <ModalTitle>
-              {modal.mode === "add" ? "교사 추가" : "교사 정보 수정"}
-            </ModalTitle>
-            <TeacherForm
-              initial={modal.teacher}
-              onSubmit={modal.mode === "add" ? handleAdd : handleEdit}
-              onCancel={() => setModal(null)}
-            />
-          </Modal>
-        </ModalBackground>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Title>
+          {selectedTab === "teachers"
+            ? "교사 관리"
+            : selectedTab === "students"
+              ? "학생 관리"
+              : "학부모 관리"}
+        </Title>
+        <select
+          value={selectedTab}
+          onChange={(e) =>
+            setSelectedTab(
+              e.target.value as "teachers" | "students" | "parents"
+            )
+          }
+          style={{
+            fontSize: "16px",
+            padding: "6px 12px",
+            borderRadius: "8px",
+            border: "1px solid #ccc",
+          }}
+        >
+          <option value="teachers">교사 관리</option>
+          <option value="students">학생 관리</option>
+          <option value="parents">학부모 관리</option>
+        </select>
+      </div>
+
+      {selectedTab === "teachers" ? (
+        <>
+          <AddButton onClick={() => setModal({ mode: "add" })}>
+            + 교사 추가
+          </AddButton>
+          <Table>
+            <thead>
+              <tr>
+                <Th>이름</Th>
+                <Th>담당 과목</Th>
+                <Th>학년</Th>
+                <Th>반</Th>
+                <Th>전화번호</Th>
+                <Th>생년월일</Th>
+                <Th>관리</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {teachers.map((teacher) => (
+                <tr key={teacher.id}>
+                  <Td>{teacher.name}</Td>
+                  <Td>{subjectMap[teacher.subject]}</Td>
+                  <Td>{teacher.grade}</Td>
+                  <Td>{teacher.classNumber}</Td>
+                  <Td>{teacher.phoneNum}</Td>
+                  <Td>{teacher.birthday}</Td>
+                  <Td>
+                    <Button
+                      className="edit"
+                      onClick={() => setModal({ mode: "edit", teacher })}
+                    >
+                      수정
+                    </Button>
+                    <Button
+                      className="delete"
+                      onClick={() => handleDelete(teacher.id)}
+                    >
+                      삭제
+                    </Button>
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+          {modal && (
+            <ModalBackground>
+              <Modal>
+                <ModalTitle>
+                  {modal.mode === "add" ? "교사 추가" : "교사 정보 수정"}
+                </ModalTitle>
+                <TeacherForm
+                  initial={modal.teacher}
+                  onSubmit={modal.mode === "add" ? handleAdd : handleEdit}
+                  onCancel={() => setModal(null)}
+                />
+              </Modal>
+            </ModalBackground>
+          )}
+        </>
+      ) : selectedTab === "students" ? (
+        <div style={{ marginTop: "32px" }}>
+          <p>✅ 학생 관리</p>
+          {selectedTab === "students" && (
+            <>
+              <Table>
+                <thead>
+                  <tr>
+                    <Th>이름</Th>
+                    <Th>학번</Th>
+                    <Th>학년</Th>
+                    <Th>반</Th>
+                    <Th>전화번호</Th>
+                    <Th>생년월일</Th>
+                    <Th>관리</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {students.map((student) => (
+                    <tr key={student.id}>
+                      <Td>{student.name}</Td>
+                      <Td>{student.studentNum}</Td>
+                      <Td>{student.grade}</Td>
+                      <Td>{student.classroom}</Td>
+                      <Td>{student.phoneNum}</Td>
+                      <Td>{student.birthday}</Td>
+                      <Td>
+                        <Button
+                          className="edit"
+                          onClick={() => setModal({ mode: "edit", student })}
+                        >
+                          수정
+                        </Button>
+                        <Button
+                          className="delete"
+                          onClick={() => handleStudentDelete(student.id)}
+                        >
+                          삭제
+                        </Button>
+                      </Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+
+              {modal?.student && (
+                <ModalBackground>
+                  <Modal>
+                    <ModalTitle>학생 정보 수정</ModalTitle>
+                    <StudentForm
+                      initial={modal.student}
+                      onSubmit={(formData) =>
+                        handleStudentEdit(modal.student!.id, formData)
+                      }
+                      onCancel={() => setModal(null)}
+                    />
+                  </Modal>
+                </ModalBackground>
+              )}
+            </>
+          )}
+        </div>
+      ) : (
+        <div style={{ marginTop: "32px" }}>
+          <p>✅ 학부모 관리</p>
+          {selectedTab === "parents" && (
+            <>
+              <Table>
+                <thead>
+                  <tr>
+                    <Th>이름</Th>
+                    <Th>자녀</Th>
+                    <Th>전화번호</Th>
+                    <Th>생년월일</Th>
+                    <Th>관리</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {parents.map((parent) => (
+                    <tr key={parent.id}>
+                      <Td>{parent.name}</Td>
+                      <Td>{parent.studentId}</Td>
+                      <Td>{parent.phoneNum}</Td>
+                      <Td>{parent.birthday}</Td>
+                      <Td>
+                        <Button
+                          className="edit"
+                          onClick={() => setModal({ mode: "edit", parent })}
+                        >
+                          수정
+                        </Button>
+                        <Button
+                          className="delete"
+                          onClick={() => handleParentDelete(parent.id)}
+                        >
+                          삭제
+                        </Button>
+                      </Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+
+              {modal?.parent && (
+                <ModalBackground>
+                  <Modal>
+                    <ModalTitle>학부모 정보 수정</ModalTitle>
+                    <ParentForm
+                      initial={modal.parent}
+                      onSubmit={(formData) =>
+                        handleParentEdit(modal.parent!.id, formData)
+                      }
+                      onCancel={() => setModal(null)}
+                    />
+                  </Modal>
+                </ModalBackground>
+              )}
+            </>
+          )}
+        </div>
       )}
     </Container>
   );

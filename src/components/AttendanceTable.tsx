@@ -3,7 +3,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import styled from "styled-components";
 import { useStudentsListApi, StudentBrief } from "../hooks/useStudentListApi";
 import { ENDPOINTS } from "../constants/api";
-import { useAuthStore } from "../hooks/useAuthStore"; // ← 추가
+import { useAuthStore } from "../hooks/useAuthStore";
 import SelectArrow from "../assets/icon/SelectArrow.png";
 
 const dayKor = ["일", "월", "화", "수", "목", "금", "토"];
@@ -36,15 +36,7 @@ interface ChangedItem {
   note: string;
 }
 
-interface AttendanceTableProps {
-  onGradeChange: (g: number) => void;
-  onClassChange: (c: number) => void;
-}
-
-export const AttendanceTable: React.FC<AttendanceTableProps> = ({
-  onGradeChange,
-  onClassChange,
-}) => {
+export const AttendanceTable: React.FC = () => {
   // 1) 로그인한 교사의 학년/반 가져오기
   const teacherGrade = useAuthStore((state) => state.teacherGrade);
   const teacherClassroom = useAuthStore((state) => state.teacherClassroom);
@@ -74,13 +66,13 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
 
   // ─────────────────────────────────────────────────────────────
   // Step A. grade/classNum이 바뀔 때마다 부모 콜백 호출
-  useEffect(() => {
-    onGradeChange(grade);
-  }, [grade, onGradeChange]);
+  // useEffect(() => {
+  //   onGradeChange(grade);
+  // }, [grade, onGradeChange]);
 
-  useEffect(() => {
-    onClassChange(classNum);
-  }, [classNum, onClassChange]);
+  // useEffect(() => {
+  //   onClassChange(classNum);
+  // }, [classNum, onClassChange]);
 
   // ─────────────────────────────────────────────────────────────
   // Step B. 학생 목록이나 grade/classNum이 바뀌면, 출결 초기화 & 서버에서 데이터 불러오기
